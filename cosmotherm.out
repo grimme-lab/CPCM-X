@@ -1,0 +1,1207 @@
+ ------------------------------------------------------------------------------ 
+ COSMOtherm Version C30-1601 (revision 2299)
+ ------------------------------------------------------------------------------ 
+ written by Frank Eckert, Andreas Klamt, Larissa Koch
+ Copyright (C) 1999-2016, COSMOlogic GmbH & Co. KG
+
+ Job-Name   :                                                                                                                    
+ Job-Date   : 12/03/2020
+ Job-Time   : 11:39:41
+ Hostname   : majestix
+ OS-Type    : linux
+ Executable : Linux 64-bit
+
+ Reading COSMOtherm parameter file BP_TZVP_C30_1601.ctd from directory /software/cluster/COSMOthermX16/COSMOtherm/CTDATA-FILES
+ Info: # COSMOtherm parameter file BP_TZVP_C30_1601.ctd for BP-TZVP optimized COSMO files                                                                    
+
+ Reading COSMOtherm license file license.txt from directory /software/cluster/COSMOthermX16/COSMOtherm/CTDATA-FILES
+
+ COSMOtherm license expiration date 11-jul-2022
+ COSMOtherm license version 19.0
+ Customer : Uni Bonn
+ ID       : 100895
+
+ Licenses:
+  product                   |    licensed version    | status
+ ------------------------------------------------------------------------------ 
+  COSMOtherm                |          19.0          | active
+  TURBOMOLE                 |          7.5           | active
+ ------------------------------------------------------------------------------ 
+
+
+ Reading COSMO information for molecule 1 from file /software/cluster/COSMOthermX16/COSMOtherm/DATABASE-COSMO/BP-TZVP-COSMO/h/h2o_c0.cosmo
+ Reading gas phase energy information for molecule 1 from file /software/cluster/COSMOthermX16/COSMOtherm/DATABASE-COSMO/BP-TZVP-COSMO/h/h2o_c0.energy
+ Reading vapor pressure and property information for compound 1 from file /software/cluster/COSMOthermX16/COSMOtherm/DATABASE-COSMO/BP-TZVP-COSMO/h/h2o.vap
+ Wagner equation coefficients ([mbar]/[K]) for compound 1:    220600.0000       647.1400        -7.7645         1.4584        -2.7758        -1.2330
+ Vapor Pressure [mbar] / Temperature [°C] input for compound 1:
+               10.0000             7.0000
+              100.0000            45.8000
+             1000.0000            99.6000
+ Antoine equation coefficients (in [mbar]/[K]) for compound 1:        18.8198      3956.2903       -40.6247
+ Minimum interpolative temperature for vapor pressure estimation of pure compound 1:     280.150 K
+ Maximum interpolative temperature for vapor pressure estimation of pure compound 1:     372.750 K
+ Minimum temperature for vapor pressure estimation of pure compound 1 (TPVMIN=     275.000 K)
+ Maximum temperature for vapor pressure estimation of pure compound 1 (TPVMAX=     647.000 K)
+ Boiling temperature of compound 1 (TBOIL=     373.150 K)
+ Melting temperature of compound 1 (TMELT=     273.150 K)
+
+ Compound Information for compound 1 (COSMO file /software/cluster/COSMOthermX16/COSMOtherm/DATABASE-COSMO/BP-TZVP-COSMO/h/h2o_c0.cosmo)
+ Atomic weights         : 111
+ E_COSMO+dE             :    -47989.4886 kcal/mol                                                                           
+ E_gas                  :    -47983.6531 kcal/mol                                                                           
+ E_COSMO-E_gas+dE       :        -5.8355 kcal/mol                                                                           
+ E_diel                 :        -9.6009 kcal/mol                                                                           
+ Averaging corr dE      :         0.5075 kcal/mol                                                                           
+ EvdW in continuum      :        -1.1420 kcal/mol                                                                           
+ Area                   :        43.0704 A^2                                                                                
+ Volume                 :        25.6019 A^3                                                                                
+ Molecular Weight       :        18.0153 a.m.u.                                                                             
+ Total COSMO charge     :        -0.0012 a.u.                                                                               
+ Dipole moment (t,x,y,z):         2.4719 -0.001569  0.000481 -2.471890 Debye                                                
+ Sigma moments (1-6)    :         0.0000  7.49E+01  1.26E+01  1.80E+02  7.15E+01  4.87E+02                                  
+ H-bond moment (accept) :         5.6986                                                                                    
+ H-bond moment (donor)  :         3.8615                                                                                    
+
+
+ Reading COSMO information for molecule 2 from file out.cosmo
+ Reading gas phase energy information for molecule 2 from file out.energy
+ Note: Vapor pressure / property file out.vap could not be found
+
+ Compound Information for compound 2 (COSMO file out.cosmo)
+ Atomic weights         : 11111
+ E_COSMO+dE             :    -25433.7504 kcal/mol                                                                           
+ E_gas                  :    -25433.4150 kcal/mol                                                                           
+ E_COSMO-E_gas+dE       :        -0.3354 kcal/mol                                                                           
+ E_diel                 :        -0.4235 kcal/mol                                                                           
+ Averaging corr dE      :         0.0714 kcal/mol                                                                           
+ EvdW in continuum      :        -2.1292 kcal/mol                                                                           
+ Area                   :        55.6562 A^2                                                                                
+ Volume                 :        37.7086 A^3                                                                                
+ Molecular Weight       :        16.0426 a.m.u.                                                                             
+ Total COSMO charge     :        -0.0015 a.u.                                                                               
+ Dipole moment (t,x,y,z):         0.0022  0.001486 -0.001508  0.000425 Debye                                                
+ Sigma moments (1-6)    :         0.0000  4.535852 -0.231260  0.535765 -0.073014  0.078143                                  
+ H-bond moment (accept) :         0.0000                                                                                    
+ H-bond moment (donor)  :         0.0000                                                                                    
+
+
+ Total number of processed compounds:    2
+
+
+------------------
+ START job     1
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture   1
+ -----------------------
+ Temperature          :    223.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -3.56543 kcal/mol                          
+ Log10(partial pressure [mbar])                    :         -1.32526                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47993.05405 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -7.11602 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.18288 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.46758 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.83131 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.65334 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          6.91356                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25434.40373 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.58165 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.71205 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.29370 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   2
+ -----------------------
+ Temperature          :    223.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          2.09035 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.21393                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.39828 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.59897 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.66942 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.07045 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.83011 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.78166                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.58050 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.80862 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08971 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.89833 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   3
+ -----------------------
+ Temperature          :    223.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -3.56543 kcal/mol                          
+ Log10(partial pressure [mbar])                    :         -1.32526                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47993.05405 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -7.11602 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.18288 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.46758 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.83131 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :   4.72869143E-05 bar                               
+ Gibbs Free Energy of Solvation                    :         -7.49303 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.65334 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          6.91356                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25434.40373 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.58165 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.71205 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.29370 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :       8195.19425 bar                               
+ Gibbs Free Energy of Solvation                    :          0.91919 kcal/mol                          
+
+
+
+----------------
+ END job     1
+----------------
+------------------
+ START job     2
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture   4
+ -----------------------
+ Temperature          :    263.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.95029 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          0.46699                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.43891 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.82696 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.23013 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.23244 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.82465 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.30763 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.22970                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25434.05802 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.42485 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.86753 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.29238 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   5
+ -----------------------
+ Temperature          :    263.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          2.01826 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.59344                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.47037 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.63143 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.69797 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.06654 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.83674 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.12924                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.58713 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.77662 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08823 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.86485 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   6
+ -----------------------
+ Temperature          :    263.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.95029 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          0.46699                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.43891 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.82696 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.23013 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.23244 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.82465 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :   2.93080786E-03 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.76391 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.30763 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.22970                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25434.05802 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.42485 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.86753 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.29238 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      16970.81649 bar                               
+ Gibbs Free Energy of Solvation                    :          1.37888 kcal/mol                          
+
+
+
+----------------
+ END job     2
+----------------
+------------------
+ START job     3
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture   7
+ -----------------------
+ Temperature          :    273.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.80469 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          0.82648                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.29331 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.72518 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.24314 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.14615 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.82217 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.23116 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.28631                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.98154 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.37905 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.91036 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.28941 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   8
+ -----------------------
+ Temperature          :    273.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.99894 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.66991                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.48969 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.63960 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.70400 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.06440 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.83926 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.19954                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.58965 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.76647 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08792 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.85439 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture   9
+ -----------------------
+ Temperature          :    273.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.80469 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          0.82648                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.29331 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.72518 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.24314 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.14615 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.82217 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :   6.70631091E-03 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.59163 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.23116 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.28631                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.98154 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.37905 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.91036 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.28941 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      19333.40852 bar                               
+ Gibbs Free Energy of Solvation                    :          1.48204 kcal/mol                          
+
+
+
+----------------
+ END job     3
+----------------
+------------------
+ START job     4
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  10
+ -----------------------
+ Temperature          :    283.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.66309 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.15750                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.15171 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.60849 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.25668 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.04588 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81929 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.15904 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.33555                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.90943 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.32996 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.95526 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.28522 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  11
+ -----------------------
+ Temperature          :    283.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.97916 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.74063                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.50946 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.64795 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.70966 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.06172 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.84218 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.26456                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.59256 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.75516 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08764 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.84281 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  12
+ -----------------------
+ Temperature          :    283.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.66309 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.15750                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.15171 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.60849 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.25668 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -6.04588 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81929 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.01437 bar                               
+ Henry law coefficient using experimental Pvap     :          0.01231 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.42393 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.15904 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.33555                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.90943 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.32996 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.95526 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.28522 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      21654.65611 bar                               
+ Gibbs Free Energy of Solvation                    :          1.58026 kcal/mol                          
+
+
+
+----------------
+ END job     4
+----------------
+------------------
+ START job     5
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  13
+ -----------------------
+ Temperature          :    293.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.52589 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.46265                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.01451 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.47572 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.27076 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.93050 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81598 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.09152 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.37801                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.84191 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.27735 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.00238 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27972 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  14
+ -----------------------
+ Temperature          :    293.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.95896 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.80621                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.52967 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.65655 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.71499 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.05844 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.84551 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.32484                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.59590 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.74259 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08739 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.82997 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  15
+ -----------------------
+ Temperature          :    293.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.52589 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.46265                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47992.01451 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.47572 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.27076 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.93050 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81598 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.02902 bar                               
+ Henry law coefficient using experimental Pvap     :          0.02345 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.26103 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.09152 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.37801                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.84191 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.27735 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.00238 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27972 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      23878.45799 bar                               
+ Gibbs Free Energy of Solvation                    :          1.67347 kcal/mol                          
+
+
+
+----------------
+ END job     5
+----------------
+------------------
+ START job     6
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  16
+ -----------------------
+ Temperature          :    298.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.45907 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.60624                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.94770 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.40305 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.27801 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.86690 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81416 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.05957 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.39684                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.80995 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.24966 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.02681 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27647 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  17
+ -----------------------
+ Temperature          :    298.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.94870 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.83723                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.53993 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.66096 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.71753 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.05657 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.84735 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.35334                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.59774 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.73579 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08726 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.82305 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  18
+ -----------------------
+ Temperature          :    298.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.45907 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.60624                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.94770 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.40305 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.27801 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.86690 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81416 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.04039 bar                               
+ Henry law coefficient using experimental Pvap     :          0.03177 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.18140 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.05957 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.39684                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.80995 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.24966 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.02681 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27647 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      24937.03695 bar                               
+ Gibbs Free Energy of Solvation                    :          1.71825 kcal/mol                          
+
+
+
+----------------
+ END job     6
+----------------
+------------------
+ START job     7
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  19
+ -----------------------
+ Temperature          :    303.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.39351 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.74419                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.88214 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.32613 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.28540 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.79930 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81222 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.02885 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.41417                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.77924 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.22103 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.05184 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27286 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  20
+ -----------------------
+ Temperature          :    303.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.93834 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.86716                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.55029 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.66545 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.72000 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.05455 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.84930 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.38082                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.59969 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.72864 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08714 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.81578 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  21
+ -----------------------
+ Temperature          :    303.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.39351 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          1.74419                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.88214 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.32613 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.28540 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.79930 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.81222 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.05549 bar                               
+ Henry law coefficient using experimental Pvap     :          0.04255 bar                               
+ Gibbs Free Energy of Solvation                    :         -6.10271 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -0.02885 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.41417                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.77924 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.22103 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.05184 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.27286 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      25951.72391 bar                               
+ Gibbs Free Energy of Solvation                    :          1.76209 kcal/mol                          
+
+
+
+----------------
+ END job     7
+----------------
+------------------
+ START job     8
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  22
+ -----------------------
+ Temperature          :    313.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.26635 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.00411                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.75498 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.15948 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.30058 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.65207 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.80800 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.02873 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.44447                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.72166 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.16090 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.10369 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.26459 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  23
+ -----------------------
+ Temperature          :    313.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.91732 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.92394                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.57130 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.67472 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.72474 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.05002 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.85358 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.43288                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.60396 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.71323 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08692 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.80015 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  24
+ -----------------------
+ Temperature          :    313.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.26635 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.00411                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.75498 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -6.15948 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.30058 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.65207 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.80800 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.10095 bar                               
+ Henry law coefficient using experimental Pvap     :          0.07396 bar                               
+ Gibbs Free Energy of Solvation                    :         -5.94951 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.02873 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.44447                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.72166 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.16090 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.10369 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.26459 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      27826.96658 bar                               
+ Gibbs Free Energy of Solvation                    :          1.84571 kcal/mol                          
+
+
+
+----------------
+ END job     8
+----------------
+------------------
+ START job     9
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  25
+ -----------------------
+ Temperature          :    323.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.14479 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.24417                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.63341 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -5.97613 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.31630 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.48914 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.80328 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.08101 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.46930                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.66938 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.09698 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.15788 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.25486 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  26
+ -----------------------
+ Temperature          :    323.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.89592 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          4.97694                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.59271 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.68438 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.72921 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.04484 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.85836 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.48137                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.60875 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.69632 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08671 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.78303 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  27
+ -----------------------
+ Temperature          :    323.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.14479 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.24417                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.63341 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -5.97613 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.31630 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.48914 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.80328 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.17545 bar                               
+ Henry law coefficient using experimental Pvap     :          0.12366 bar                               
+ Gibbs Free Energy of Solvation                    :         -5.80213 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.08101 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.46930                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.66938 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.09698 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.15788 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.25486 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      29464.71392 bar                               
+ Gibbs Free Energy of Solvation                    :          1.92380 kcal/mol                          
+
+
+
+----------------
+ END job     9
+----------------
+------------------
+ START job    10
+------------------
+
+ -------------------------------------------------------------
+ Computation of Henry law coefficients at given concentration
+ XH={ 1.0 0.0 }
+ -------------------------------------------------------------
+
+
+
+
+ Results for mixture  28
+ -----------------------
+ Temperature          :    333.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.02915 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.46592                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.51777 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -5.77701 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.33250 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.31144 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.79807 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.12781 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.48905                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.62258 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.02935 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.21431 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.24366 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  29
+ -----------------------
+ Temperature          :    333.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     0.0000    1.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :          1.87413 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.02651                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47987.61449 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :          0.69446 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.73345 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -1.03899 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.86370 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          5.52659                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25436.61409 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -2.67786 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.08652 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.76437 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+
+
+
+
+ Results for mixture  30
+ -----------------------
+ Temperature          :    333.150 K
+
+ Compound Nr.         :          1         2 
+ Compound             :        h2o       out 
+ Mole Fraction        :     1.0000    0.0000 
+
+ Compound:  1  (h2o)                                                                                              
+ Chemical potential of the compound in the mixture :         -2.02915 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          2.46592                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -47991.51777 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -5.77701 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          0.33250 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :         -5.31144 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -0.79807 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :          0.29236 bar                               
+ Henry law coefficient using experimental Pvap     :          0.19962 bar                               
+ Gibbs Free Energy of Solvation                    :         -5.66080 kcal/mol                          
+
+ Compound:  2  (out)                                                                                              
+ Chemical potential of the compound in the mixture :          0.12781 kcal/mol                          
+ Log10(partial pressure [mbar])                    :          7.48905                                   
+ Free energy of molecule in mix (E_COSMO+dE+Mu)    :     -25433.62258 kcal/mol                          
+ Total mean interaction energy in the mix (H_int)  :         -1.02935 kcal/mol                          
+ Misfit interaction energy in the mix (H_MF)       :          1.21431 kcal/mol                          
+ H-Bond interaction energy in the mix (H_HB)       :          0.00000 kcal/mol                          
+ VdW interaction energy in the mix (H_vdW)         :         -2.24366 kcal/mol                          
+ Ring correction                                   :          0.00000 kcal/mol                          
+ Henry law coefficient                             :      30835.49289 bar                               
+ Gibbs Free Energy of Solvation                    :          1.99629 kcal/mol                          
+
+
+
+--------------
+ END job   10
+--------------

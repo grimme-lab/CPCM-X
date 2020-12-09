@@ -1,0 +1,57 @@
+$info
+prog.: ridft;A-mat. vers.:1.0;cav. vers.:1.0;disp3 -bj;ridft;b-p;def2-TZVP
+$cosmo
+  epsilon=infinity
+  nppa=  1082
+  nspa=   92
+  disex= 10.0000    
+  rsolv= 1.30
+  routf= 0.85
+  cavity closed
+  phsran=  0.0    
+  ampran= 0.10E-04
+$cosmo_data
+  fepsi=     1.0000000
+  disex2= 2414.04    
+  nsph=   32
+  nps=   63
+  npsd=  105
+  npspher=   42
+  area=   96.17
+  volume=       86.79
+$coord_rad
+#atom   x                  y                  z             element  radius [A]
+   1  -6.28203548081307   1.65783783911925   0.00000000000000  h      1.30000
+   2  -4.94410937873004   1.65783783911925   0.00000000000000  h      1.30000
+$coord_car
+!BIOSYM archive 3
+PBC=OFF
+coordinates from COSMO calculation
+!DATE 
+H1      -3.324310013    0.877290003    0.000000000 COSM 1      h       H   0.000
+H2      -2.616310010    0.877290003    0.000000000 COSM 1      h       H   0.000
+end
+end
+$screening_charge
+  cosmo      =  -0.019697
+  correction =   0.019309
+  total      =  -0.000388
+$cosmo_energy
+  Total energy [a.u.]            =       -1.1766660452
+  Total energy + OC corr. [a.u.] =       -1.1766525071
+  Total energy corrected [a.u.]  =       -1.1766592761 Note: incorrect value contained for downward compatibility
+  Dielectric energy [a.u.]       =       -0.0003101569
+  Diel. energy + OC corr. [a.u.] =       -0.0002966188
+$segment_information
+# n             - segment number
+# atom          - atom associated with segment n
+# position      - segment coordinates [a.u.]
+# charge        - segment charge (corrected)
+# area          - segment area [A**2]
+# potential     - solute potential on segment (A length scale)
+#
+#  n   atom              position (X, Y, Z)                   charge         area        charge/area     potential
+#
+#
+    1    1   -0.000000000    1.000000000    0.000000000   -0.030000000    1.000000000   -0.030000000    1.000000000
+    2    2   -0.000000000    0.000000000    0.000000000    0.030000000    1.000000000    0.030000000    -1.00000000
