@@ -35,12 +35,12 @@ program COSMO
    Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
    Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
    Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
-   Call read_cosmo("ch4.cosmo",solute_ident, solute_xyz, solute_su, solute_area,solute_pot)
+   Call read_cosmo("h2o.cosmo",solute_ident, solute_xyz, solute_su, solute_area,solute_pot)
    Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
    Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
    Call ortho_charge(solute_sv,solute_sv0,solute_svt)
-   !Call sigma_profile(solvent_sv,solvent_area,solvent_sigma)
-   !Call sigma_profile(solute_sv,solute_area,solute_sigma)
+   Call sigma_profile(solvent_sv,solvent_area)
+   Call sigma_profile(solute_sv,solute_area)
    if (gas) then
       Call calcgas(id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot,solute_ident,disp_con,param, T,r_cav)
    end if
@@ -494,33 +494,43 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end subroutine compute_solvent
 
-      subroutine sigma_profile(sv,area,sigma)
+      subroutine sigma_profile(sv,area)
 
          real(8), dimension(:), allocatable,intent(in) :: sv,area
 
-         real(8), dimension(:), allocatable,intent(out) :: sigma
+       !  real(8), dimension(:,:), allocatable,intent(out) :: sigma
 
          integer :: sigma_min, sigma_max, i, j,tmp
 
+         real(8) :: punit
 
-         sigma_min=int(minval(anint(sv*1000)))
-         sigma_max=int(maxval(anint(sv*1000)))
-         allocate(sigma(sigma_min:sigma_max))
-         write(*,*) sigma_min, sigma_max
+         real(8), parameter :: sig_width=0.025_8
+         integer, parameter :: n_sig=50
 
-         sigma(:)=0
-         do i=sigma_min,sigma_max
-            do j=1,size(sv)
-            tmp=int(anint(sv(j)*1000))
-               if (tmp .EQ. i) then
-                  sigma(i)=sigma(i)+area(i)
-               end if
-            end do
+         real(8) :: profile(0:n_sig), chdval(0:n_sig), temp
+
+         punit=2.0_8*sig_width/n_sig
+
+         do i=0,n_sig
+            profile(i) = 0.0_8
+            chdval(i) = -sig_width+punit*i
          end do
-
-         do i=sigma_min,sigma_max
-            write(*,*) i, sigma(i)
+         do i= 1, size(sv)
+            temp = sv(i)
+           
+            tmp = int((temp-chdval(0))/punit)
+           
+            if (tmp<0) tmp=0
+            if (tmp>n_sig-1) tmp=n_sig-1
+            profile(tmp) = profile(tmp)+area(i)*(chdval(tmp+1)-temp)/punit
+            profile(tmp+1) = profile(tmp+1)+area(i)*(temp-chdval(tmp))/punit
          end do
+         open(unit=2,file="sigma_profile.txt",action="write",status="replace")
+         
+         do i=0,size(profile)-1
+            write(2,*) chdval(i),";", profile(i)
+         end do
+         close(2)
 
       end subroutine
 
