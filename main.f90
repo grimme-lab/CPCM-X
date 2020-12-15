@@ -13,19 +13,21 @@ program COSMO
    character(20) :: solvent, solute
    real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
-   real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T
+   real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume
    logical :: gas
    
 
    type(DICT_STRUCT), pointer :: r_cav, disp_con
   
    gas=.TRUE.
-
+   
    Call initialize_param(param,r_cav,disp_con)
    Call getargs(solvent,solute,T)
 
-   Call read_cosmo(trim(solvent)//".cosmo",solvent_ident,solvent_xyz,solvent_su,solvent_area,solvent_pot)
-   Call read_cosmo(trim(solute)//".cosmo",solute_ident, solute_xyz, solute_su, solute_area,solute_pot)
+   Call read_cosmo(trim(solvent)//".cosmo",solvent_ident,solvent_xyz,solvent_su,&
+      &solvent_area,solvent_pot,solvent_volume)
+   Call read_cosmo(trim(solute)//".cosmo",solute_ident, solute_xyz, solute_su,&
+      &solute_area,solute_pot,solute_volume)
 
    Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
    Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
@@ -35,7 +37,7 @@ program COSMO
    Call ortho_charge(solute_sv,solute_sv0,solute_svt)
    Call sigma_profile(solvent_sv,solvent_area,solvent_sigma)
    Call sigma_profile(solute_sv,solute_area,solute_sigma)
-   Call onedim(solvent_sigma,solute_sigma)
+   Call onedim(solvent_sigma,solute_sigma,solute_volume)
    if (gas) then
       Call calcgas(id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot,solute_ident,disp_con,param, T,r_cav)
    end if
@@ -56,7 +58,9 @@ program COSMO
    !      temp=temp+E_dd(param(5),param(3),param(4),param(6),solvent_sv(1),solvent_svt(1),solute_sv(j),solute_svt(j))
    !      write(*,*) temp
    !   end do
- write(*,*) gas_chem*4.184
+ write(*,*) "calc_gas_chem: ", gas_chem
+ write(*,*) "calc_sol_chem: ", chem_pot_sol
+ write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
 !   temp=0
 !   do i=1,size(solvent_pot)
 !      do z=1,size(solvent_pot)
@@ -160,7 +164,64 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             read(1,*) dummy1,E_gas
             read(1,*) dummy1,E_solv
          end if
-         dEreal=(E_gas-E_solv)
+         dEreal=(E_solv-E_gas)
+         ediel=0
+         edielprime=0
+         do i=1,size(sv)
+            ediel=ediel+(area(i)*pot(i)*su(i))
+            edielprime=edielprime+(area(i)*pot(i)*sv(i))
+         end do
+         avcorr=(edielprime-ediel)/2.0_8*0.8_8
+         write(*,*) "E_COSMO+dE: ", (E_solv+avcorr)*autokcal
+         write(*,*) "E_gas: ", E_gas*autokcal
+         dEreal=dEreal*autokcal
+         id_scr=dEreal-avcorr*autokcal
+         write(*,*) "E_COSMO-E_gas+dE: ", (E_solv-E_gas+avcorr)*autokcal
+         write(*,*) "Ediel: ", ediel/2*autokcal
+         write(*,*) "Averaging corr dE: ", avcorr*autokcal
+
+
+         vdW_gain=0
+         do i=1,size(area)
+            disp=dict_get_key(disp_con, ident(i))
+            vdW_gain=vdW_gain+(area(i)*disp%param)
+         end do
+         write(*,*) "EvdW: ", vdW_gain 
+         write(*,*) "Area: ", sum(area)
+
+         thermo=param(10)*R*jtokcal*T
+         write(*,*) "thermostatic correction: ", thermo
+
+         !!! RING CORRECTION IS MISSING ATM
+         gas_chem=-id_scr+thermo-vdW_gain!-ring_corr
+         write(*,*) gas_chem
+         
+
+      end subroutine calcgas
+
+      subroutine calcgas_a(id_scr,gas_chem,area,sv,su,svt,pot,ident,disp_con,param, T,r_cav)
+         use globals
+         use element_dict
+         real(8), intent(out) :: id_scr, gas_chem
+         real(8), intent(in) :: T
+         real(8),dimension(:),allocatable, intent(in) :: area, sv,svt, su, pot
+         character(2), dimension(:), allocatable, intent(in) :: ident
+         type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
+         real(8), dimension(10) :: param
+         type(DICT_DATA) :: disp, r_c
+         real(8) :: E_gas, E_solv,  dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
+         integer :: dummy1, ioerror, i 
+
+         open(1,file="energy")
+         read(1,*,iostat=ioerror)
+         if (ioerror .NE. 0) then
+            write(*,*) "Problem while reading energies (check energy file)."
+            error stop
+         else
+            read(1,*) dummy1,E_gas
+            read(1,*) dummy1,E_solv
+         end if
+         dEreal=(E_solv-E_gas)
          ediel=0
          edielprime=0
          do i=1,size(sv)
@@ -193,7 +254,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          write(*,*) gas_chem
          
 
-      end subroutine calcgas
+      end subroutine calcgas_a
 
       function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2)
          implicit none
@@ -280,7 +341,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          allocate(W_v(size(sv_sol)))
          allocate(sol_pot(size(sv_sol)))
          W_v(:)=0.0_8
-         beta=0.0832_8!(R*Jtokcal*T)/param(7)
+         beta=(R*Jtokcal*T)/param(7)
          temppot=0.0_8
          sol_pot(:)=0
          !! For mixed solvent, mole fraction needs to be introduced in the following loop
@@ -386,11 +447,15 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          real(8), parameter :: sig_width=0.025_8
          integer, parameter :: n_sig=50
 
-         real(8) :: profile(0:n_sig), chdval(0:n_sig), temp
+         real(8) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
 
          punit=2.0_8*sig_width/n_sig
 
-         do i=0,n_sig
+
+         profile(:)=0.0_8
+         chdval(:)=0.0_8
+         
+         do i=0,n_sig-1
             profile(i) = 0.0_8
             chdval(i) = -sig_width+punit*i
          end do
@@ -398,7 +463,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             temp = sv(i)
            
             tmp = int((temp-chdval(0))/punit)
-           
+ 
             if (tmp<0) tmp=0
             if (tmp>n_sig-1) tmp=n_sig-1
             profile(tmp) = profile(tmp)+area(i)*(chdval(tmp+1)-temp)/punit
@@ -406,12 +471,13 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          end do
          open(unit=2,file="sigma_profile.txt",action="write",status="replace")
          
-         do i=0,size(profile)-1
+         
+         do i=0,size(profile)
             write(2,*) chdval(i),";", profile(i)/sum(area)
          end do
          close(2)
 
-         allocate(sigma(0:size(profile)))
+         allocate(sigma(0:size(profile)-1))
          sigma(:)=profile(:)
 
       end subroutine

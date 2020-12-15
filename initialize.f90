@@ -1,7 +1,7 @@
 module initialize_cosmo
 
    contains
-      subroutine read_cosmo(compound,ident,xyz,charges,area,pot)
+      subroutine read_cosmo(compound,ident,xyz,charges,area,pot,volume)
          use globals
          implicit none
          character(*), intent(in) :: compound
@@ -10,6 +10,7 @@ module initialize_cosmo
             &area,pot
          real(8), dimension(:,:), allocatable, intent(out) :: xyz
          character(2), allocatable, dimension(:),intent(out) :: ident
+         real(8), intent(out) :: volume
          integer :: i, io_error, dummy1, dummy2, num
          real(8) :: dummy3, dummy4, dummy5
          real(8), dimension(:), allocatable :: dummy_ident
@@ -84,6 +85,13 @@ module initialize_cosmo
                exit
             end if
          end do
+
+         rewind(1)
+         do while (line .NE. "area=")
+            read(1,*) line
+         end do
+
+         read(1,*) line, volume
          
          close(1)
          deallocate(dummy_ident)
