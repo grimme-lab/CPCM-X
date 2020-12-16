@@ -39,6 +39,7 @@ subroutine onedim(profil,profil2,vcosmo)
    real(8) :: gam(0:49),maxsig,punit,profile(0:49), gam_saved(0:49),gam_sol(0:49)
    real(8) :: gamma_solv, gamma_sol, summ
    real(8) :: T, VNORM, ANORM, RNORM, QNORM, vcosmo
+  ! real(8) :: Theta, Phi, L, coord, gammasg !SG Equation
 
    integer :: i,j,z
    logical :: not_conv
@@ -52,7 +53,7 @@ subroutine onedim(profil,profil2,vcosmo)
    !! Pure Activity Coefficient of Solvent
    profile(:)=0.0_8
   ! write(*,*) profil
-   do i=0,49
+   do i=1,49
       profile(i)=profil(i)/sum(profil)
    end do
    T=298.15_8
@@ -63,8 +64,8 @@ subroutine onedim(profil,profil2,vcosmo)
    summ=0.0_8
    do while (not_conv)
       gam_saved(:)=gam(:)
-      do i=0,size(profile)-1
-         do j=0,size(profile)-1
+      do i=1,size(profile)-1
+         do j=1,size(profile)-1
             summ=summ+profile(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
          gam(i)=exp(-log(summ))
@@ -72,7 +73,7 @@ subroutine onedim(profil,profil2,vcosmo)
          summ=0.0_8
       end do
       not_conv=.false.
-      do i=0,size(gam)-1
+      do i=1,size(gam)-1
          if (abs((gam(i)-gam_saved(i))) .LT. 0.000001) then
             cycle
          else
@@ -85,7 +86,7 @@ subroutine onedim(profil,profil2,vcosmo)
    !! Pure Activity Coefficient of Solute
   ! write(*,*) profil2
    profile(:)=0.0_8
-   do i=0,49
+   do i=1,49
       profile(i)=profil2(i)/sum(profil2)
    end do
  !  write(*,*) profile
@@ -98,8 +99,8 @@ subroutine onedim(profil,profil2,vcosmo)
    not_conv=.true.
    do while (not_conv)
       gam_saved(:)=gam_sol(:)
-      do i=0,size(profile)-1
-         do j=0,size(profile)-1
+      do i=1,size(profile)-1
+         do j=1,size(profile)-1
             summ=summ+profile(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
          gam_sol(i)=exp(-log(summ))
@@ -117,25 +118,31 @@ subroutine onedim(profil,profil2,vcosmo)
       end do
    end do
 
-   !! Staverman-Guggenheim equation
+   !! Staverman-Guggenheim equation, only necessary for mixtures
 
-     RNORM = VCOSMO/VNORM 
-     QNORM = sum(profil2)/ANORM
+  !   RNORM = VCOSMO/VNORM 
+  !   QNORM = sum(profil2)/ANORM
+  !   
+  !   Theta=1.0_8
+  !   Phi=1.0_8
+  !   L=(coord/2.0_8)*(RNORM-qnorm)-(RNORM-1.0_8)
+
+  !   gammasg=log(phi)+(coord/2.0_8)*QNORM*log(Theta/Phi)+L-(Phi)*(L)
+  !   write(*,*) gammasg
 
 
-
-   write(*,*) "One dimensional calculation done!"
+   write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
   ! write(*,*) mue
    gamma_solv=0.0_8
    gamma_sol=0.0_8
 
  !  write(*,*) gam_sol
-   do i=0,size(profil)-1
+   do i=1,size(profil)-1
   !    write(*,*) mue(i)
-      gamma_solv=gamma_solv+profil2(i)/7.5*(log(gam(i))-log(gam_sol(i)))
-      gamma_sol=gamma_sol+profil2(i)/7.5*log(gam(i))
+      gamma_solv=gamma_solv+profil2(i)/7.5_8*(log(gam(i))-log(gam_sol(i)))
+ !     gamma_sol=gamma_sol+profil2(i)/7.5_8*log(gam(i))
    end do
-   write(*,*) gamma_solv, gamma_sol*R*T*Jtokcal
+   write(*,*) gamma_solv
 
 
 

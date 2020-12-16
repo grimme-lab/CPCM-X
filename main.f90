@@ -42,12 +42,12 @@ program COSMO
       Call calcgas(id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot,solute_ident,disp_con,param, T,r_cav)
    end if
 
-   Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_sigma)
+   Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident)
  !  do i=1,size(solvent_sv)
  !     write(*,*) solvent_sv(i), solv_pot(i)
  !  end do
    Call compute_solute(sol_pot,solv_pot,param,solute_sv,solute_svt,solvent_sv,&
-         &solvent_svt,solute_area,solvent_area,T,chem_pot_sol)
+         &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident)
   
  !  do i=1,size(solute_sv)
     !  write(*,*) solute_sv(i), solute_svt(i), sol_pot(i)
@@ -175,7 +175,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          write(*,*) "E_COSMO+dE: ", (E_solv+avcorr)*autokcal
          write(*,*) "E_gas: ", E_gas*autokcal
          dEreal=dEreal*autokcal
-         id_scr=dEreal-avcorr*autokcal
+         id_scr=dEreal+avcorr*autokcal
          write(*,*) "E_COSMO-E_gas+dE: ", (E_solv-E_gas+avcorr)*autokcal
          write(*,*) "Ediel: ", ediel/2*autokcal
          write(*,*) "Averaging corr dE: ", avcorr*autokcal
@@ -256,11 +256,12 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end subroutine calcgas_a
 
-      function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2)
+      function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident1,ident2)
          implicit none
          real(8), intent(in) :: c_hb, alpha, f_corr,s_hb
          real(8), intent(in) :: sv1, svt1, sv2, svt2
-        
+         character(2), intent(in) :: ident1, ident2
+         
          real(8) :: E_dd
          real(8) :: svdo, svac
          real(8) :: E_misfit, E_hb
@@ -278,6 +279,12 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          E_hb=0.0_8
          E_misfit=0.0_8
          E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+         if ((ident1 .NE. 'h') .AND. (ident2 .NE. 'h')) then
+            E_hb=0.0
+         end if
+    !     if (E_hb .NE. 0) then
+    !             write(*,*) svdo, svac, ident1, ident2
+    !     end if
          E_misfit=(alpha/2)*(sv1+sv2)&
                  &*((sv1+sv2)+f_corr*(svt1+svt2))
       !  E_misfit=(alpha/2)*((sv1+sv2)**2.0_8)
@@ -286,11 +293,12 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end function E_dd
 
-      subroutine iterate_solvent(pot_di,param,sv,svt,area,T,sigma)
+      subroutine iterate_solvent(pot_di,param,sv,svt,area,T,ident)
          use globals
          implicit none
          real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area,sigma
+         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area
+         character(2), dimension(:), allocatable, intent(in) :: ident
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
          real(8), dimension(:), allocatable :: W_v 
          real(8), intent(in) :: T
@@ -311,8 +319,8 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             do i=1,size(pot_di)
        !        if (i .NE. j) then
                temppot=temppot+(area(i)*dexp((-E_dd&
-                      &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i))/beta&
-                      &+pot_di(i))))
+                      &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i),ident(j),ident(i))&
+                      &/beta+pot_di(i))))
                W_v(j)=W_v(j)+area(i)
         !       end if
             end do
@@ -325,13 +333,15 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
       end subroutine iterate_solvent
 
 
-      subroutine compute_solute(sol_pot,solv_pot,param,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol)
+      subroutine compute_solute(sol_pot,solv_pot,param,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol,&
+                      &ident_sol,ident_solv)
          use globals
          implicit none
          real(8), dimension(10), intent(in) :: param
          real(8), intent(out) :: chem_pot_sol
          real(8), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol
          real(8), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
+         character(2), dimension(:), allocatable, intent(in) :: ident_sol, ident_solv
          real(8), dimension(:), allocatable :: W_v 
          real(8), intent(in) :: T
 
@@ -349,8 +359,8 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             do i=1,size(solv_pot)
              !  if (i .NE. j) then
                temppot=temppot+(area_solv(i)*dexp((-E_dd&
-                      &(param(5),param(3),param(4),param(6),sv_sol(j),svt_sol(j),sv_solv(i),svt_solv(i))/beta&
-                      &+solv_pot(i))))
+                      &(param(5),param(3),param(4),param(6),sv_sol(j),svt_sol(j),sv_solv(i),svt_solv(i),ident_sol(j),ident_solv(i))&
+                      &/beta)+solv_pot(i)))
              !  end if
                W_v(j)=W_v(j)+area_solv(i)
             end do
@@ -364,7 +374,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
         !    write(*,*) area_sol(i), sol_pot(i), area_sol(i)*sol_pot(i)
          end do
 
-         chem_pot_sol=beta*temppot-(param(8)*R*Jtokcal*T*log(sum(area_solv)))
+         chem_pot_sol=temppot*beta-(param(8)*R*Jtokcal*T*log(sum(area_solv)))
          write(*,*) chem_pot_sol
          temppot=0
          do i=1,size(solv_pot)
@@ -373,12 +383,13 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          write(*,*) beta*temppot
       end subroutine compute_solute
 
-      subroutine compute_solvent(pot_di,param,sv,svt,area,T,max_cycle,conv_crit,sigma_solvent)
+      subroutine compute_solvent(pot_di,param,sv,svt,area,T,max_cycle,conv_crit,ident)
          use globals
          implicit none
          real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable :: sv, svt, area, sigma_solvent
+         real(8), dimension(:), allocatable :: sv, svt, area
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
+         character(2), dimension(:), allocatable, intent(in) :: ident
          real(8), intent(in) :: T
          real(4), intent(in) :: conv_crit
          integer, intent(in) :: max_cycle
@@ -407,7 +418,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
       !      end do
             saved_potdi(:)=pot_di(:)
 !            write(*,*) sum(pot_di)
-            Call iterate_solvent(pot_di,param,sv,svt,area,T,sigma_solvent)
+            Call iterate_solvent(pot_di,param,sv,svt,area,T,ident)
        !     pot_di(:)=av(:)
             not_conv=.FALSE.
             do j=1,size(pot_di)
@@ -472,7 +483,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          open(unit=2,file="sigma_profile.txt",action="write",status="replace")
          
          
-         do i=0,size(profile)
+         do i=0,size(profile)-1
             write(2,*) chdval(i),";", profile(i)/sum(area)
          end do
          close(2)

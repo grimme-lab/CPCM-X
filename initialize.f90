@@ -109,16 +109,16 @@ module initialize_cosmo
          
          !Setting global COSMO Parameters - TO DO: read from file
 
-         param(1)=0.50_8
-         param(2)=1.00_8
-         param(3)=1288.0_8
-         param(4)=2.40_8
+         param(1)=0.40_8
+         param(2)=0.8_8
+         param(3)=1515.0_8
+         param(4)=2.802_8
          param(5)=7400.0_8
-         param(6)=0.00820_8
-         param(7)=7.10_8
-         param(8)=0.140_8
-         param(9)=-0.210_8
-         param(10)=-9.150_8
+         param(6)=0.00854_8
+         param(7)=7.62_8
+         param(8)=0.129_8
+         param(9)=-0.217_8
+         param(10)=-9.910_8
 
          !Setting cavity radii - to do: read from file
 
