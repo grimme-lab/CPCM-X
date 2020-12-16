@@ -1,7 +1,7 @@
 module initialize_cosmo
 
    contains
-      subroutine read_cosmo(compound,ident,xyz,charges,area,pot,volume)
+      subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume)
          use globals
          implicit none
          character(*), intent(in) :: compound
@@ -9,11 +9,11 @@ module initialize_cosmo
          real(8), dimension(:), allocatable,intent(out) :: charges,&
             &area,pot
          real(8), dimension(:,:), allocatable, intent(out) :: xyz
-         character(2), allocatable, dimension(:),intent(out) :: ident
+         character(2), allocatable, dimension(:),intent(out) :: elements
          real(8), intent(out) :: volume
          integer :: i, io_error, dummy1, dummy2, num
          real(8) :: dummy3, dummy4, dummy5
-         real(8), dimension(:), allocatable :: dummy_ident
+         real(8), dimension(:), allocatable :: ident
          character(2) :: element
          
          logical :: exists
@@ -40,12 +40,11 @@ module initialize_cosmo
          read(line,*) num
          allocate(charges(num))
          allocate(ident(num))
-         allocate(dummy_ident(num))
          allocate(area(num))
          allocate(xyz(num,3))
          allocate(pot(num))
          rewind(1)
-         ident(:)="XX"
+         ident(:)=0
          do while (line .NE. "$segment_information")
             read(1,*) line
          end do
@@ -60,7 +59,7 @@ module initialize_cosmo
             else if (io_error .LT. 0) then
                exit
             else
-               read(1,*) dummy1,dummy_ident(num),xyz(num,1),xyz(num,2),&
+               read(1,*) dummy1,ident(num),xyz(num,1),xyz(num,2),&
                   &xyz(num,3),dummy3,area(num),charges(num),pot(num)
             !   charges(num)=anint(charges(num)*1000)/1000
                pot(num)=pot(num)*BtoA
@@ -71,21 +70,19 @@ module initialize_cosmo
          do while (line .NE. "#atom")
             read(1,*) line
          end do
+         
+         allocate(elements(int(maxval(ident))))
 
          do while (.TRUE.)
             read(1,'(A1)',advance='no',iostat=io_error) line
             if (line .NE. "$") then
                read(1,*) dummy1, dummy3, dummy4, dummy5, element
-               do i=1,size(dummy_ident)
-                  if (dummy1==dummy_ident(i)) then
-                     ident(i)=element
-                  end if
-               end do
+               elements(dummy1)=element
             else
                exit
             end if
          end do
-
+   !      write(*,*) elements
          rewind(1)
          do while (line .NE. "area=")
             read(1,*) line
@@ -94,7 +91,7 @@ module initialize_cosmo
          read(1,*) line, volume
          
          close(1)
-         deallocate(dummy_ident)
+        
       end subroutine read_cosmo
 
       subroutine initialize_param(param,r_cav,disp_con)
