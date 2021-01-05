@@ -1,16 +1,16 @@
 module initialize_cosmo
 
    contains
-      subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume)
+      subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy)
          use globals
          implicit none
          character(*), intent(in) :: compound
-         character(30) :: line 
+         character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6
          real(8), dimension(:), allocatable,intent(out) :: charges,&
             &area,pot
          real(8), dimension(:,:), allocatable, intent(out) :: xyz
          character(2), allocatable, dimension(:),intent(out) :: elements
-         real(8), intent(out) :: volume
+         real(8), intent(out) :: volume, c_energy
          integer :: i, io_error, dummy1, dummy2, num
          real(8) :: dummy3, dummy4, dummy5
          real(8), dimension(:), allocatable :: ident
@@ -89,6 +89,14 @@ module initialize_cosmo
          end do
 
          read(1,*) line, volume
+
+         rewind(1)
+         do while (line .NE. "$cosmo_energy")
+            read(1,*) line
+         end do
+         read (1,*)
+         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
+   
          
          close(1)
         

@@ -13,7 +13,8 @@ program COSMO
    character(20) :: solvent, solute
    real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
-   real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume
+   real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume,&
+      &solute_energy, solvent_energy
    logical :: gas
    
 
@@ -25,9 +26,9 @@ program COSMO
    Call getargs(solvent,solute,T)
 
    Call read_cosmo(trim(solvent)//".cosmo",solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-      &solvent_area,solvent_pot,solvent_volume)
+      &solvent_area,solvent_pot,solvent_volume,solvent_energy)
    Call read_cosmo(trim(solute)//".cosmo",solute_elements,solute_ident, solute_xyz, solute_su,&
-      &solute_area,solute_pot,solute_volume)
+      &solute_area,solute_pot,solute_volume,solute_energy)
   
    Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
    Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
@@ -35,11 +36,12 @@ program COSMO
    Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
    Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
    Call ortho_charge(solute_sv,solute_sv0,solute_svt)
-   Call sigma_profile(solvent_sv,solvent_area,solvent_sigma)
-   Call sigma_profile(solute_sv,solute_area,solute_sigma)
+   Call sigma_profile(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
+   Call sigma_profile(solute_sv,solute_area,solute_sigma,trim(solute))
    Call onedim(solvent_sigma,solute_sigma,solute_volume)
    if (gas) then
-      Call calcgas(id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot,solute_elements,solute_ident,disp_con,param, T,r_cav)
+      Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
+         &solute_pot,solute_elements,solute_ident,disp_con,param, T,r_cav)
    end if
 
    Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_elements)
@@ -142,17 +144,17 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end subroutine
 
-      subroutine calcgas(id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con,param, T,r_cav)
+      subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con,param, T,r_cav)
          use globals
          use element_dict
          real(8), intent(out) :: id_scr, gas_chem
-         real(8), intent(in) :: T
+         real(8), intent(in) :: T, E_cosmo
          real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot,ident
          character(2), dimension(:), allocatable, intent(in) :: element
          type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
          real(8), dimension(10) :: param
          type(DICT_DATA) :: disp, r_c
-         real(8) :: E_gas, E_solv,  dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
+         real(8) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
          integer :: dummy1, ioerror, i 
 
          open(1,file="energy")
@@ -162,9 +164,8 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             error stop
          else
             read(1,*) dummy1,E_gas
-            read(1,*) dummy1,E_solv
          end if
-         dEreal=(E_solv-E_gas)
+         dEreal=(E_cosmo-E_gas)
          ediel=0
          edielprime=0
          do i=1,size(sv)
@@ -172,11 +173,11 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             edielprime=edielprime+(area(i)*pot(i)*sv(i))
          end do
          avcorr=(edielprime-ediel)/2.0_8*0.8_8
-         write(*,*) "E_COSMO+dE: ", (E_solv+avcorr)*autokcal
+         write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
          write(*,*) "E_gas: ", E_gas*autokcal
          dEreal=dEreal*autokcal
          id_scr=dEreal+avcorr*autokcal
-         write(*,*) "E_COSMO-E_gas+dE: ", (E_solv-E_gas+avcorr)*autokcal
+         write(*,*) "E_COSMO-E_gas+dE: ", (E_cosmo-E_gas+avcorr)*autokcal
          write(*,*) "Ediel: ", ediel/2*autokcal
          write(*,*) "Averaging corr dE: ", avcorr*autokcal
 
@@ -528,11 +529,13 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end subroutine compute_solvent
 
-      subroutine sigma_profile(sv,area,sigma)
+      subroutine sigma_profile(sv,area,sigma,nam)
 
          real(8), dimension(:), allocatable,intent(in) :: sv,area
 
          real(8), dimension(:), allocatable,intent(out) :: sigma
+
+         character(len=*), intent(in) :: nam
 
          integer :: sigma_min, sigma_max, i, j,tmp
 
@@ -563,7 +566,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             profile(tmp) = profile(tmp)+area(i)*(chdval(tmp+1)-temp)/punit
             profile(tmp+1) = profile(tmp+1)+area(i)*(temp-chdval(tmp))/punit
          end do
-         open(unit=2,file="sigma_profile.txt",action="write",status="replace")
+         open(unit=2,file=nam//"_sigma.txt",action="write",status="replace")
          
          
          do i=0,size(profile)-1
