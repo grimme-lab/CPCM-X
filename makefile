@@ -22,5 +22,5 @@ initialize_cosmo.mod: initialize.f90
 	gfortran -c initialize.f90
 
 clean:
-		rm main.o initialize_cosmo.mod initialize.o csm element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o
+		rm main.o eledata_module.mod initialize_cosmo.mod initialize.o csm element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o
 # End of makefile

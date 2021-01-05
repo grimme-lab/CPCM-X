@@ -276,7 +276,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
          logical :: hbnof
 
-         hbnof=.false.
+       !  hbnof=.true.
          
          !! Setting up optional parameters at the beginning
 
@@ -309,16 +309,16 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
             svdo=sv1
          end if
 
-         !! Set Neighbors
+         !! Set Neighbors, not sufficient information in COSMO files
 
-         nl1=atom1-1
-         if (nl1 .LT. 1) nl1=size(ident)
-         nl2=atom2-1
-         if (nl2 .LT. 1) nl2=size(ident2)
-         nr1=atom1+1
-         if (nr1 .GT. size(ident)) nr1=1
-         nr2=atom2+1
-         if (nr2 .GT. size(ident2)) nr2=1
+      !   nl1=atom1-1
+      !   if (nl1 .LT. 1) nl1=size(ident)
+      !   nl2=atom2-1
+      !   if (nl2 .LT. 1) nl2=size(ident2)
+      !   nr1=atom1+1
+      !   if (nr1 .GT. size(ident)) nr1=1
+      !   nr2=atom2+1
+      !   if (nr2 .GT. size(ident2)) nr2=1
 
 
          !! Start E_dd Calculation
@@ -329,30 +329,42 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          E_misfit=(alpha/2)*(sv1+sv2)&
                  &*((sv1+sv2)+f_corr*(svt1+svt2))
 
-         if (hbnof) then
-            if (E_hb .NE. 0.0_8) then
-               select case (element(int(ident(atom1))))
-                  case default
-                     E_hb=0.0_8
-                  case ('h')
-                     if (((element(int(ident(nr1))) .EQ. 'o') .OR. ((element(int(ident(nl1))) .EQ. 'o')))) then
-                     else
-                        E_hb=0.0_8
-                     end if
-                  case ('o')
-                     if (element2(int(ident2(atom2))) .EQ. 'h') then
-                        if ((element2(int(ident(nr2))) .EQ. 'o') .OR. ((element2(int(ident2(nl2)))) .EQ. 'o')) then
-                        !   write(*,*) "yes"
-                        else
-                           E_hb=0.0_8
-                        end if
-                     else
-                        E_hb=0.0_8
-                     end if  
-               end select
+ !        if (element(int(ident(atom1))) .EQ. 'h') then
+ !           if (element2(int(ident2(atom2))) .EQ. 'o') then
+ !              E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+ !           end if
+ !        else if (element(int(ident(atom1))) .EQ. 'o') then
+ !           if (element2(int(ident2(atom2))) .EQ. 'h') then
+ !              E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+ !           end if
+ !        end if
 
-            end if
-        end if
+         !! HBNOF does not work, because provided information is not sufficient
+
+ !        if (hbnof) then
+ !           if (E_hb .NE. 0.0_8) then
+ !              select case (element(int(ident(atom1))))
+ !                 case default
+ !                    E_hb=0.0_8
+ !                 case ('h')
+ !                    if (((element(int(ident(nr1))) .EQ. 'o') .OR. ((element(int(ident(nl1))) .EQ. 'o')))) then
+ !                    else
+ !                       E_hb=0.0_8
+ !                    end if
+ !                 case ('o')
+ !                    if (element2(int(ident2(atom2))) .EQ. 'h') then
+ !                       if ((element2(int(ident2(nr2))) .EQ. 'o') .OR. ((element2(int(ident2(nl2)))) .EQ. 'o')) then
+ !                       !   write(*,*) "yes"
+ !                       else
+ !                          E_hb=0.0_8
+ !                       end if
+ !                    else
+ !                       E_hb=0.0_8
+ !                    end if  
+ !              end select
+ !
+ !           end if
+ !       end if
             
             
 

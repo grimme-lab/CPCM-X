@@ -101,40 +101,73 @@ module initialize_cosmo
          real(8), dimension(10) :: param
          type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
-         type(DICT_DATA) :: data1
+         type(DICT_DATA) :: data1, r_c, d_c
          character(len=2) :: symbol
-         
-         !Setting global COSMO Parameters - TO DO: read from file
+         logical :: g_exists
+         integer :: i, io_error
 
-         param(1)=0.40_8
-         param(2)=0.8_8
-         param(3)=1515.0_8
-         param(4)=2.802_8
-         param(5)=7400.0_8
-         param(6)=0.00854_8
-         param(7)=7.62_8
-         param(8)=0.129_8
-         param(9)=-0.217_8
-         param(10)=-9.910_8
+         INQUIRE(file="cosmo.param", exist=g_exists)
+      
+         if (g_exists) then
+            write(*,*) "Reading COSMO Parameters from cosmo.param"
+            open(1,file="cosmo.param")
 
-         !Setting cavity radii - to do: read from file
+            ! Setting global COSMO Parameters from parameter file
 
-         data1%param = 1.30_8
-         call dict_create(r_cav, 'h', data1)
-         data1%param = 2.00_8
-         call dict_add_key(r_cav, 'c', data1)
-         data1%param = 1.72_8
-         call dict_add_key(r_cav, 'o', data1)
+            read(1,*) param(1)
+            param(2)=2.0_8*param(1)
+            do i=3,10
+               read(1,*) param(i)
+            end do
+            read(1,*)
+            io_error=0
 
-         !Setting dispersion contant -- need to be read from file
+            ! Creating element specific Parameter Dictionaries from parameter file
 
-         data1%param = -0.041_8
-         call dict_create(disp_con, 'h', data1)
-         data1%param = -0.037_8
-         call dict_add_key(disp_con, 'c', data1)
-         data1%param = -0.042_8
-         call dict_add_key(disp_con, 'o', data1)
+            read(1,*) symbol, r_c%param, d_c%param
+            Call dict_create(r_cav, trim(symbol), r_c)
+            Call dict_create(disp_con, trim(symbol), d_c)
+            do while (io_error .GE. 0)
+               read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
+               Call dict_add_key(r_cav, trim(symbol), r_c)
+               Call dict_add_key(disp_con,trim(symbol), d_c)
+            end do
 
+         else
+            write(*,*) "No COSMO Parameter File, using default parameters."
+            write(*,*)
+            !Setting global hard coded COSMO Parameters
+
+            param(1)=0.40_8
+            param(2)=0.8_8
+            param(3)=1515.0_8
+            param(4)=2.802_8
+            param(5)=7400.0_8
+            param(6)=0.00854_8
+            param(7)=7.62_8
+            param(8)=0.129_8
+            param(9)=-0.217_8
+            param(10)=-9.910_8
+
+            !Setting hard coded cavity radii
+
+            data1%param = 1.30_8
+            call dict_create(r_cav, 'h', data1)
+            data1%param = 2.00_8
+            call dict_add_key(r_cav, 'c', data1)
+            data1%param = 1.72_8
+            call dict_add_key(r_cav, 'o', data1)
+
+            !Setting hard coded dispersion contant 
+
+            data1%param = -0.041_8
+            call dict_create(disp_con, 'h', data1)
+            data1%param = -0.037_8
+            call dict_add_key(disp_con, 'c', data1)
+            data1%param = -0.042_8
+            call dict_add_key(disp_con, 'o', data1)
+         end if
+     
 
 
       end subroutine initialize_param
