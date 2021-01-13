@@ -7,15 +7,15 @@ program COSMO
    integer :: i,j,z
    real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
    real(8), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
-   real(8), dimension(:), allocatable :: sol_pot, solv_pot, solvent_sigma, solute_sigma, solvent_ident, solute_ident
+   real(8), dimension(:), allocatable :: sol_pot, solv_pot, solvent_ident, solute_ident
    real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz
    character(2), dimension(:), allocatable :: solute_elements, solvent_elements
    character(20) :: solvent, solute
    real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
    real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume,&
-      &solute_energy, solvent_energy
-   logical :: gas
+      &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50)
+   logical :: gas,sig_in,sac
    
 
    type(DICT_STRUCT), pointer :: r_cav, disp_con
@@ -23,22 +23,38 @@ program COSMO
    gas=.TRUE.
    
    Call initialize_param(param,r_cav,disp_con)
-   Call getargs(solvent,solute,T)
+   Call getargs(solvent,solute,T,sig_in,sac)
 
-   Call read_cosmo(trim(solvent)//".cosmo",solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-      &solvent_area,solvent_pot,solvent_volume,solvent_energy)
-   Call read_cosmo(trim(solute)//".cosmo",solute_elements,solute_ident, solute_xyz, solute_su,&
-      &solute_area,solute_pot,solute_volume,solute_energy)
+   if (sig_in) then
+
+      write(*,*) "Reading Sigma Profile"
+      Call read_sigma(solvent_sigma,trim(solvent)//".sigma",solvent_volume)
+      Call read_sigma(solute_sigma,trim(solute)//".sigma",solute_volume)
+   else
+
+      write(*,*) "Creating Sigma Profile from COSMO data"
+
+      Call read_cosmo(trim(solvent)//".cosmo",solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
+          &solvent_area,solvent_pot,solvent_volume,solvent_energy)
+      Call read_cosmo(trim(solute)//".cosmo",solute_elements,solute_ident, solute_xyz, solute_su,&
+         &solute_area,solute_pot,solute_volume,solute_energy)
   
-   Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
-   Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
-   Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
-   Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
-   Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
-   Call ortho_charge(solute_sv,solute_sv0,solute_svt)
-   Call sigma_profile(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
-   Call sigma_profile(solute_sv,solute_area,solute_sigma,trim(solute))
-   Call onedim(solvent_sigma,solute_sigma,solute_volume)
+      Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
+      Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
+      Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
+      Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
+      Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
+      Call ortho_charge(solute_sv,solute_sv0,solute_svt)
+
+      Call sigma_profile(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
+      Call sigma_profile(solute_sv,solute_area,solute_sigma,trim(solute))
+   end if
+
+   if (sac) then ! Do a COSMO-SAC calculation instead COSMO-RS
+      Call onedim(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
+      stop
+   end if
+
    if (gas) then
       Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
          &solute_pot,solute_elements,solute_ident,disp_con,param, T,r_cav)
@@ -533,7 +549,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
          real(8), dimension(:), allocatable,intent(in) :: sv,area
 
-         real(8), dimension(:), allocatable,intent(out) :: sigma
+         real(8), dimension(:),intent(out) :: sigma(0:50)
 
          character(len=*), intent(in) :: nam
 
@@ -542,7 +558,7 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          real(8) :: punit
 
          real(8), parameter :: sig_width=0.025_8
-         integer, parameter :: n_sig=50
+         integer, parameter :: n_sig=51
 
          real(8) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
 
@@ -570,14 +586,43 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          
          
          do i=0,size(profile)-1
-            write(2,*) chdval(i),";", profile(i)/sum(area)
+            write(2,*) chdval(i),";", profile(i)!/sum(area)
          end do
          close(2)
 
-         allocate(sigma(0:size(profile)-1))
+         
          sigma(:)=profile(:)
 
       end subroutine
+
+      subroutine read_sigma(sigma,nam,volume)
+
+         character(len=*), intent(in) :: nam
+         real(8), intent(out) :: volume
+         real(8), dimension(:), intent(out) :: sigma (0:50)
+
+         character(len=20) :: dummy1, dummy2
+         integer :: io_error,i
+         real(8) :: dummy3
+
+         open(unit=2,file=nam)
+
+         read(2,*)
+         read(2,*)
+         read(2,*) 
+         read(2,*) dummy1,dummy2,volume
+     	 io_error=0
+         sigma(:) = 0.0_8
+         i=0
+     	 do i=0,50
+     	    read(2,*,iostat=io_error) dummy3, sigma(i)
+          !  write(*,*) i, dummy3, sigma(i)
+     	 end do
+     !	 write(*,*) sigma
+         close(2)
+     	
+      end subroutine read_sigma
+
 
 include "onedim.f90"
 end program COSMO

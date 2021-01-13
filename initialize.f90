@@ -112,13 +112,21 @@ module initialize_cosmo
          type(DICT_DATA) :: data1, r_c, d_c
          character(len=2) :: symbol
          logical :: g_exists
-         integer :: i, io_error
-
-         INQUIRE(file="cosmo.param", exist=g_exists)
+         integer :: i, io_error,dummy1
+         character(len=100) :: home,param_path
+         
+         Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
+         if (io_error .EQ. 0) then
+            param_path=trim(home)//"/cosmo.param"
+         else if (io_error .EQ. 1) then
+            param_path="cosmo.param"
+         end if
+        ! write(*,*) param_path
+         INQUIRE(file=param_path, exist=g_exists)
       
          if (g_exists) then
             write(*,*) "Reading COSMO Parameters from cosmo.param"
-            open(1,file="cosmo.param")
+            open(1,file=param_path)
 
             ! Setting global COSMO Parameters from parameter file
 
@@ -179,18 +187,20 @@ module initialize_cosmo
 
 
       end subroutine initialize_param
-      subroutine getargs(solvent,solute,T)
+      subroutine getargs(solvent,solute,T,sig_in,sac)
       
          integer :: i
          character(len=20),intent(out) ::solvent, solute
          real(8),intent(out) :: T
+         logical, intent(out) :: sig_in, sac
 
          character(len=20) :: arg
 
          T=298.15_8
          solute=''
          solvent=''
-
+         sig_in=.FALSE.
+         sac=.FALSE.
          do i=1,command_argument_count()
 
          Call get_command_argument(i, arg) 
@@ -198,12 +208,22 @@ module initialize_cosmo
                case ("--c")
                   Call get_command_argument(i+1,arg)
                   solute=arg
+                  Call get_command_argument(i+2,arg)
+                  if (arg .EQ. "--sigma") then
+                     sig_in=.TRUE.
+                  end if
                case ("--s")
                   Call get_command_argument(i+1,arg)
                   solvent=arg
+                  Call get_command_argument(i+2,arg)
+                  if (arg .EQ. "--sigma") then
+                     sig_in=.TRUE.
+                  end if
                case ("--T")
                   Call get_command_argument(i+1,arg)
                   read(arg,*) T
+               case ("--sac")
+                  sac=.TRUE.
                case default
                   cycle
             end select

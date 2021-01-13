@@ -24,48 +24,103 @@ function E_dd1(sigma1,sigma2)
   ! write(*,*) sigma1,sigma2
    E_misfit=alphaprime/2*(sigma1+sigma2)**2.0_8
    E_dd1=E_misfit+E_hb
-  ! Write(*,*) E_dd1
+ !  Write(*,*) E_dd1
 
 end function E_dd1
 
 
 
-subroutine onedim(profil,profil2,vcosmo)
+subroutine onedim(profil,profil2,vcosmo1,vcosmo2)
    use globals
    implicit none
 
-   real(8), dimension(:) :: profil,profil2
+   real(8), dimension(0:50) :: profil,profil2
 
-   real(8) :: gam(0:49),maxsig,punit,profile(0:49), gam_saved(0:49),gam_sol(0:49)
-   real(8) :: gamma_solv, gamma_sol, summ
-   real(8) :: T, VNORM, ANORM, RNORM, QNORM, vcosmo
-  ! real(8) :: Theta, Phi, L, coord, gammasg !SG Equation
+  ! real(8), dimension(1:2,0:49) :: sigma_profiles
 
-   integer :: i,j,z
+   real(8) :: gam(0:50),maxsig,punit,profile(0:50), gam_saved(0:50),gam_sol(0:50)
+   real(8) :: gamma_solv, gamma_sol, summ, mix_prof(0:50), mix_gam(0:50)
+   real(8) :: T, VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
+   real(8) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
+
+   
+  ! integer :: comp_num
+   integer :: i,j
    logical :: not_conv
+
+   z(1)=0.3_8
+   z(2)=0.7_8
+   
+  ! comp_num=2
 
    VNORM=66.69_8
    ANORM=79.53_8
-   vcosmo=vcosmo*BtoA**3
+ !  vcosmo1=vcosmo1*BtoA**3
+ !  vcosmo2=vcosmo2*BtoA**3
   ! write(*,*) vcosmo
    not_conv=.TRUE.
 
-   !! Pure Activity Coefficient of Solvent
-   profile(:)=0.0_8
-  ! write(*,*) profil
-   do i=1,49
-      profile(i)=profil(i)/sum(profil)
+   !! Calculate the SIGMA Profile of the mixture
+
+   do i=0,50
+      mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
    end do
+   write(*,*) E_dd1(-0.025_8,-0.016_8)
+  ! write(*,*) mix_prof
+  ! stop
+   !! Mixed Activity Coefficient
    T=298.15_8
    maxsig=0.025_8
    punit=0.001_8
+   mix_gam(:)=1.0
+   gam_saved(:)=1.0
+   summ=0.0_8
+
+   !write(*,*) (1*punit)-maxsig
+   
+   do while (not_conv)
+      gam_saved(:)=mix_gam(:)
+      do i=0,50!size(mix_prof)-1
+         do j=0,50!size(mix_prof)-1
+        ! write(*,*) j*punit-maxsig, summ, mix_prof(j), gam_saved(j), E_dd1((i*punit)-maxsig,(j*punit)-maxsig)
+            summ=summ+mix_prof(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
+         end do
+        ! write(*,*) summ
+        ! stop
+         mix_gam(i)=exp(-log(summ))
+         mix_gam(i)=(mix_gam(i)+gam_saved(i))/2.0_8
+         summ=0.0_8
+      end do
+      not_conv=.false.
+      do i=0,50!size(mix_gam)-1
+         if (abs((mix_gam(i)-gam_saved(i))) .LT. 0.000001) then
+            cycle
+         else
+            not_conv=.true.
+            exit
+         end if
+      end do
+   end do
+
+   !write(*,*) mix_gam
+   !stop
+   !! Pure Activity Coefficient of 1
+   profile(:)=0.0_8
+  ! write(*,*) profil
+   do i=0,50
+      profile(i)=profil(i)/sum(profil)
+   end do
+   !write(*,*) profile
+
    gam(:)=1.0
    gam_saved(:)=1.0
    summ=0.0_8
+   not_conv=.true. 
    do while (not_conv)
       gam_saved(:)=gam(:)
-      do i=1,size(profile)-1
-         do j=1,size(profile)-1
+      do i=0,50
+         do j=0,50
+    !     write(*,*) summ
             summ=summ+profile(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
          gam(i)=exp(-log(summ))
@@ -73,7 +128,7 @@ subroutine onedim(profil,profil2,vcosmo)
          summ=0.0_8
       end do
       not_conv=.false.
-      do i=1,size(gam)-1
+      do i=0,50
          if (abs((gam(i)-gam_saved(i))) .LT. 0.000001) then
             cycle
          else
@@ -82,25 +137,25 @@ subroutine onedim(profil,profil2,vcosmo)
          end if
       end do
    end do
-  
-   !! Pure Activity Coefficient of Solute
-  ! write(*,*) profil2
+
+  ! write(*,*) gam
+
+   !! Pure Activity Coefficient of 2
+   !write(*,*) profil2
    profile(:)=0.0_8
-   do i=1,49
+  ! write(*,*) sum(profil2)
+   do i=0,50
       profile(i)=profil2(i)/sum(profil2)
    end do
- !  write(*,*) profile
-   T=298.15_8
-   maxsig=0.025_8
-   punit=0.001_8
+   
    gam_sol(:)=1.0
    gam_saved(:)=1.0
    summ=0.0_8
    not_conv=.true.
    do while (not_conv)
       gam_saved(:)=gam_sol(:)
-      do i=1,size(profile)-1
-         do j=1,size(profile)-1
+      do i=0,50
+         do j=0,50
             summ=summ+profile(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
          gam_sol(i)=exp(-log(summ))
@@ -108,7 +163,7 @@ subroutine onedim(profil,profil2,vcosmo)
          summ=0.0_8
       end do
       not_conv=.false.
-      do i=0,size(gam_sol)-1
+      do i=0,50
          if (abs((gam_sol(i)-gam_saved(i))) .LT. 0.000001) then
             cycle
          else
@@ -118,17 +173,33 @@ subroutine onedim(profil,profil2,vcosmo)
       end do
    end do
 
-   !! Staverman-Guggenheim equation, only necessary for mixtures
+ !  write(*,*) gam_sol
+   !! Staverman-Guggenheim equation
+   coord=10
 
-  !   RNORM = VCOSMO/VNORM 
-  !   QNORM = sum(profil2)/ANORM
-  !   
-  !   Theta=1.0_8
-  !   Phi=1.0_8
-  !   L=(coord/2.0_8)*(RNORM-qnorm)-(RNORM-1.0_8)
+   RNORM(1) = VCOSMO1/VNORM 
+   QNORM(1) = sum(profil)/ANORM
+   RNORM(2) = VCOSMO2/VNORM
+   QNORM(2) = sum(profil2)/ANORM
 
-  !   gammasg=log(phi)+(coord/2.0_8)*QNORM*log(Theta/Phi)+L-(Phi)*(L)
-  !   write(*,*) gammasg
+ !  write(*,*) RNORM(1), QNORM(1)
+ !  write(*,*) RNORM(2), QNORM(2)
+   bt=z(1)*QNORM(1)+z(2)*QNORM(2)
+   bp=z(1)*RNORM(1)+z(2)*RNORM(2)
+  
+   
+   do i=1,2
+      Theta(i)=(z(i)*QNORM(i))/(bt)
+      Phi(i)=(z(i)*RNORM(i))/(bp)
+      L(i)=(coord/2.0_8)*(RNORM(i)-QNORM(i))-(RNORM(i)-1.0_8)
+      write(*,*) Theta(i), Phi(i), L(i)
+   end do
+   gammasg(1)=log(phi(1)/z(1))+(coord/2.0_8)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
+      &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
+   
+   gammasg(2)=log(phi(2)/z(2))+(coord/2.0_8)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
+      &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
+!     write(*,*) gammasg(1), gammasg(2)
 
 
    write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
@@ -137,12 +208,14 @@ subroutine onedim(profil,profil2,vcosmo)
    gamma_sol=0.0_8
 
  !  write(*,*) gam_sol
-   do i=1,size(profil)-1
+   do i=0,50
   !    write(*,*) mue(i)
-      gamma_solv=gamma_solv+profil2(i)/7.5_8*(log(gam(i))-log(gam_sol(i)))
- !     gamma_sol=gamma_sol+profil2(i)/7.5_8*log(gam(i))
+      gamma_solv=gamma_solv+(profil(i)/7.5_8*(log(mix_gam(i)/gam(i))))
+      gamma_sol=gamma_sol+(profil2(i)/7.5_8*log(mix_gam(i)/gam_sol(i)))
    end do
-   write(*,*) gamma_solv
+   gamma_solv=exp(gammasg(1)+gamma_solv)
+   gamma_sol=exp(gammasg(2)+gamma_sol)
+   write(*,*) gamma_solv, log(gamma_solv), gamma_sol, log(gamma_sol)
 
 
 
