@@ -22,9 +22,8 @@ program COSMO
   
    gas=.TRUE.
    
-   Call initialize_param(param,r_cav,disp_con)
    Call getargs(solvent,solute,T,sig_in,sac)
-
+   Call initialize_param(param,r_cav,disp_con,sac)
    if (sig_in) then
 
       write(*,*) "Reading Sigma Profile"
@@ -51,7 +50,7 @@ program COSMO
    end if
 
    if (sac) then ! Do a COSMO-SAC calculation instead COSMO-RS
-      Call onedim(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
+      Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
       stop
    end if
 
@@ -555,38 +554,39 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
          integer :: sigma_min, sigma_max, i, j,tmp
 
-         real(8) :: punit
+         real(4) :: punit
 
-         real(8), parameter :: sig_width=0.025_8
+         real(4), parameter :: sig_width=0.025_8
          integer, parameter :: n_sig=51
+         real(4) :: counter(0:n_sig-1)
 
          real(8) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
 
-         punit=2.0_8*sig_width/n_sig
+         punit=0.001
 
 
          profile(:)=0.0_8
-         chdval(:)=0.0_8
+         counter(:)=0.0
          
          do i=0,n_sig-1
             profile(i) = 0.0_8
-            chdval(i) = -sig_width+punit*i
+            counter(i) = -sig_width+punit*i
          end do
          do i= 1, size(sv)
             temp = sv(i)
            
-            tmp = int((temp-chdval(0))/punit)
+            tmp = int((temp-counter(0))/punit)
  
             if (tmp<0) tmp=0
             if (tmp>n_sig-1) tmp=n_sig-1
-            profile(tmp) = profile(tmp)+area(i)*(chdval(tmp+1)-temp)/punit
-            profile(tmp+1) = profile(tmp+1)+area(i)*(temp-chdval(tmp))/punit
+            profile(tmp) = profile(tmp)+area(i)*(counter(tmp+1)-temp)/punit
+            profile(tmp+1) = profile(tmp+1)+area(i)*(temp-counter(tmp))/punit
          end do
          open(unit=2,file=nam//"_sigma.txt",action="write",status="replace")
          
-         
+        ! write(*,*) profile
          do i=0,size(profile)-1
-            write(2,*) chdval(i),";", profile(i)!/sum(area)
+            write(2,*) counter(i),";", profile(i)!/sum(area)
          end do
          close(2)
 
@@ -624,6 +624,6 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
       end subroutine read_sigma
 
 
-include "onedim.f90"
+include "sac.f90"
 end program COSMO
 

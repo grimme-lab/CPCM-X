@@ -30,7 +30,7 @@ end function E_dd1
 
 
 
-subroutine onedim(profil,profil2,vcosmo1,vcosmo2)
+subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    use globals
    implicit none
 
@@ -65,7 +65,7 @@ subroutine onedim(profil,profil2,vcosmo1,vcosmo2)
    do i=0,50
       mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
    end do
-   write(*,*) E_dd1(-0.025_8,-0.016_8)
+  ! write(*,*) E_dd1(-0.025_8,-0.016_8)
   ! write(*,*) mix_prof
   ! stop
    !! Mixed Activity Coefficient
@@ -192,7 +192,7 @@ subroutine onedim(profil,profil2,vcosmo1,vcosmo2)
       Theta(i)=(z(i)*QNORM(i))/(bt)
       Phi(i)=(z(i)*RNORM(i))/(bp)
       L(i)=(coord/2.0_8)*(RNORM(i)-QNORM(i))-(RNORM(i)-1.0_8)
-      write(*,*) Theta(i), Phi(i), L(i)
+   !   write(*,*) Theta(i), Phi(i), L(i)
    end do
    gammasg(1)=log(phi(1)/z(1))+(coord/2.0_8)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
       &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
@@ -215,9 +215,11 @@ subroutine onedim(profil,profil2,vcosmo1,vcosmo2)
    end do
    gamma_solv=exp(gammasg(1)+gamma_solv)
    gamma_sol=exp(gammasg(2)+gamma_sol)
-   write(*,*) gamma_solv, log(gamma_solv), gamma_sol, log(gamma_sol)
+   write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
+   write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
+   write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
 
 
 
-end subroutine onedim
+end subroutine sac_2005
       

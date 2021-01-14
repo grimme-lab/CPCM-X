@@ -102,10 +102,11 @@ module initialize_cosmo
         
       end subroutine read_cosmo
 
-      subroutine initialize_param(param,r_cav,disp_con)
+      subroutine initialize_param(param,r_cav,disp_con,sac)
          use element_dict
          implicit none
 
+         logical, intent(in) :: sac
          real(8), dimension(10) :: param
          type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
@@ -114,18 +115,26 @@ module initialize_cosmo
          logical :: g_exists
          integer :: i, io_error,dummy1
          character(len=100) :: home,param_path
+         character(len=3) :: model
+
+
+         if (sac) then
+            model="sac"
+         else
+            model="crs"
+         end if
          
          Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
          if (io_error .EQ. 0) then
-            param_path=trim(home)//"/cosmo.param"
+            param_path=trim(home)//"/"//model//".param"
          else if (io_error .EQ. 1) then
-            param_path="cosmo.param"
+            param_path=model//".param"
          end if
         ! write(*,*) param_path
          INQUIRE(file=param_path, exist=g_exists)
       
          if (g_exists) then
-            write(*,*) "Reading COSMO Parameters from cosmo.param"
+            write(*,*) "Reading COSMO Parameters from "//model//".param"
             open(1,file=param_path)
 
             ! Setting global COSMO Parameters from parameter file
