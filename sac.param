@@ -1,4 +1,4 @@
- 0.4000000
+ 0.8176420
  1515.0000
  2.8020000
  7400.0000
@@ -11,3 +11,4 @@ atom  r_cav  disp_con #Note: Element parameters can be included in any sequence
 h     1.30   -0.041 
 c     2.00   -0.037
 o     1.72   -0.042
+n     1.72   -0.027
