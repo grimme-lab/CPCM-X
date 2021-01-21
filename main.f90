@@ -3,27 +3,35 @@ program COSMO
    use globals
    use sort
    use initialize_cosmo
+   use sigma_av
+   use sac_mod
+   use bonding
    implicit none
    integer :: i,j,z
    real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
    real(8), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
    real(8), dimension(:), allocatable :: sol_pot, solv_pot, solvent_ident, solute_ident
-   real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz
-   character(2), dimension(:), allocatable :: solute_elements, solvent_elements
+   real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz
+   character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
+   logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
    character(20) :: solvent, solute
    real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
    real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50)
    logical :: gas,sig_in,sac
-   
+  
 
    type(DICT_STRUCT), pointer :: r_cav, disp_con
   
    gas=.TRUE.
    
+   !! Read Command Line Arguments and set Parameters accordingly
+
    Call getargs(solvent,solute,T,sig_in,sac)
    Call initialize_param(param,r_cav,disp_con,sac)
+   !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
+
    if (sig_in) then
 
       write(*,*) "Reading Sigma Profile"
@@ -34,16 +42,18 @@ program COSMO
       write(*,*) "Creating Sigma Profile from COSMO data"
 
       Call read_cosmo(trim(solvent)//".cosmo",solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-          &solvent_area,solvent_pot,solvent_volume,solvent_energy)
+          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz)
       Call read_cosmo(trim(solute)//".cosmo",solute_elements,solute_ident, solute_xyz, solute_su,&
-         &solute_area,solute_pot,solute_volume,solute_energy)
+         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz)
   
       Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
-      Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
-      Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
-      Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
-      Call ortho_charge(solute_sv,solute_sv0,solute_svt)
+
+
+      Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds)
+      Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
+      Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
+      Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
 
       Call sigma_profile(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
       Call sigma_profile(solute_sv,solute_area,solute_sigma,trim(solute))
@@ -54,41 +64,34 @@ program COSMO
       stop
    end if
 
+   !!!! COSMO-RS calculation starts here if no SAC calculation was choosen !!!!
+
+   ! Calculate sv0,svt for COSMO-RS
+
+   Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
+   Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
+      
+   Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
+   Call ortho_charge(solute_sv,solute_sv0,solute_svt)
+
+   ! Calcualtion of Gas Phase energies
+
    if (gas) then
       Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
          &solute_pot,solute_elements,solute_ident,disp_con,param, T,r_cav)
    end if
 
-   Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_elements)
- !  do i=1,size(solvent_sv)
- !     write(*,*) solvent_sv(i), solv_pot(i)
- !  end do
+   ! Computation of COSMO-RS equations (here may be something wrong atm)
+
+   Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
    Call compute_solute(sol_pot,solv_pot,param,solute_sv,solute_svt,solvent_sv,&
-         &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_elements)
+         &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
   
- !  do i=1,size(solute_sv)
-    !  write(*,*) solute_sv(i), solute_svt(i), sol_pot(i)
- !  end do
-   
-   !   temp=0
-   !   do i=1,size(solvent_sv)
-   !      temp=temp+E_dd(param(5),param(3),param(4),param(6),solvent_sv(1),solvent_svt(1),solute_sv(j),solute_svt(j))
-   !      write(*,*) temp
-   !   end do
  write(*,*) "calc_gas_chem: ", gas_chem
  write(*,*) "calc_sol_chem: ", chem_pot_sol
  write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
-!   temp=0
-!   do i=1,size(solvent_pot)
-!      do z=1,size(solvent_pot)
-!         temp=temp+solvent_area(z)*E_dd(param(5)&
-!            &,param(3),param(4),param(6),solvent_sv(i),solvent_svt(i),solvent_sv(z),solvent_svt(z))
-!      end do
-!      temp2=temp/sum(solvent_area)
-!      temp=0
-!   end do
-!   write(*,*) temp2
-deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
+
+ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
    &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
    &solv_pot,sol_pot)
 
@@ -96,68 +99,6 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
    
    contains
 
-      function distance(xyz1,xyz2)
-         use globals
-         implicit none
-         real(8), dimension(3), intent(in) :: xyz1, xyz2
-         real(8) :: distance
-
-         distance=BtoA*(sqrt((xyz1(1)-xyz2(1))**2.0_8+(xyz1(2)-xyz2(2))**2.0_8+(xyz1(3)-xyz2(3))**2.0_8))
-         
-      end function distance
-
-      subroutine average_charge (r_av, xyz, charges, area,av_charge)
-         implicit none
-         real(8), dimension(:), allocatable, intent(in) :: charges, area
-         real(8), dimension(:,:), allocatable, intent(in) :: xyz
-         real(8), intent(in) :: r_av
-         real(8), dimension(:), allocatable, intent(out) :: av_charge
-         real(8) :: tmpcharge, tmpcounter, tmpdenominator, r_u2, r_av2
-         real(8), parameter :: pi = 4*atan(1.0_8)
-         integer :: num, i, j
-
-         num = size(charges)
-         allocate(av_charge(num))
-         r_av2=r_av**2.0_8
-         r_u2=0.0_8
-         tmpcharge=0.0_8
-         tmpcounter=0.0_8
-         tmpdenominator=0.0_8
-         do i=1,num
-            do j=1,num
-              ! tmpcounter=tmpcounter+(charges(j)/(area(j)*2.0_8*pi*r_av)*&
-               !          &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_av2))))
-               r_u2=(area(j)/pi)
-              ! tmpdenominator=tmpdenominator+(area(j)/(area(j)*2.0_8*pi*r_av)*&
-               !          &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_av2))))
-               tmpcounter=tmpcounter+(charges(j)*((r_u2*r_av2)/(r_u2+r_av2))*&
-                         &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_u2+r_av2))))
-               tmpdenominator=tmpdenominator+(((r_u2*r_av2)/(r_u2+r_av2))*&
-                             &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_u2+r_av2))))
-               r_u2=0.0_8
-            end do
-            tmpcharge=tmpcounter/tmpdenominator
-            tmpcounter=0.0_8
-            tmpdenominator=0.0_8
-            av_charge(i)=tmpcharge
-         !   av_charge(i)=anint(tmpcharge*1000)/1000
-         end do
-      end subroutine average_charge
-
-      subroutine ortho_charge (v,v0,vt)
-         implicit none
-         real(8), dimension(:), allocatable, intent(in) :: v,v0
-         real(8), dimension(:), allocatable, intent(out) :: vt
-
-         integer :: i
-
-         allocate(vt(size(v)))
-
-         do i=1,size(v)
-            vt(i)=v0(i)-0.816_8*v(i)
-         end do
-
-      end subroutine
 
       subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con,param, T,r_cav)
          use globals
@@ -214,62 +155,6 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
 
       end subroutine calcgas
 
-      subroutine calcgas_a(id_scr,gas_chem,area,sv,su,svt,pot,ident,disp_con,param, T,r_cav)
-         use globals
-         use element_dict
-         real(8), intent(out) :: id_scr, gas_chem
-         real(8), intent(in) :: T
-         real(8),dimension(:),allocatable, intent(in) :: area, sv,svt, su, pot
-         character(2), dimension(:), allocatable, intent(in) :: ident
-         type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
-         real(8), dimension(10) :: param
-         type(DICT_DATA) :: disp, r_c
-         real(8) :: E_gas, E_solv,  dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
-         integer :: dummy1, ioerror, i 
-
-         open(1,file="energy")
-         read(1,*,iostat=ioerror)
-         if (ioerror .NE. 0) then
-            write(*,*) "Problem while reading energies (check energy file)."
-            error stop
-         else
-            read(1,*) dummy1,E_gas
-            read(1,*) dummy1,E_solv
-         end if
-         dEreal=(E_solv-E_gas)
-         ediel=0
-         edielprime=0
-         do i=1,size(sv)
-            ediel=ediel+(area(i)*pot(i)*su(i))
-            edielprime=edielprime+(area(i)*pot(i)*sv(i))
-         end do
-         avcorr=(edielprime-ediel)/2.0_8*0.8_8
-         write(*,*) "E_COSMO+dE: ", (E_solv+avcorr)*autokcal
-         write(*,*) "E_gas: ", E_gas*autokcal
-         dEreal=dEreal*autokcal
-         id_scr=dEreal+avcorr*autokcal
-         write(*,*) "E_COSMO-E_gas+dE: ", (E_solv-E_gas+avcorr)*autokcal
-         write(*,*) "Ediel: ", ediel/2*autokcal
-         write(*,*) "Averaging corr dE: ", avcorr*autokcal
-
-
-         vdW_gain=0
-         do i=1,size(area)
-            disp=dict_get_key(disp_con, ident(i))
-            vdW_gain=vdW_gain+(area(i)*disp%param)
-         end do
-         write(*,*) "EvdW: ", vdW_gain 
-         write(*,*) "Area: ", sum(area)
-
-         thermo=param(10)*R*jtokcal*T
-         write(*,*) "thermostatic correction: ", thermo
-
-         !!! RING CORRECTION IS MISSING ATM
-         gas_chem=-id_scr+thermo-vdW_gain!-ring_corr
-         write(*,*) gas_chem
-         
-
-      end subroutine calcgas_a
 
       function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
          implicit none
@@ -341,9 +226,12 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
          
          E_hb=0.0_8
          E_misfit=0.0_8
-         E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+        ! if ((element(int(ident(atom1))) .EQ. 'OH') .AND. (element(int(ident(atom2))) .EQ. 'OH')) then
+            E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+        ! end if
          E_misfit=(alpha/2)*(sv1+sv2)&
                  &*((sv1+sv2)+f_corr*(svt1+svt2))
+
 
  !        if (element(int(ident(atom1))) .EQ. 'h') then
  !           if (element2(int(ident2(atom2))) .EQ. 'o') then
@@ -624,6 +512,5 @@ deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
       end subroutine read_sigma
 
 
-include "sac.f90"
 end program COSMO
 

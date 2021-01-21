@@ -1,14 +1,14 @@
 module initialize_cosmo
 
    contains
-      subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy)
+      subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy,atom_xyz)
          use globals
          implicit none
          character(*), intent(in) :: compound
          character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6
          real(8), dimension(:), allocatable,intent(out) :: charges,&
             &area,pot
-         real(8), dimension(:,:), allocatable, intent(out) :: xyz
+         real(8), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
          character(2), allocatable, dimension(:),intent(out) :: elements
          real(8), intent(out) :: volume, c_energy
          integer :: i, io_error, dummy1, dummy2, num
@@ -72,12 +72,16 @@ module initialize_cosmo
          end do
          
          allocate(elements(int(maxval(ident))))
+         allocate(atom_xyz(int(maxval(ident)),3))
 
          do while (.TRUE.)
             read(1,'(A1)',advance='no',iostat=io_error) line
             if (line .NE. "$") then
                read(1,*) dummy1, dummy3, dummy4, dummy5, element
                elements(dummy1)=element
+               atom_xyz(dummy1,1)=dummy3
+               atom_xyz(dummy1,2)=dummy4
+               atom_xyz(dummy1,3)=dummy5
             else
                exit
             end if
@@ -104,6 +108,7 @@ module initialize_cosmo
 
       subroutine initialize_param(param,r_cav,disp_con,sac)
          use element_dict
+         use globals
          implicit none
 
          logical, intent(in) :: sac
@@ -192,6 +197,15 @@ module initialize_cosmo
             data1%param = -0.042_8
             call dict_add_key(disp_con, 'o', data1)
          end if
+
+            !Hard Coded Covalent Radii
+
+            data1%param=0.31_8
+            call dict_create(cov_r, 'h', data1)
+            data1%param=0.76_8
+            call dict_add_key(cov_r, 'c', data1)
+            data1%param=0.66_8
+            call dict_add_key(cov_r, 'o', data1)
      
 
 
@@ -217,22 +231,16 @@ module initialize_cosmo
                case ("--c")
                   Call get_command_argument(i+1,arg)
                   solute=arg
-                  Call get_command_argument(i+2,arg)
-                  if (arg .EQ. "--sigma") then
-                     sig_in=.TRUE.
-                  end if
                case ("--s")
                   Call get_command_argument(i+1,arg)
                   solvent=arg
-                  Call get_command_argument(i+2,arg)
-                  if (arg .EQ. "--sigma") then
-                     sig_in=.TRUE.
-                  end if
                case ("--T")
                   Call get_command_argument(i+1,arg)
                   read(arg,*) T
                case ("--sac")
                   sac=.TRUE.
+               case ("--sigma")
+                  sig_in=.TRUE.
                case default
                   cycle
             end select
