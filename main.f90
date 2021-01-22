@@ -6,6 +6,7 @@ program COSMO
    use sigma_av
    use sac_mod
    use bonding
+   use profile
    implicit none
    integer :: i,j,z
    real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
@@ -14,6 +15,7 @@ program COSMO
    real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz
    character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
    logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
+   real(8), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
    real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
@@ -35,8 +37,8 @@ program COSMO
    if (sig_in) then
 
       write(*,*) "Reading Sigma Profile"
-      Call read_sigma(solvent_sigma,trim(solvent)//".sigma",solvent_volume)
-      Call read_sigma(solute_sigma,trim(solute)//".sigma",solute_volume)
+      Call read_singlesig(solvent_sigma,trim(solvent)//".sigma",solvent_volume)
+      Call read_singlesig(solute_sigma,trim(solute)//".sigma",solute_volume)
    else
 
       write(*,*) "Creating Sigma Profile from COSMO data"
@@ -55,8 +57,11 @@ program COSMO
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
 
-      Call sigma_profile(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
-      Call sigma_profile(solute_sv,solute_area,solute_sigma,trim(solute))
+      Call single_sigma(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
+      Call single_sigma(solute_sv,solute_area,solute_sigma,trim(solute))
+
+      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_sigma3,trim(solvent))
+      Call split_sigma(solute_sv,solute_area,solute_hb,solute_sigma3,trim(solute))
    end if
 
    if (sac) then ! Do a COSMO-SAC calculation instead COSMO-RS

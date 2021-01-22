@@ -1,8 +1,8 @@
 # Comment
 # Start of the makefile
-test: main.o ElementParameters.o globals.o sort.o initialize.o sigma_av.o sac.o bonding.o
-	gfortran -fbacktrace -o csm main.o ElementParameters.o globals.o sort.o initialize.o sigma_av.o sac.o bonding.o
-main.o: main.f90 element_dict.mod globals.mod sort.mod sac.f90 initialize_cosmo.mod sigma_av.mod sac_mod.mod bonding.mod
+test: main.o ElementParameters.o globals.o sort.o initialize.o sigma_av.o sac.o bonding.o profile.o
+	gfortran -fbacktrace -o csm main.o ElementParameters.o globals.o sort.o initialize.o sigma_av.o sac.o bonding.o profile.o
+main.o: main.f90 element_dict.mod globals.mod sort.mod sac.f90 initialize_cosmo.mod sigma_av.mod sac_mod.mod bonding.mod profile.mod
 	gfortran -c main.f90 
 ElementParameters.o: dictionary.f90 linkedlist.f90 ElementParameters.f90
 	gfortran -c ElementParameters.f90
@@ -32,7 +32,11 @@ bonding.mod : bonding.f90 globals.mod element_dict.mod
 	gfortran -c bonding.f90
 bonding.o : bonding.f90 globals.mod element_dict.mod
 	gfortran -c bonding.f90
+profile.o : profile.f90
+	gfortran -c profile.f90
+profile.mod : profile.f90
+	gfortran -c profile.f90
 
 clean:
-		rm main.o eledata_module.mod initialize_cosmo.mod initialize.o csm element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o sigma_av.o sigma_av.mod
+	rm main.o eledata_module.mod initialize_cosmo.mod initialize.o csm sac.o sac.mod element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o sigma_av.o sigma_av.mod bonding.o bonding.mod profile.o profile.mod
 # End of makefile
