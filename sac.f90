@@ -1,3 +1,6 @@
+module sac_mod
+
+   contains
 function E_dd1(sigma1,sigma2)
 
    real(8), intent(in) :: sigma1,sigma2
@@ -39,7 +42,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
   ! real(8), dimension(1:2,0:49) :: sigma_profiles
 
    real(8) :: gam(0:50),maxsig,punit,profile(0:50), gam_saved(0:50),gam_sol(0:50)
-   real(8) :: gamma_solv, gamma_sol, summ, mix_prof(0:50), mix_gam(0:50)
+   real(8) :: gamma_solv, gamma_sol,gamma_test, summ, mix_prof(0:50), mix_gam(0:50)
    real(8) :: T, VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
    real(8) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
 
@@ -206,13 +209,16 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
   ! write(*,*) mue
    gamma_solv=0.0_8
    gamma_sol=0.0_8
-
+  ! gamma_test=0.0_8
  !  write(*,*) gam_sol
    do i=0,50
   !    write(*,*) mue(i)
       gamma_solv=gamma_solv+(profil(i)/7.5_8*(log(mix_gam(i)/gam(i))))
       gamma_sol=gamma_sol+(profil2(i)/7.5_8*log(mix_gam(i)/gam_sol(i)))
+     ! gamma_test=gamma_test+(profil2(i)/7.5_8*log(gam_sol(i)))
    end do
+ !  write(*,*) gamma_test*R*T*jtokcal
+ !  write(*,*) gamma_sol*R*T*jtokcal
    gamma_solv=exp(gammasg(1)+gamma_solv)
    gamma_sol=exp(gammasg(2)+gamma_sol)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
@@ -222,4 +228,6 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
 
 
 end subroutine sac_2005
+
+end module sac_mod
       
