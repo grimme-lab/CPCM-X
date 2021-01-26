@@ -99,7 +99,7 @@ module profile
 
       end subroutine
 
-      subroutine split_sigma(sv,area,hb_group,sigma3,nam)
+      subroutine split_sigma(sv,area,hb_group,ident,elements,sigma3,nam)
       
          !! This Routine splits the charge densities by the Hydrogen Bonding groups
          !! and creates a seperate Sigma Profile for each independent group.
@@ -114,30 +114,105 @@ module profile
          real(8), dimension(:), allocatable,intent(in) :: sv,area
          character(2), dimension(:), allocatable, intent(in) :: hb_group
          character(len=*), intent(in), optional :: nam
+         real(8), dimension(:), allocatable, intent(in) :: ident
+         character(2), dimension(:), allocatable, intent(in) :: elements
 
+         real(8), dimension(0:50) :: prob_hb !hb bond probability function
          real(8), dimension(3,0:50),intent(out) :: sigma3
 
-         
+         character(2), dimension(:), allocatable :: profile_group
          real(8), dimension(:), allocatable :: sv_oh, sv_ot, sv_nh, area_oh, area_ot, area_nh
+         real(8) :: s_0, punit, max_sig,save1,save2,save3
          integer :: oh_count, ot_count, nh_count, i
+
+         allocate(profile_group(size(hb_group)))
+         profile_group="NH"
+         s_0=0.007 !sigma_0 for the probability based function
+         punit=0.001
+         max_sig=0.025
+         prob_hb=0.0
+
+         ! Calculate the probability for each sigma to form hydrogen bonds
+
+         do i=0,50
+            prob_hb(i)=1.0_8-dexp(-((punit*i-max_sig)**2.0_8/(2.0_8*s_0**2.0_8)))
+         end do
 
          oh_count=0
          ot_count=0
          nh_count=0
 
+         ! Choose to which profile (OH,OT,NH) each Segment belongs.
+
          do i=1,size(sv)
-            select case (hb_group(i))
-               case ("OH")
-                  oh_count=oh_count+1
-               case ("OT")
-                  ot_count=ot_count+1
-               case ("NH")
-                  nh_count=nh_count+1
+            select case (elements(int(ident(i))))
+               case ("o", "n", "f")
+                  select case (hb_group(i))
+                     case ("OH")
+
+                        if (sv(i) .GT. 0) then
+                           oh_count=oh_count+1
+                           profile_group(i)="OH"
+                        else
+                           nh_count=nh_count+1
+                           profile_group(i)="NH"
+                        end if
+
+                     case ("OT")
+
+                        if (sv(i) .GT. 0) then
+                           ot_count=ot_count+1
+                           profile_group(i)="OT"
+                        else
+                           nh_count=nh_count+1
+                           profile_group(i)="NH"
+                        end if
+
+                     case default
+
+                        nh_count=nh_count+1
+                        profile_group(i)="NH"
+                  end select
+
+               case ("h")
+                  select case (hb_group(i))
+                     case ("OH")
+
+                        if (sv(i) .LT. 0) then
+                           oh_count=oh_count+1
+                           profile_group(i)="OH"
+                        else
+                           nh_count=nh_count+1
+                           profile_group(i)="NH"
+                        end if
+
+                     case ("OT")
+
+                        if (sv(i) .LT. 0) then
+                           ot_count=ot_count+1
+                           profile_group(i)="OT"
+                        else
+                           nh_count=nh_count+1
+                           profile_group(i)="NH"
+                        end if
+
+                     case default
+                        
+                        nh_count=nh_count+1
+                        profile_group(i)="NH"
+                  end select
+
                case default
-                  cycle
+
+                  nh_count=nh_count+1
+                  profile_group(i)="NH"
+
             end select
          end do
 
+         ! Allocate the three profile array according to the 
+         ! number of segments in each profile
+         
          allocate(sv_oh(oh_count))
          allocate(area_oh(oh_count))
          allocate(sv_ot(ot_count))
@@ -148,9 +223,11 @@ module profile
          oh_count=0
          ot_count=0
          nh_count=0
+
+         ! Sort the Segments into the accordings profiles
          
          do i=1,size(sv)
-            select case (hb_group(i))
+            select case (profile_group(i))
                case ("OH")
                   oh_count=oh_count+1
                   sv_oh(oh_count)=sv(i)
@@ -167,31 +244,51 @@ module profile
                   cycle
             end select
          end do
+
+         ! Create Split Sigma Profiles for each Profile Group
          
          Call single_sigma(sv_nh,area_nh,sigma3(1,:))
          Call single_sigma(sv_oh,area_oh,sigma3(2,:))
          Call single_sigma(sv_ot,area_ot,sigma3(3,:))
+        
+         ! Scale Profiles with probability to form hydrogen bond
+
+         do i=0,50
+            save1=sigma3(1,i)+((sigma3(2,i)+sigma3(3,i))*(1-prob_hb(i)))
+            save2=sigma3(2,i)*prob_hb(i)
+            save3=sigma3(3,i)*prob_hb(i)
+            sigma3(1,i)=save1
+            sigma3(2,i)=save2
+            sigma3(3,i)=save3
+         end do
+
+         ! If choosen, write Profiles into file
 
          if (present(nam)) then
 
             open(unit=2,file=nam//"_sigma3.txt",action="write",status="replace")
          
             do i=0,50
-               write(2,*) ((i*0.01)-0.25), sigma3(1,i)
+                
+               write(2,999) ((i*punit)-max_sig), sigma3(1,i)
             end do
 
             do i=0,50
-               write(2,*) ((i*0.01)-0.25),";", sigma3(2,i)
+               write(2,999) ((i*punit)-max_sig), sigma3(2,i)
             end do
 
             do i=0,50
-               write(2,*) ((i*0.001)-0.25),";", sigma3(3,i)
+               write(2,999) ((i*punit)-max_sig), sigma3(3,i)
             end do
 
+            ! do i=0,50 !check if sigma+sigma+sigma=single_sigma
+           !    write(2,*) ((i*0.001)-0.25),";",sigma3(1,i)+sigma3(2,i)+sigma3(3,i)
+           ! end do
             close(2)
          end if
 
          deallocate(sv_oh,area_oh,sv_ot,area_ot,sv_nh,area_nh)
+         999 FORMAT(F6.3,5x,F10.6)
       end subroutine split_sigma
 
 end module profile

@@ -106,7 +106,7 @@ module bonding
          if (elements(int(ident(i))) .EQ. 'n') hb_group(i)='OT' 
          if (elements(int(ident(i))) .EQ. 'f') hb_group(i)='OT'
 
-        !write(*,*) i, elements(int(ident(i))), hb_group(i)
+       ! write(*,*) i, elements(int(ident(i))), hb_group(i)
       end do
 
 !      write(*,*) hb_group(66),size(ident)

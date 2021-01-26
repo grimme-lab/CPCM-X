@@ -63,6 +63,9 @@ module initialize_cosmo
                   &xyz(num,3),dummy3,area(num),charges(num),pot(num)
             !   charges(num)=anint(charges(num)*1000)/1000
                pot(num)=pot(num)*BtoA
+               xyz(num,1)=xyz(num,1)*btoa
+               xyz(num,2)=xyz(num,2)*btoa
+               xyz(num,3)=xyz(num,3)*btoa
                num=num+1
             end if
          end do
@@ -79,9 +82,9 @@ module initialize_cosmo
             if (line .NE. "$") then
                read(1,*) dummy1, dummy3, dummy4, dummy5, element
                elements(dummy1)=element
-               atom_xyz(dummy1,1)=dummy3
-               atom_xyz(dummy1,2)=dummy4
-               atom_xyz(dummy1,3)=dummy5
+               atom_xyz(dummy1,1)=dummy3!*btoa
+               atom_xyz(dummy1,2)=dummy4!*btoa
+               atom_xyz(dummy1,3)=dummy5!*btoa
             else
                exit
             end if
@@ -106,13 +109,13 @@ module initialize_cosmo
         
       end subroutine read_cosmo
 
-      subroutine initialize_param(param,r_cav,disp_con,sac)
+      subroutine initialize_param(r_cav,disp_con,sac)
          use element_dict
          use globals
          implicit none
 
          logical, intent(in) :: sac
-         real(8), dimension(10) :: param
+         !real(8), dimension(10) :: param
          type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
          type(DICT_DATA) :: data1, r_c, d_c
@@ -142,26 +145,43 @@ module initialize_cosmo
             write(*,*) "Reading COSMO Parameters from "//model//".param"
             open(1,file=param_path)
 
-            ! Setting global COSMO Parameters from parameter file
+            select case (model)
+               case("crs")
 
-            read(1,*) param(1)
-            param(2)=2.0_8*param(1)
-            do i=3,10
-               read(1,*) param(i)
-            end do
-            read(1,*)
-            io_error=0
+                  ! Setting global COSMO-RS Parameters from parameter file
+
+                  read(1,*) param(1)
+                  param(2)=2.0_8*param(1)
+                  do i=3,10
+                     read(1,*) param(i)
+                  end do
+                  read(1,*)
+                  io_error=0
 
             ! Creating element specific Parameter Dictionaries from parameter file
 
-            read(1,*) symbol, r_c%param, d_c%param
-            Call dict_create(r_cav, trim(symbol), r_c)
-            Call dict_create(disp_con, trim(symbol), d_c)
-            do while (io_error .GE. 0)
-               read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
-               Call dict_add_key(r_cav, trim(symbol), r_c)
-               Call dict_add_key(disp_con,trim(symbol), d_c)
-            end do
+                  read(1,*) symbol, r_c%param, d_c%param
+                  Call dict_create(r_cav, trim(symbol), r_c)
+                  Call dict_create(disp_con, trim(symbol), d_c)
+                  do while (io_error .GE. 0)
+                     read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
+                     Call dict_add_key(r_cav, trim(symbol), r_c)
+                     Call dict_add_key(disp_con,trim(symbol), d_c)
+                  end do
+               case("sac")
+
+                  ! Setting global COSMO-SAC Parameters from parameter file
+
+                  read(1,*) param(1)
+                  io_error=0
+                  do i=2,8
+                     read(1,*,iostat=io_error) param(i)
+                  end do
+
+               case default
+                  write(*,*) model//" is not a defined model!"
+                  stop
+            end select
 
          else
             write(*,*) "No COSMO Parameter File, using default parameters."
@@ -211,7 +231,8 @@ module initialize_cosmo
 
       end subroutine initialize_param
       subroutine getargs(solvent,solute,T,sig_in,sac)
-      
+         use globals
+         implicit none
          integer :: i
          character(len=20),intent(out) ::solvent, solute
          real(8),intent(out) :: T
@@ -245,5 +266,6 @@ module initialize_cosmo
                   cycle
             end select
          end do
+         SysTemp=T
       end subroutine getargs
 end module initialize_cosmo

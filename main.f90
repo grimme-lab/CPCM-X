@@ -17,7 +17,7 @@ program COSMO
    logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
    real(8), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
-   real(8), dimension(10) :: param
+   !real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
    real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50)
@@ -31,7 +31,7 @@ program COSMO
    !! Read Command Line Arguments and set Parameters accordingly
 
    Call getargs(solvent,solute,T,sig_in,sac)
-   Call initialize_param(param,r_cav,disp_con,sac)
+   Call initialize_param(r_cav,disp_con,sac)
    !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
 
    if (sig_in) then
@@ -60,8 +60,10 @@ program COSMO
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
       Call single_sigma(solute_sv,solute_area,solute_sigma,trim(solute))
 
-      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_sigma3,trim(solvent))
-      Call split_sigma(solute_sv,solute_area,solute_hb,solute_sigma3,trim(solute))
+      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
+         &solvent_sigma3,trim(solvent))
+      Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
+         &solute_sigma3,trim(solute))
    end if
 
    if (sac) then ! Do a COSMO-SAC calculation instead COSMO-RS
@@ -83,13 +85,13 @@ program COSMO
 
    if (gas) then
       Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
-         &solute_pot,solute_elements,solute_ident,disp_con,param, T,r_cav)
+         &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
    end if
 
    ! Computation of COSMO-RS equations (here may be something wrong atm)
 
-   Call compute_solvent(solv_pot,param,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
-   Call compute_solute(sol_pot,solv_pot,param,solute_sv,solute_svt,solvent_sv,&
+   Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
+   Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
          &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
   
  write(*,*) "calc_gas_chem: ", gas_chem
@@ -105,7 +107,7 @@ program COSMO
    contains
 
 
-      subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con,param, T,r_cav)
+      subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con, T,r_cav)
          use globals
          use element_dict
          real(8), intent(out) :: id_scr, gas_chem
@@ -113,7 +115,7 @@ program COSMO
          real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot,ident
          character(2), dimension(:), allocatable, intent(in) :: element
          type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
-         real(8), dimension(10) :: param
+         !real(8), dimension(10) :: param
          type(DICT_DATA) :: disp, r_c
          real(8) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
          integer :: dummy1, ioerror, i 
@@ -284,10 +286,10 @@ program COSMO
 
       end function E_dd
 
-      subroutine iterate_solvent(pot_di,param,sv,svt,area,T,ident,element)
+      subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element)
          use globals
          implicit none
-         real(8), dimension(10), intent(in) :: param
+         !real(8), dimension(10), intent(in) :: param
          real(8), dimension(:), allocatable, intent(in) :: sv, svt, area,ident
          character(2), dimension(:), allocatable, intent(in) :: element
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
@@ -324,11 +326,11 @@ program COSMO
       end subroutine iterate_solvent
 
 
-      subroutine compute_solute(sol_pot,solv_pot,param,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol,&
+      subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol,&
                       &ident_sol,ident_solv,elem_sol,elem_solv)
          use globals
          implicit none
-         real(8), dimension(10), intent(in) :: param
+         !real(8), dimension(10), intent(in) :: param
          real(8), intent(out) :: chem_pot_sol
          real(8), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol,ident_sol,ident_solv
          real(8), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
@@ -375,10 +377,10 @@ program COSMO
          write(*,*) beta*temppot
       end subroutine compute_solute
 
-      subroutine compute_solvent(pot_di,param,sv,svt,area,T,max_cycle,conv_crit,ident,element)
+      subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,element)
          use globals
          implicit none
-         real(8), dimension(10), intent(in) :: param
+         !real(8), dimension(10), intent(in) :: param
          real(8), dimension(:), allocatable :: sv, svt, area, ident
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
          character(2), dimension(:), allocatable, intent(in) :: element
@@ -410,7 +412,7 @@ program COSMO
       !      end do
             saved_potdi(:)=pot_di(:)
 !            write(*,*) sum(pot_di)
-            Call iterate_solvent(pot_di,param,sv,svt,area,T,ident,element)
+            Call iterate_solvent(pot_di,sv,svt,area,T,ident,element)
        !     pot_di(:)=av(:)
             not_conv=.FALSE.
             do j=1,size(pot_di)
