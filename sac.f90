@@ -2,10 +2,15 @@ module sac_mod
 
    contains
 function E_dd1(sigma1,sigma2)
-
+   use globals
+   implicit none
    real(8), intent(in) :: sigma1,sigma2
-   real(8), parameter :: EPS=3.667_8, aef= 7.5, e0=2.395E-4, c_hb=85580.0, s_hb=0.0084
-   real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime
+   real(8), parameter :: EPS=3.667_8, e0=2.395E-4
+   real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime,aef,s_hb,c_hb
+
+   aef=param(5)
+   c_hb=param(6)
+   s_hb=param(7)
 
    fpol=(EPS-1.0_8)/(EPS+0.5_8)
    alpha=(0.3_8*aef**(1.5))/e0
@@ -38,7 +43,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    implicit none
 
    real(8), dimension(0:50) :: profil,profil2
-
+   !real(8), dimension(1:9), intent(in) :: param
   ! real(8), dimension(1:2,0:49) :: sigma_profiles
 
    real(8) :: gam(0:50),maxsig,punit,profile(0:50), gam_saved(0:50),gam_sol(0:50)
@@ -56,8 +61,8 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    
   ! comp_num=2
 
-   VNORM=66.69_8
-   ANORM=79.53_8
+   VNORM=param(3)
+   ANORM=param(2)
  !  vcosmo1=vcosmo1*BtoA**3
  !  vcosmo2=vcosmo2*BtoA**3
   ! write(*,*) vcosmo
@@ -72,7 +77,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
   ! write(*,*) mix_prof
   ! stop
    !! Mixed Activity Coefficient
-   T=298.15_8
+   T=SysTemp
    maxsig=0.025_8
    punit=0.001_8
    mix_gam(:)=1.0
@@ -178,7 +183,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
 
  !  write(*,*) gam_sol
    !! Staverman-Guggenheim equation
-   coord=10
+   coord=int(param(4))
 
    RNORM(1) = VCOSMO1/VNORM 
    QNORM(1) = sum(profil)/ANORM
@@ -213,8 +218,8 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
  !  write(*,*) gam_sol
    do i=0,50
   !    write(*,*) mue(i)
-      gamma_solv=gamma_solv+(profil(i)/7.5_8*(log(mix_gam(i)/gam(i))))
-      gamma_sol=gamma_sol+(profil2(i)/7.5_8*log(mix_gam(i)/gam_sol(i)))
+      gamma_solv=gamma_solv+(profil(i)/param(5)*(log(mix_gam(i)/gam(i))))
+      gamma_sol=gamma_sol+(profil2(i)/param(5)*log(mix_gam(i)/gam_sol(i)))
      ! gamma_test=gamma_test+(profil2(i)/7.5_8*log(gam_sol(i)))
    end do
  !  write(*,*) gamma_test*R*T*jtokcal
