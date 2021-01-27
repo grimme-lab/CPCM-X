@@ -30,8 +30,8 @@ program COSMO
    
    !! Read Command Line Arguments and set Parameters accordingly
 
-   Call getargs(solvent,solute,T,sig_in,sac)
-   Call initialize_param(r_cav,disp_con,sac)
+   Call getargs(solvent,solute,T,sig_in)
+   Call initialize_param(r_cav,disp_con)
    !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
 
    if (sig_in) then
@@ -39,6 +39,9 @@ program COSMO
       write(*,*) "Reading Sigma Profile"
       Call read_singlesig(solvent_sigma,trim(solvent)//".sigma",solvent_volume)
       Call read_singlesig(solute_sigma,trim(solute)//".sigma",solute_volume)
+      
+      Call read_triplesig(solvent_sigma3,trim(solvent)//".sigma",solvent_volume)
+      Call read_triplesig(solute_sigma3,trim(solute)//".sigma",solute_volume)
    else
 
       write(*,*) "Creating Sigma Profile from COSMO data"
@@ -65,43 +68,47 @@ program COSMO
       Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
          &solute_sigma3,trim(solute))
    end if
+   
+   select case (trim(model))
+      case ("sac")! Do a COSMO-SAC calculation instead COSMO-RS
+         Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
+         stop
+      case("sac2010")
+         Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
+      case ("crs")
+   
 
-   if (sac) then ! Do a COSMO-SAC calculation instead COSMO-RS
-      Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
-      stop
-   end if
+         !!!! COSMO-RS calculation starts here if no SAC calculation was choosen !!!!
 
-   !!!! COSMO-RS calculation starts here if no SAC calculation was choosen !!!!
+         ! Calculate sv0,svt for COSMO-RS
 
-   ! Calculate sv0,svt for COSMO-RS
-
-   Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
-   Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
+         Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
+         Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
       
-   Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
-   Call ortho_charge(solute_sv,solute_sv0,solute_svt)
+         Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
+         Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
-   ! Calcualtion of Gas Phase energies
+         ! Calcualtion of Gas Phase energies
 
-   if (gas) then
-      Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
-         &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
-   end if
+         if (gas) then
+            Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
+               &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+         end if
 
-   ! Computation of COSMO-RS equations (here may be something wrong atm)
+         ! Computation of COSMO-RS equations (here may be something wrong atm)
 
-   Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
-   Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
+         Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
+         Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
          &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
   
- write(*,*) "calc_gas_chem: ", gas_chem
- write(*,*) "calc_sol_chem: ", chem_pot_sol
- write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
+      write(*,*) "calc_gas_chem: ", gas_chem
+      write(*,*) "calc_sol_chem: ", chem_pot_sol
+      write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
 
- deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
-   &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
-   &solv_pot,sol_pot)
-
+      deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
+         &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
+         &solv_pot,sol_pot)
+      end select
    
    
    contains

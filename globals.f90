@@ -8,6 +8,7 @@ module globals
    real(8), parameter :: pi = 4*atan(1.0_8)
    real(8), dimension(10) :: param !Parameter for several methods
    real(8) :: SysTemp !System Temperature
+   character(7) :: model ! Chosen COSMO model
    ! Covalent Radii of Elements
 
    type(DICT_STRUCT), pointer :: cov_r

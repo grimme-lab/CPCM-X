@@ -38,5 +38,5 @@ profile.mod : profile.f90
 	gfortran -c profile.f90
 
 clean:
-	rm main.o eledata_module.mod initialize_cosmo.mod initialize.o csm sac.o sac.mod element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o sigma_av.o sigma_av.mod bonding.o bonding.mod profile.o profile.mod
+	rm main.o eledata_module.mod initialize_cosmo.mod initialize.o csm sac.o sac_mod.mod element_dict.mod globals.mod sort.mod ElementParameters.o globals.o sort.o sigma_av.o sigma_av.mod bonding.o bonding.mod profile.o profile.mod
 # End of makefile
