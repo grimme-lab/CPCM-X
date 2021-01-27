@@ -37,6 +37,43 @@ function E_dd1(sigma1,sigma2)
 end function E_dd1
 
 
+function E_dd3(sigma1,sigma2,t,s)
+   use globals
+   implicit none
+   integer,intent(in) :: t,s
+   real(8), intent(in) :: sigma1,sigma2
+
+   real(8) :: E_dd3,E_es,E_hb,c_hb,c_es,A_es,B_es
+   real(8) :: c_ohoh,c_otot,c_ohot
+
+   ! t and s are the sigma profile types (1=NH, 2=OH, 3=OT)
+
+
+   c_ohoh=param(6)
+   c_otot=param(7)
+   c_ohot=param(8)
+  c_hb=0.0_8
+   if ((sigma1*sigma2) .LT. 0.0_8) then
+      if ((s .EQ. 2) .AND. (t .EQ. 2)) then
+         c_hb=c_ohoh
+      else if ((s .EQ. 3) .AND. (t .EQ. 3)) then
+         c_hb=c_otot
+      else if (((s .EQ. 2) .AND. (t .EQ. 3)) .OR. ((s .EQ. 3) .AND. (t .EQ. 2))) then
+         c_hb=c_ohot
+      end if
+   end if
+
+    A_es=param(9)
+    B_es=param(10)
+    c_es=A_es+(B_es/(SysTemp**2)) !Temperaturabhängige elektrostatische interactiom
+
+   E_hb=0.0_8
+   E_es=0.0_8
+   E_hb=c_hb*((sigma1-sigma2)**2)
+   E_es=c_es*((sigma1+sigma2)**2)
+   E_dd3=E_es-E_hb
+
+end function E_dd3
 
 subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    use globals
@@ -63,9 +100,6 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
 
    VNORM=param(3)
    ANORM=param(2)
- !  vcosmo1=vcosmo1*BtoA**3
- !  vcosmo2=vcosmo2*BtoA**3
-  ! write(*,*) vcosmo
    not_conv=.TRUE.
 
    !! Calculate the SIGMA Profile of the mixture
@@ -73,9 +107,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    do i=0,50
       mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
    end do
-  ! write(*,*) E_dd1(-0.025_8,-0.016_8)
-  ! write(*,*) mix_prof
-  ! stop
+
    !! Mixed Activity Coefficient
    T=SysTemp
    maxsig=0.025_8
@@ -84,23 +116,19 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    gam_saved(:)=1.0
    summ=0.0_8
 
-   !write(*,*) (1*punit)-maxsig
-   
+
    do while (not_conv)
       gam_saved(:)=mix_gam(:)
-      do i=0,50!size(mix_prof)-1
-         do j=0,50!size(mix_prof)-1
-        ! write(*,*) j*punit-maxsig, summ, mix_prof(j), gam_saved(j), E_dd1((i*punit)-maxsig,(j*punit)-maxsig)
+      do i=0,50
+         do j=0,50
             summ=summ+mix_prof(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
-        ! write(*,*) summ
-        ! stop
          mix_gam(i)=exp(-log(summ))
          mix_gam(i)=(mix_gam(i)+gam_saved(i))/2.0_8
          summ=0.0_8
       end do
       not_conv=.false.
-      do i=0,50!size(mix_gam)-1
+      do i=0,50
          if (abs((mix_gam(i)-gam_saved(i))) .LT. 0.000001) then
             cycle
          else
@@ -110,15 +138,11 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       end do
    end do
 
-   !write(*,*) mix_gam
-   !stop
    !! Pure Activity Coefficient of 1
    profile(:)=0.0_8
-  ! write(*,*) profil
    do i=0,50
       profile(i)=profil(i)/sum(profil)
    end do
-   !write(*,*) profile
 
    gam(:)=1.0
    gam_saved(:)=1.0
@@ -128,7 +152,6 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       gam_saved(:)=gam(:)
       do i=0,50
          do j=0,50
-    !     write(*,*) summ
             summ=summ+profile(j)*gam_saved(j)*dexp((-E_dd1((i*punit)-maxsig,(j*punit)-maxsig))/(298.15_8*R*Jtokcal))
          end do
          gam(i)=exp(-log(summ))
@@ -146,12 +169,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       end do
    end do
 
-  ! write(*,*) gam
-
    !! Pure Activity Coefficient of 2
-   !write(*,*) profil2
+
    profile(:)=0.0_8
-  ! write(*,*) sum(profil2)
    do i=0,50
       profile(i)=profil2(i)/sum(profil2)
    end do
@@ -181,7 +201,6 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       end do
    end do
 
- !  write(*,*) gam_sol
    !! Staverman-Guggenheim equation
    coord=int(param(4))
 
@@ -190,8 +209,6 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    RNORM(2) = VCOSMO2/VNORM
    QNORM(2) = sum(profil2)/ANORM
 
- !  write(*,*) RNORM(1), QNORM(1)
- !  write(*,*) RNORM(2), QNORM(2)
    bt=z(1)*QNORM(1)+z(2)*QNORM(2)
    bp=z(1)*RNORM(1)+z(2)*RNORM(2)
   
@@ -200,30 +217,21 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       Theta(i)=(z(i)*QNORM(i))/(bt)
       Phi(i)=(z(i)*RNORM(i))/(bp)
       L(i)=(coord/2.0_8)*(RNORM(i)-QNORM(i))-(RNORM(i)-1.0_8)
-   !   write(*,*) Theta(i), Phi(i), L(i)
    end do
    gammasg(1)=log(phi(1)/z(1))+(coord/2.0_8)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
       &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
    
    gammasg(2)=log(phi(2)/z(2))+(coord/2.0_8)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
       &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
-!     write(*,*) gammasg(1), gammasg(2)
 
 
    write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
-  ! write(*,*) mue
    gamma_solv=0.0_8
    gamma_sol=0.0_8
-  ! gamma_test=0.0_8
- !  write(*,*) gam_sol
    do i=0,50
-  !    write(*,*) mue(i)
       gamma_solv=gamma_solv+(profil(i)/param(5)*(log(mix_gam(i)/gam(i))))
       gamma_sol=gamma_sol+(profil2(i)/param(5)*log(mix_gam(i)/gam_sol(i)))
-     ! gamma_test=gamma_test+(profil2(i)/7.5_8*log(gam_sol(i)))
    end do
- !  write(*,*) gamma_test*R*T*jtokcal
- !  write(*,*) gamma_sol*R*T*jtokcal
    gamma_solv=exp(gammasg(1)+gamma_solv)
    gamma_sol=exp(gammasg(2)+gamma_sol)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
@@ -233,6 +241,203 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
 
 
 end subroutine sac_2005
+
+subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
+   use globals
+   implicit none
+
+   real(8), dimension(3,0:50) :: profil,profil2
+   !real(8), dimension(1:9), intent(in) :: param
+  ! real(8), dimension(1:2,0:49) :: sigma_profiles
+
+   real(8) :: gam(3,0:50),maxsig,punit,profile(3,0:50), gam_saved(3,0:50),gam_sol(3,0:50)
+   real(8) :: gamma_solv, gamma_sol,gamma_test, summ, mix_prof(3,0:50), mix_gam(3,0:50)
+   real(8) :: VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
+   real(8) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
+
+   
+  ! integer :: comp_num
+   integer :: i,j,s,t
+   logical :: not_conv
+
+   z(1)=0.3_8
+   z(2)=0.7_8
+   
+  ! comp_num=2
+
+   VNORM=param(3)
+   ANORM=param(2)
+   not_conv=.TRUE.
+
+   !! Calculate the SIGMA Profile of the mixture
+   do s=1,3
+      do i=0,50
+         mix_prof(s,i)=(z(1)*profil(s,i)+z(2)*profil2(s,i))/(z(1)*sum(profil)+z(2)*sum(profil2))
+      end do
+   end do
+
+   !! Mixed Activity Coefficient
+   ! T=SysTemp
+   maxsig=0.025_8
+   punit=0.001_8
+   mix_gam=1.0
+   gam_saved=1.0
+   summ=0.0_8
+
+
+   do while (not_conv)
+      gam_saved(:,:)=mix_gam(:,:)
+      do t=1,3
+         do i=0,50
+            do s=1,3
+               do j=0,50
+                  summ=summ+mix_prof(s,j)*gam_saved(t,j)*dexp((-E_dd3((i*punit)-maxsig,(j*punit)-maxsig,t,s))/(R*SysTemp*Jtokcal))
+               end do
+            end do
+            mix_gam(t,i)=exp(-log(summ))
+            mix_gam(t,i)=(mix_gam(t,i)+gam_saved(t,i))/2.0_8
+            summ=0.0_8
+         end do
+      end do
+      not_conv=.false.
+ !     write(*,*) mix_gam
+      
+      do t=1,3
+         do i=0,50
+            if (abs((mix_gam(t,i)-gam_saved(t,i))) .LT. 0.000001) then
+               cycle
+            else
+               not_conv=.true.
+               exit
+            end if
+         end do
+      end do
+   end do
+!stop
+   !! Pure Activity Coefficient of 1
+   profile=0.0_8
+   do t=1,3
+      do i=0,50
+         profile(t,i)=profil(t,i)/sum(profil)
+      end do
+   end do
+
+   gam=1.0
+   gam_saved=1.0
+   summ=0.0_8
+   not_conv=.true.
+   
+   do while (not_conv)
+      gam_saved(:,:)=gam(:,:)
+      do t=1,3
+         do i=0,50
+            do s=1,3
+               do j=0,50
+                  summ=summ+profile(s,j)*gam_saved(t,j)*dexp((-E_dd3((i*punit)-maxsig,(j*punit)-maxsig,t,s))/(R*SysTemp*Jtokcal))
+               end do
+            end do
+            gam(t,i)=exp(-log(summ))
+            gam(t,i)=(gam(t,i)+gam_saved(t,i))/2.0_8
+            summ=0.0_8
+         end do
+      end do
+      not_conv=.false.
+      do t=1,3
+         do i=0,50
+            if (abs((gam(t,i)-gam_saved(t,i))) .LT. 0.000001) then
+               cycle
+            else
+               not_conv=.true.
+               exit
+            end if
+         end do
+      end do
+   end do
+
+
+   !! Pure Activity Coefficient of 2
+
+   profile=0.0_8
+   do t=1,3
+      do i=0,50
+         profile(t,i)=profil2(t,i)/sum(profil2)
+      end do
+   end do
+   
+   gam_sol=1.0
+   gam_saved=1.0
+   summ=0.0_8
+   not_conv=.true.
+
+   do while (not_conv)
+      gam_saved(:,:)=gam_sol(:,:)
+      do t=1,3
+         do i=0,50
+            do s=1,3
+               do j=0,50
+                  summ=summ+profile(s,j)*gam_saved(t,j)*dexp((-E_dd3((i*punit)-maxsig,(j*punit)-maxsig,t,s))/(R*SysTemp*Jtokcal))
+               end do
+            end do
+            gam_sol(t,i)=exp(-log(summ))
+            gam_sol(t,i)=(gam_sol(t,i)+gam_saved(t,i))/2.0_8
+            summ=0.0_8
+         end do
+      end do
+      not_conv=.false.
+      do t=1,3
+         do i=0,50
+            if (abs((gam_sol(t,i)-gam_saved(t,i))) .LT. 0.000001) then
+               cycle
+            else
+               not_conv=.true.
+               exit
+            end if
+         end do
+      end do
+   end do
+
+   !! Staverman-Guggenheim equation
+   coord=int(param(4))
+
+   RNORM(1) = VCOSMO1/VNORM 
+   QNORM(1) = sum(profil)/ANORM
+   RNORM(2) = VCOSMO2/VNORM
+   QNORM(2) = sum(profil2)/ANORM
+
+   bt=z(1)*QNORM(1)+z(2)*QNORM(2)
+   bp=z(1)*RNORM(1)+z(2)*RNORM(2)
+  
+   
+   do i=1,2
+      Theta(i)=(z(i)*QNORM(i))/(bt)
+      Phi(i)=(z(i)*RNORM(i))/(bp)
+      L(i)=(coord/2.0_8)*(RNORM(i)-QNORM(i))-(RNORM(i)-1.0_8)
+   end do
+   gammasg(1)=log(phi(1)/z(1))+(coord/2.0_8)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
+      &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
+   
+   gammasg(2)=log(phi(2)/z(2))+(coord/2.0_8)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
+      &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
+
+
+   write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
+   gamma_solv=0.0_8
+   gamma_sol=0.0_8
+   do t=1,3
+      do i=0,50
+         gamma_solv=gamma_solv+(profil(t,i)/param(5)*(log(mix_gam(t,i)/gam(t,i))))
+         gamma_sol=gamma_sol+(profil2(t,i)/param(5)*log(mix_gam(t,i)/gam_sol(t,i)))
+      end do
+   end do
+   gamma_solv=exp(gammasg(1)+gamma_solv)
+   gamma_sol=exp(gammasg(2)+gamma_sol)
+   write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
+   write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
+   write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
+  ! write(*,*) param(10) 
+  ! write(*,*) gammasg(1), gammasg(2)
+
+end subroutine sac_2010
 
 end module sac_mod
       

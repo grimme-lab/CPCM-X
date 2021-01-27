@@ -38,6 +38,42 @@ module profile
      	
       end subroutine read_singlesig
 
+      subroutine read_triplesig(sigma3,nam,volume)
+
+         !! Read a Single Sigma Profile from File, uses the format of the UD Database
+         !! Input:
+         !! nam: path to the sigma file
+         !! Output:
+         !! Sigma: Sigma Profile array ordered from -0.25 to +0.25
+         !! Volume: Volume of the Compound from COSMO Calculation
+
+         character(len=*), intent(in) :: nam
+         real(8), intent(out) :: volume
+         real(8), dimension(:), intent(out) :: sigma3 (3,0:50)
+
+         character(len=20) :: dummy1, dummy2
+         integer :: io_error,i,t
+         real(8) :: dummy3
+
+         open(unit=2,file=nam)
+
+         read(2,*)
+         read(2,*)
+         read(2,*) 
+         read(2,*) dummy1,dummy2,volume
+     	 io_error=0
+         sigma3 = 0.0_8
+         i=0
+         do t=1,3
+     	    do i=0,50
+     	       read(2,*,iostat=io_error) dummy3, sigma3(t,i)
+     	    end do
+         end do
+         close(2)
+     	
+      end subroutine read_triplesig
+
+
       subroutine single_sigma(sv,area,sigma,nam)
 
          !! Creates a single Sigma Profile from averaged charge densities.

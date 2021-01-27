@@ -82,9 +82,9 @@ module initialize_cosmo
             if (line .NE. "$") then
                read(1,*) dummy1, dummy3, dummy4, dummy5, element
                elements(dummy1)=element
-               atom_xyz(dummy1,1)=dummy3!*btoa
-               atom_xyz(dummy1,2)=dummy4!*btoa
-               atom_xyz(dummy1,3)=dummy5!*btoa
+               atom_xyz(dummy1,1)=dummy3*btoa
+               atom_xyz(dummy1,2)=dummy4*btoa
+               atom_xyz(dummy1,3)=dummy5*btoa
             else
                exit
             end if
@@ -109,12 +109,11 @@ module initialize_cosmo
         
       end subroutine read_cosmo
 
-      subroutine initialize_param(r_cav,disp_con,sac)
+      subroutine initialize_param(r_cav,disp_con)
          use element_dict
          use globals
          implicit none
 
-         logical, intent(in) :: sac
          !real(8), dimension(10) :: param
          type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
@@ -123,29 +122,22 @@ module initialize_cosmo
          logical :: g_exists
          integer :: i, io_error,dummy1
          character(len=100) :: home,param_path
-         character(len=3) :: model
 
-
-         if (sac) then
-            model="sac"
-         else
-            model="crs"
-         end if
          
          Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
          if (io_error .EQ. 0) then
-            param_path=trim(home)//"/"//model//".param"
+            param_path=trim(home)//"/"//trim(model)//".param"
          else if (io_error .EQ. 1) then
-            param_path=model//".param"
+            param_path=trim(model)//".param"
          end if
         ! write(*,*) param_path
          INQUIRE(file=param_path, exist=g_exists)
       
          if (g_exists) then
-            write(*,*) "Reading COSMO Parameters from "//model//".param"
+            write(*,*) "Reading COSMO Parameters from "//trim(model)//".param"
             open(1,file=param_path)
 
-            select case (model)
+            select case (trim(model))
                case("crs")
 
                   ! Setting global COSMO-RS Parameters from parameter file
@@ -177,45 +169,19 @@ module initialize_cosmo
                   do i=2,8
                      read(1,*,iostat=io_error) param(i)
                   end do
+               case("sac2010")
 
+                  do i=1,10
+                     read(1,*) param(i)
+                  end do
                case default
                   write(*,*) model//" is not a defined model!"
                   stop
             end select
 
          else
-            write(*,*) "No COSMO Parameter File, using default parameters."
-            write(*,*)
-            !Setting global hard coded COSMO Parameters
-
-            param(1)=0.40_8
-            param(2)=0.8_8
-            param(3)=1515.0_8
-            param(4)=2.802_8
-            param(5)=7400.0_8
-            param(6)=0.00854_8
-            param(7)=7.62_8
-            param(8)=0.129_8
-            param(9)=-0.217_8
-            param(10)=-9.910_8
-
-            !Setting hard coded cavity radii
-
-            data1%param = 1.30_8
-            call dict_create(r_cav, 'h', data1)
-            data1%param = 2.00_8
-            call dict_add_key(r_cav, 'c', data1)
-            data1%param = 1.72_8
-            call dict_add_key(r_cav, 'o', data1)
-
-            !Setting hard coded dispersion contant 
-
-            data1%param = -0.041_8
-            call dict_create(disp_con, 'h', data1)
-            data1%param = -0.037_8
-            call dict_add_key(disp_con, 'c', data1)
-            data1%param = -0.042_8
-            call dict_add_key(disp_con, 'o', data1)
+            write(*,*) "No COSMO Parameter File found, exiting."
+            stop
          end if
 
             !Hard Coded Covalent Radii
@@ -230,13 +196,14 @@ module initialize_cosmo
 
 
       end subroutine initialize_param
-      subroutine getargs(solvent,solute,T,sig_in,sac)
+
+      subroutine getargs(solvent,solute,T,sig_in)
          use globals
          implicit none
          integer :: i
          character(len=20),intent(out) ::solvent, solute
          real(8),intent(out) :: T
-         logical, intent(out) :: sig_in, sac
+         logical, intent(out) :: sig_in
 
          character(len=20) :: arg
 
@@ -244,7 +211,7 @@ module initialize_cosmo
          solute=''
          solvent=''
          sig_in=.FALSE.
-         sac=.FALSE.
+         model="sac"
          do i=1,command_argument_count()
 
          Call get_command_argument(i, arg) 
@@ -258,8 +225,9 @@ module initialize_cosmo
                case ("--T")
                   Call get_command_argument(i+1,arg)
                   read(arg,*) T
-               case ("--sac")
-                  sac=.TRUE.
+               case ("--model")
+                  Call get_command_argument(i+1,arg)
+                  read(arg,*) model
                case ("--sigma")
                   sig_in=.TRUE.
                case default
