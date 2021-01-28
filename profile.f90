@@ -40,11 +40,11 @@ module profile
 
       subroutine read_triplesig(sigma3,nam,volume)
 
-         !! Read a Single Sigma Profile from File, uses the format of the UD Database
+         !! Read Splitted Sigma Profile from File, uses the format of the UD Database
          !! Input:
          !! nam: path to the sigma file
          !! Output:
-         !! Sigma: Sigma Profile array ordered from -0.25 to +0.25
+         !! Sigma3: Splitted Sigma Profile array ordered from -0.25 to +0.25
          !! Volume: Volume of the Compound from COSMO Calculation
 
          character(len=*), intent(in) :: nam

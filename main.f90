@@ -20,7 +20,7 @@ program COSMO
    !real(8), dimension(10) :: param
    real(8), dimension(5) :: T_a
    real(8) :: id_scr,gas_chem,chem_pot_sol, temp, temp2, T, solute_volume, solvent_volume,&
-      &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50)
+      &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
    logical :: gas,sig_in,sac
   
 
@@ -33,7 +33,7 @@ program COSMO
    Call getargs(solvent,solute,T,sig_in)
    Call initialize_param(r_cav,disp_con)
    !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
-
+   T=SysTemp
    if (sig_in) then
 
       write(*,*) "Reading Sigma Profile"
@@ -75,10 +75,15 @@ program COSMO
          stop
       case("sac2010")
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
+
+      case("sac2013")
+         Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
+         Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
+         Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
       case ("crs")
    
 
-         !!!! COSMO-RS calculation starts here if no SAC calculation was choosen !!!!
+         !! COSMO-RS calculation starts here !!
 
          ! Calculate sv0,svt for COSMO-RS
 

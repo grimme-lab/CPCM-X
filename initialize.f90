@@ -118,7 +118,7 @@ module initialize_cosmo
          type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
          type(DICT_DATA) :: data1, r_c, d_c
-         character(len=2) :: symbol
+         character(len=3) :: symbol
          logical :: g_exists
          integer :: i, io_error,dummy1
          character(len=100) :: home,param_path
@@ -169,11 +169,28 @@ module initialize_cosmo
                   do i=2,8
                      read(1,*,iostat=io_error) param(i)
                   end do
+
                case("sac2010")
 
                   do i=1,10
                      read(1,*) param(i)
                   end do
+
+               case("sac2013")
+
+                  do i=1,10
+                     read(1,*) param(i)
+                  end do
+                  read(1,*)
+                  io_error=0
+
+                  read(1,*) symbol, d_c%param
+                  Call dict_create(disp_con, trim(symbol), d_c)
+                  do while (io_error .GE. 0)
+                     read(1,*,iostat=io_error) symbol, d_c%param
+                     Call dict_add_key(disp_con,trim(symbol), d_c)
+                  end do
+
                case default
                   write(*,*) model//" is not a defined model!"
                   stop
