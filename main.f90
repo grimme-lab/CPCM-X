@@ -7,6 +7,7 @@ program COSMO
    use sac_mod
    use bonding
    use profile
+   use pr
    implicit none
    integer :: i,j,z
    real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
@@ -32,6 +33,7 @@ program COSMO
 
    Call getargs(solvent,solute,T,sig_in)
    Call initialize_param(r_cav,disp_con)
+   Call init_pr
    !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
    T=SysTemp
    if (sig_in) then
@@ -67,19 +69,26 @@ program COSMO
          &solvent_sigma3,trim(solvent))
       Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
          &solute_sigma3,trim(solute))
+     ! write(*,*) sum(solvent_area)
    end if
    
    select case (trim(model))
       case ("sac")! Do a COSMO-SAC calculation instead COSMO-RS
+         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
-         stop
+         Call pr2018(solute_area,solute_elements,solute_ident)
       case("sac2010")
+         
+         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
-
+         Call pr2018(solute_area,solute_elements,solute_ident)
       case("sac2013")
+         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
          Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
+         !dG_disp=log(sac_disp(2))*(-0.5924)
          Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
+         !Call pr2011(solute_area,solute_elements,solute_ident)
       case ("crs")
    
 
@@ -114,6 +123,16 @@ program COSMO
          &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
       end select
+
+      if (model .NE. "crs") then
+         write(*,*) "Free Energy contributions:"
+         write(*,*) "Ideal State (dG_is):", dG_is
+         write(*,*) "Averaging correction (dG_cc):", dG_cc
+         write(*,*) "restoring free energy (dG_res):", dG_res
+         write(*,*) "dispersion contribution (dG_disp):", dG_disp
+         write(*,*) "-------------------------------------------------"
+         write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp
+      end if
    
    
    contains

@@ -244,6 +244,8 @@ module profile
                   profile_group(i)="NH"
 
             end select
+        !    write(*,*) hb_group(i)
+        !    write(*,*) profile_group(i)
          end do
 
          ! Allocate the three profile array according to the 
@@ -297,7 +299,6 @@ module profile
             sigma3(2,i)=save2
             sigma3(3,i)=save3
          end do
-
          ! If choosen, write Profiles into file
 
          if (present(nam)) then
