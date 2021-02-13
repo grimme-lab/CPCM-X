@@ -1,6 +1,66 @@
 module sac_mod
 
    contains
+
+   subroutine sac_gas(E_cosmo,id_scr,gas_chem,area,sv,su,pot)
+         use globals
+         use element_dict
+         real(8), intent(out) :: id_scr, gas_chem
+         real(8), intent(in) ::E_cosmo
+         real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot!,ident
+         !character(2), dimension(:), allocatable, intent(in) :: element
+       !  type(DICT_STRUCT), pointer :: dispa_con, dispb_con
+         !real(8), dimension(10) :: param
+       !  type(DICT_DATA) :: a_disp,b_disp
+         real(8) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
+         integer :: dummy1, ioerror, i 
+
+         open(1,file="energy")
+         read(1,*,iostat=ioerror)
+         if (ioerror .NE. 0) then
+            write(*,*) "Problem while reading energies (check energy file)."
+            error stop
+         else
+            read(1,*) dummy1,E_gas
+         end if
+         dEreal=(E_cosmo-E_gas)
+         ediel=0
+         edielprime=0
+         do i=1,size(sv)
+            ediel=ediel+(area(i)*pot(i)*su(i))
+            edielprime=edielprime+(area(i)*pot(i)*sv(i))
+         end do
+         avcorr=(edielprime-ediel)/2.0_8*0.8_8
+         write(*,*) "E_COSMO", E_cosmo*autokcal
+         write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
+         write(*,*) "E_gas: ", E_gas*autokcal
+         dEreal=dEreal*autokcal
+         id_scr=dEreal+avcorr*autokcal
+         write(*,*) "E_COSMO-E_gas", (E_cosmo-E_gas)*autokcal
+         write(*,*) "E_COSMO-E_gas+dE: ", (E_cosmo-E_gas+avcorr)*autokcal
+         write(*,*) "Ediel: ", ediel/2*autokcal
+         write(*,*) "Averaging corr dE: ", avcorr*autokcal
+
+         vdW_gain=0
+!         do i=1,size(area)
+ !           a_disp=dict_get_key(disp_cona, element(int(ident(i))))
+ !           b_disp=dict_get_key(disp_conb, element(int(ident(i))))
+  !          vdW_gain=vdW_gain+(area(i)*(a_disp%param*SysTemp+b_disp%param))
+  !       end do
+     !    write(*,*) "EvdW: ", vdW_gain 
+         write(*,*) "Area: ", sum(area)
+
+         thermo=param(10)*R*jtokcal*SysTemp
+    !     write(*,*) "thermostatic correction: ", thermo
+
+         !!! RING CORRECTION IS MISSING ATM
+         gas_chem=-id_scr+thermo!-vdW_gain!-ring_corr
+       !  write(*,*) gas_chem
+        dG_is=(E_cosmo-E_gas)*autokcal
+        dG_cc=avcorr*autokcal
+
+   end subroutine sac_gas
+
 function E_dd1(sigma1,sigma2)
    use globals
    implicit none
@@ -84,7 +144,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
   ! real(8), dimension(1:2,0:49) :: sigma_profiles
 
    real(8) :: gam(0:50),maxsig,punit,profile(0:50), gam_saved(0:50),gam_sol(0:50)
-   real(8) :: gamma_solv, gamma_sol,gamma_test, summ, mix_prof(0:50), mix_gam(0:50)
+   real(8) :: gamma_solv, gamma_sol,gamma_test,gamma_test2, summ, mix_prof(0:50), mix_gam(0:50)
    real(8) :: T, VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
    real(8) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
 
@@ -228,16 +288,21 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
    gamma_solv=0.0_8
    gamma_sol=0.0_8
+   gamma_test=0.0_8
+   gamma_test2=0.0_8
    do i=0,50
+      gamma_test=gamma_test+(profil(i)/param(5)*log(gam(i)))
+      gamma_test2=gamma_test2+(profil2(i)/param(5)*log(gam_sol(i)))
       gamma_solv=gamma_solv+(profil(i)/param(5)*(log(mix_gam(i)/gam(i))))
       gamma_sol=gamma_sol+(profil2(i)/param(5)*log(mix_gam(i)/gam_sol(i)))
    end do
+   write(*,*) gamma_test, gamma_test2
    gamma_solv=exp(gammasg(1)+gamma_solv)
    gamma_sol=exp(gammasg(2)+gamma_sol)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
    write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
    write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
-
+   dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
 
 
 end subroutine sac_2005
@@ -423,13 +488,15 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
    gamma_solv=0.0_8
    gamma_sol=0.0_8
+   gamma_test=0.0_8
    do t=1,3
       do i=0,50
+         gamma_test=gamma_test+(profil2(t,i)/param(5)*log(gam_sol(t,i)))
          gamma_solv=gamma_solv+(profil(t,i)/param(5)*(log(mix_gam(t,i)/gam(t,i))))
          gamma_sol=gamma_sol+(profil2(t,i)/param(5)*log(mix_gam(t,i)/gam_sol(t,i)))
       end do
    end do
-   !write(*,*) gamma_solv, gamma_sol
+   write(*,*) gamma_test, gamma_sol, gammasg(2)
    gamma_solv=exp(gammasg(1)+gamma_solv)
    gamma_sol=exp(gammasg(2)+gamma_sol)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
@@ -437,6 +504,8 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
   ! write(*,*) param(10) 
    !write(*,*) gammasg(1), gammasg(2)
+
+   dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
 
 end subroutine sac_2010
 
@@ -644,6 +713,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
   ! write(*,*) param(10) 
    !write(*,*) gammasg(1), gammasg(2)
 
+   dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
 end subroutine sac_2013
 
 

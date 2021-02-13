@@ -5,7 +5,7 @@ module initialize_cosmo
          use globals
          implicit none
          character(*), intent(in) :: compound
-         character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6
+         character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
          real(8), dimension(:), allocatable,intent(out) :: charges,&
             &area,pot
          real(8), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
@@ -18,14 +18,28 @@ module initialize_cosmo
          
          logical :: exists
 
-         INQUIRE(file=compound,EXIST=exists)
+         filen=compound
+
+         INQUIRE(file=trim(filen),EXIST=exists)
    
          if (.NOT. exists) then
-            write(*,*) "COSMO file does not exists."
-            stop
+            Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
+            if (io_error .EQ. 0) then
+               filen=trim(home)//"/"//compound
+               INQUIRE(file=trim(filen), EXIST=exists)
+                  if (exists) then
+                     write(*,*) "No COSMO file in working directory, reading COSMO file from", filen
+                  else
+                     write(*,*) "No COSMO file in working directory or HOME directory for", compound
+                     stop
+                  end if
+            else
+               write(*,*) "No COSMO file in working directory for", compound,"No Home directory to check."
+               stop
+            end if
          end if
 
-         open(1,file=compound,iostat=io_error)
+         open(1,file=trim(filen),iostat=io_error)
 
          if (io_error .NE. 0) then
             write(*,*) "Problem while reading COSMO input. &
@@ -130,7 +144,7 @@ module initialize_cosmo
          else if (io_error .EQ. 1) then
             param_path=trim(model)//".param"
          end if
-        ! write(*,*) param_path
+         write(*,*) param_path
          INQUIRE(file=param_path, exist=g_exists)
       
          if (g_exists) then
@@ -253,4 +267,42 @@ module initialize_cosmo
          end do
          SysTemp=T
       end subroutine getargs
+
+      subroutine init_pr
+         use globals
+         use element_dict
+         !Initialize PR Parameters
+
+         character(2) :: symbol
+         type(DICT_DATA) :: r_i,A,B
+         integer:: i,io_error, dummy1
+         character(len=100) :: param_path, home
+
+         Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
+         if (io_error .EQ. 0) then
+            param_path=trim(home)//"/pr.param"
+         else if (io_error .EQ. 1) then
+            param_path="pr.param"
+         end if
+
+         open(1,file=param_path)
+         do i=1,6
+            read(1,*) pr_param(i)
+         !   write(*,*) pr_param(i)
+         end do
+         read(1,*)
+         read(1,*) symbol, r_i%param, A%param, B%param
+
+         !write(*,*) symbol, r_i%param, A%param, B%param
+         Call dict_create(r_pr, trim(symbol), r_i)
+         Call dict_create(A_dsp, trim(symbol), A)
+         Call dict_create(B_dsp, trim(symbol), B)
+         do while (io_error .GE. 0)
+            read(1,*,iostat=io_error) symbol, r_i%param, A%param, B%param
+            Call dict_add_key(r_pr, trim(symbol), r_i)
+            Call dict_add_key(A_dsp, trim(symbol), A)
+            Call dict_add_key(B_dsp, trim(symbol), B)
+         end do
+         close(1)
+      end subroutine init_pr
 end module initialize_cosmo

@@ -1,0 +1,25 @@
+0.81764  #r_av
+79.53    #q_0
+66.69    #r_0
+10.0     #z
+7.25     #a_eff
+4013.78  #c_ohoh
+932.31   #c_otot
+3016.43  #c_ohot
+6525.69  #A_es
+1.4859E8 #B_es
+# Dispersion Parameters for the Sac2013-disp model, number is bonded atoms
+c4   115.7023
+c3   117.4650
+c2   66.0691
+n3   15.4901
+n2   84.6268
+n1   109.6621
+o2   95.6184
+o1  -11.0549
+f    52.9318
+cl   104.2534
+h2   58.3301   #h parameter for h in h2o
+ho   19.3477   #h bounded to o
+hn   141.1709  #h bounded to n
+ht   0         # other h
