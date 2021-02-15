@@ -1,0 +1,14 @@
+name="COSMO-SE"
+version="0.5.0"
+author="Marcel Stahn"
+maintainer="stahn@thch.uni-bonn.de"
+
+[library]
+source-dir="src"
+
+
+
+[[executable]]
+name="csm"
+source-dir="app"
+main="main.f90"
