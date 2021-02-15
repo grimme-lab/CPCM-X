@@ -3,7 +3,7 @@
 Building with Fortran Package Manager:
 https://github.com/fortran-lang/fpm
 
-fpm build
+fpm build &&
 fpm install prefix [path without bin]
 
 Setting Home Directory Global Variable:
