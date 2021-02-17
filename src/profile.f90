@@ -117,7 +117,7 @@ module profile
             tmp = int((temp-counter(0))/punit)
  
             if (tmp<0) tmp=0
-            if (tmp>n_sig-1) tmp=n_sig-1
+            if (tmp>n_sig-2) tmp=n_sig-2
             profile(tmp) = profile(tmp)+area(i)*(counter(tmp+1)-temp)/punit
             profile(tmp+1) = profile(tmp+1)+area(i)*(temp-counter(tmp))/punit
          end do
