@@ -10,17 +10,18 @@ program COSMO
    use pr
    use crs
    implicit none
-   integer :: i,j,z
+   integer :: oh_sol, nh_sol, near_sol
    real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
    real(8), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
    real(8), dimension(:), allocatable :: sol_pot, solv_pot, solvent_ident, solute_ident
    real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz
    character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
    logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
+   logical, dimension(:), allocatable :: solute_rings
    real(8), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
    !real(8), dimension(10) :: param
-   real(8) :: id_scr,gas_chem,chem_pot_sol, temp2, T, solute_volume, solvent_volume,&
+   real(8) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
    logical :: gas,sig_in
   
@@ -57,10 +58,12 @@ program COSMO
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
 
 
-      Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds)
+      Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
+      
+      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
 
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
       Call single_sigma(solute_sv,solute_area,solute_sigma,trim(solute))
@@ -76,19 +79,19 @@ program COSMO
       case ("sac")! Do a COSMO-SAC calculation instead COSMO-RS
          Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
-         Call pr2018(solute_area,solute_elements,solute_ident)
+         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case("sac2010")
          
          Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
-         Call pr2018(solute_area,solute_elements,solute_ident)
+         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case("sac2013")
          Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
          Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
          Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
          !dG_disp=log(sac_disp(2))*(-0.5924)
          Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
-         !Call pr2011(solute_area,solute_elements,solute_ident)
+         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case ("crs")
    
 

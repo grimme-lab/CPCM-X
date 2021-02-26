@@ -69,12 +69,12 @@ function E_dd1(sigma1,sigma2)
    real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime,aef,s_hb,c_hb
 
    aef=param(5)
-   c_hb=param(6)
+   c_hb=param(6)*1000 !Parameter is scaled up to allow better fitting
    s_hb=param(7)
 
   ! fpol=(EPS-1.0_8)/(EPS+0.5_8)
   ! alpha=(0.3_8*aef**(1.5))/e0
-   alphaprime=param(8)
+   alphaprime=param(8)*1000
    
    svac=0
    svdo=0
