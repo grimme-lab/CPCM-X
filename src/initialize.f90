@@ -219,11 +219,48 @@ module initialize_cosmo
 
             data1%param=0.31_8
             call dict_create(cov_r, 'h', data1)
+            data1%param=0.28_8
+            call dict_add_key(cov_r, 'he', data1)
+            data1%param=1.28_8
+            call dict_add_key(cov_r, 'li', data1)
+            data1%param=0.96_8
+            call dict_add_key(cov_r, 'be', data1)
+            data1%param=0.84_8
+            call dict_add_key(cov_r, 'b', data1)
             data1%param=0.76_8
             call dict_add_key(cov_r, 'c', data1)
+            data1%param=0.71_8
+            call dict_add_key(cov_r, 'n', data1)
             data1%param=0.66_8
             call dict_add_key(cov_r, 'o', data1)
-     
+            data1%param=0.57_8
+            call dict_add_key(cov_r, 'f', data1)
+            data1%param=0.58_8
+            call dict_add_key(cov_r, 'ne', data1)
+            data1%param=1.66_8
+            call dict_add_key(cov_r, 'na', data1) 
+            data1%param=1.41_8
+            call dict_add_key(cov_r, 'mg', data1)
+            data1%param=1.21_8
+            call dict_add_key(cov_r, 'al', data1)
+            data1%param=1.11_8
+            call dict_add_key(cov_r, 'si', data1)
+            data1%param=1.07_8
+            call dict_add_key(cov_r, 'p', data1)
+            data1%param=1.05_8
+            call dict_add_key(cov_r, 's', data1)
+            data1%param=1.02_8
+            call dict_add_key(cov_r, 'cl', data1)
+            data1%param=1.06_8
+            call dict_add_key(cov_r, 'ar', data1)
+            data1%param=2.03_8
+            call dict_add_key(cov_r, 'k', data1)
+            data1%param=1.76_8
+            call dict_add_key(cov_r, 'ca', data1)
+            data1%param=1.70_8
+            call dict_add_key(cov_r, 'sc', data1)
+            data1%param=1.60_8
+            call dict_add_key(cov_r, 'ti', data1)
 
 
       end subroutine initialize_param

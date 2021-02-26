@@ -7,7 +7,7 @@ module bonding
    ! This Subroutine determines covalent bonds between Atoms/Segments 
    ! It uses the Positions of the Segments and the hard coded covalent Radii
    ! A Covalent Bond is assumed when the distance is lower than the sum of the convalent Radii*1.15
-   subroutine det_bonds(ident,xyz,elements,is_bonded)
+   subroutine det_bonds(ident,xyz,elements,is_bonded,oh_count,nh_count)
       use globals
       use element_dict
       implicit none
@@ -17,6 +17,8 @@ module bonding
       real(8), dimension(:,:), allocatable, intent(in) :: xyz
 
       logical, dimension(:,:), allocatable, intent(out) :: is_bonded
+
+      integer, intent(out), optional :: oh_count, nh_count
 
       type(DICT_DATA) :: radius
       integer :: i,j
@@ -41,6 +43,32 @@ module bonding
          end do
          cov_a=0.0_8
       end do
+
+      if (present(nh_count)) then
+         oh_count=0
+         nh_count=0
+         do i=1,int(maxval(ident))
+            select case (elements(i))
+               case default
+                  cycle
+               case ("o")
+                  do j=1,int(maxval(ident))
+                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then 
+                        oh_count=oh_count+1
+                        exit
+                     end if
+                  end do 
+               case ("n")
+                  do j=1,int(maxval(ident))
+                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then 
+                        nh_count=nh_count+1
+                        exit
+                     end if
+                  end do
+            end select                    
+         end do
+      !   write(*,*) oh_count, nh_count
+      end if
 
 
       ! Check points, uncomment the following:
@@ -116,6 +144,89 @@ module bonding
 
    end subroutine hb_grouping
       
+   subroutine det_rings(ident,is_bonded,is_ring,N_ear)
+      implicit none
 
+      real(8), dimension(:), intent(in) :: ident
+      logical, dimension(:,:), intent(in) :: is_bonded
+      logical, dimension(:), intent(out), allocatable :: is_ring
+      integer, intent(out) :: N_ear ! Number of effective atoms in rings
+
+      logical, dimension(:), allocatable :: visited
+
+      integer :: eles, i, j, cut
+
+      eles=int(maxval(ident))
+
+      allocate(is_ring(eles))
+      allocate(visited(eles))
+      
+      do i=1,eles
+         visited(:)=.false.
+         is_ring(i)=.false.
+         cut=1
+         do j=1,eles
+            if (is_bonded(i,j)) then
+               Call iter_ring(i,i,j,is_ring(i),eles,is_bonded,cut,visited)
+            end if
+            if (is_ring(i)) exit
+         end do
+         !write(*,*) i, is_ring(i)
+         !stop
+      end do
+
+      N_ear=0
+
+      do i=1,eles
+         if (is_ring(i)) then
+            do j=1,eles
+               if (is_bonded(i,j)) then
+                  if (.NOT. is_ring(j)) then
+                     N_ear=N_ear+1
+                     exit
+                  end if
+               end if
+               if (j .eq. eles) N_ear=N_ear+2
+            end do
+         end if
+      end do
+                  
+
+
+   end subroutine det_rings
+
+   recursive subroutine iter_ring(check,i,j,is_ring,eles,is_bonded,cut,visited)
+
+      integer, intent(in) :: check, i,j,eles
+      integer, intent(in) :: cut
+      logical, intent(inout) :: is_ring
+      logical, dimension(:,:), intent(in) :: is_bonded
+      logical, dimension(:) :: visited
+
+      integer :: z
+      
+      visited(j)=.true.
+
+      do z=1,eles
+         if ((is_bonded(j,z)) .AND. (i .ne. z) .AND. (.NOT. visited(z))) then
+            !write(*,*) check,z, cut
+            if (check .eq. z) then
+               is_ring=.true.
+               exit
+            else if (is_ring) then
+               exit
+            else
+         
+               if (cut .GE. 11) exit
+               Call iter_ring(check,j,z,is_ring,eles,is_bonded,cut+1,visited)
+            end if
+         end if
+      end do
+
+   end subroutine iter_ring
+
+
+
+   
       
 end module bonding

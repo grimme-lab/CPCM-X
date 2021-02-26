@@ -117,7 +117,7 @@ module profile
             tmp = int((temp-counter(0))/punit)
  
             if (tmp<0) tmp=0
-            if (tmp>n_sig-1) tmp=n_sig-1
+            if (tmp>n_sig-2) tmp=n_sig-2
             profile(tmp) = profile(tmp)+area(i)*(counter(tmp+1)-temp)/punit
             profile(tmp+1) = profile(tmp+1)+area(i)*(temp-counter(tmp))/punit
          end do
@@ -160,6 +160,7 @@ module profile
          real(8), dimension(:), allocatable :: sv_oh, sv_ot, sv_nh, area_oh, area_ot, area_nh
          real(8) :: s_0, punit, max_sig,save1,save2,save3
          integer :: oh_count, ot_count, nh_count, i
+         real(8), dimension(0:50) :: temp_sigma !Surpresses runtime error
 
          allocate(profile_group(size(hb_group)))
          profile_group="NH"
@@ -284,10 +285,17 @@ module profile
          end do
 
          ! Create Split Sigma Profiles for each Profile Group
-         
-         Call single_sigma(sv_nh,area_nh,sigma3(1,:))
-         Call single_sigma(sv_oh,area_oh,sigma3(2,:))
-         Call single_sigma(sv_ot,area_ot,sigma3(3,:))
+         temp_sigma=0
+         Call single_sigma(sv_nh,area_nh,temp_sigma)
+         sigma3(1,:)=temp_sigma(:)
+
+         temp_sigma=0
+         Call single_sigma(sv_oh,area_oh,temp_sigma)
+         sigma3(2,:)=temp_sigma(:)
+
+         temp_sigma=0
+         Call single_sigma(sv_ot,area_ot,temp_sigma)
+         sigma3(3,:)=temp_sigma(:)
         
          ! Scale Profiles with probability to form hydrogen bond
 
