@@ -125,7 +125,7 @@ module profile
             open(unit=2,file=nam//"_sigma.txt",action="write",status="replace")
          
             do i=0,size(profile)-1
-               write(2,*) counter(i),";", profile(i)!/sum(area)
+               write(2,*) counter(i),";", profile(i)/sum(area)
             end do
             close(2)
          end if
