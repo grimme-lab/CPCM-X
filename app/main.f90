@@ -134,8 +134,8 @@ program COSMO
       end select
       if (ML) then
          write(*,*) "Writing ML data in ML.data"
-         Call System("paste --delimiters='' ML.energy ML.prof ML.pr > ML.data")
-         Call System ("rm ML.energy ML.pr ML.prof")
+         Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
+         Call System ("rm ML.energy ML.pr")
       else if (model .NE. "crs") then
          write(*,*) "Free Energy contributions:"
          write(*,*) "Ideal State (dG_is):", dG_is

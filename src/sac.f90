@@ -168,14 +168,16 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    not_conv=.TRUE.
 
    !! Calculate the SIGMA Profile of the mixture
-   if (ML) open(5,file='ML.prof')
+  ! if (ML) open(5,file='ML.prof')
    do i=0,50
       mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
-      if (ML) write(5,'(F0.10A)',advance='no') mix_prof(i),","
+  !    if (ML) write(5,'(F0.10A)',advance='no') mix_prof(i),","
    end do
-   if (ML) then
-      close(5)
-   else
+   if (ML) then 
+   !   close(5)
+      open(5,file='ML.gamma')
+   end if
+   
 
       !! Mixed Activity Coefficient
       T=SysTemp
@@ -293,26 +295,32 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       gammasg(2)=log(phi(2)/z(2))+(coord/2.0_8)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
          &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
 
-
+      
       write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
       gamma_solv=0.0_8
       gamma_sol=0.0_8
       gamma_test=0.0_8
       gamma_test2=0.0_8
       do i=0,50
-         gamma_test=gamma_test+(profil(i)/param(5)*log(gam(i)))
-         gamma_test2=gamma_test2+(profil2(i)/param(5)*log(gam_sol(i)))
+         if (ML) then
+            write(5,'(F0.10A)',advance='no') mix_gam(i),","
+            write(5,'(F0.10A)',advance='no') gam(i),","
+            write(5,'(F0.10A)',advance='no') gam_sol(i),","
+         end if
+         !gamma_test=gamma_test+(profil(i)/param(5)*log(gam(i)))
+         !gamma_test2=gamma_test2+(profil2(i)/param(5)*log(gam_sol(i)))
          gamma_solv=gamma_solv+(profil(i)/param(5)*(log(mix_gam(i)/gam(i))))
          gamma_sol=gamma_sol+(profil2(i)/param(5)*log(mix_gam(i)/gam_sol(i)))
       end do
-      write(*,*) gamma_test, gamma_test2
+      if (ML) close(5)
+      !write(*,*) gamma_test, gamma_test2
       gamma_solv=exp(gammasg(1)+gamma_solv)
       gamma_sol=exp(gammasg(2)+gamma_sol)
       write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
       write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
       write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
       dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
-   end if
+   
 
 end subroutine sac_2005
 
