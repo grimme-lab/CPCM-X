@@ -95,7 +95,8 @@ module initialize_cosmo
             read(1,'(A1)',advance='no',iostat=io_error) line
             if (line .NE. "$") then
                read(1,*) dummy1, dummy3, dummy4, dummy5, element
-               elements(dummy1)=element
+               elements(dummy1)=to_lower(element)
+               !write(*,*) elements(dummy1)
                atom_xyz(dummy1,1)=dummy3*btoa
                atom_xyz(dummy1,2)=dummy4*btoa
                atom_xyz(dummy1,3)=dummy5*btoa
@@ -262,7 +263,6 @@ module initialize_cosmo
             data1%param=1.60_8
             call dict_add_key(cov_r, 'ti', data1)
 
-
       end subroutine initialize_param
 
       subroutine getargs(solvent,solute,T,sig_in)
@@ -278,12 +278,17 @@ module initialize_cosmo
          T=298.15_8
          solute=''
          solvent=''
+         ML=.FALSE.
          sig_in=.FALSE.
+         onlyprof=.FALSE.
          model="sac"
          do i=1,command_argument_count()
 
          Call get_command_argument(i, arg) 
             Select case (arg)
+               case ("--ML")
+                  ML=.TRUE.
+                  model="sac"
                case ("--c")
                   Call get_command_argument(i+1,arg)
                   solute=arg
@@ -298,6 +303,8 @@ module initialize_cosmo
                   read(arg,*) model
                case ("--sigma")
                   sig_in=.TRUE.
+               case ("--onlyprofile")
+                  onlyprof=.TRUE.
                case default
                   cycle
             end select

@@ -42,16 +42,21 @@ module pr
         ! write(*,*) atom_area(i), A%param, B%param
          dG_vdw=dG_vdw+atom_area(i)*(A%param*log(SysTemp)+B%param)
         end do
-
+       !  write(*,*) oh_count
          dG_hb=oh_count*(pr_param(3)*(log(SysTemp)/SysTemp)+pr_param(4))&
             &+nh_count*(pr_param(5)*(log(SysTemp)/SysTemp)+pr_param(6))
-
+!write(*,*) dG_hb
          dG_ring=n_ear*(pr_param(1)*log(SysTemp)+pr_param(2))
 
          dG_vdw=dG_vdw*jtokcal
-
+         
          dG_disp = dG_vdw + dG_hb + dG_ring
-
+        ! write(*,*)  dG_vdw, dG_hb, dG_ring, dG_disp
+        if (ML) then
+           open(5,file='ML.pr')
+           write(5,'(F0.2,A,I0,A,I0,A,I0,A,I0)') SysTemp,",",oh_count,",",nh_count,",",n_ear,",",int(maxval(ident))
+           close(5)
+         end if
 
 
       end subroutine pr2018

@@ -35,6 +35,7 @@ program COSMO
    Call getargs(solvent,solute,T,sig_in)
    Call initialize_param(r_cav,disp_con)
    Call init_pr
+   if (ML) write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file."
    !! Read Sigma Profiles (--sigma) or create Sigma Profiles from .cosmo files (default)
    T=SysTemp
    if (sig_in) then
@@ -67,26 +68,31 @@ program COSMO
 
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
       Call single_sigma(solute_sv,solute_area,solute_sigma,trim(solute))
-
-      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
-         &solvent_sigma3,trim(solvent))
-      Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
-         &solute_sigma3,trim(solute))
+      if (.NOT. ML) then
+         Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
+            &solvent_sigma3,trim(solvent))
+         Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
+            &solute_sigma3,trim(solute))
+      end if
+      if (onlyprof) then;
+         write(*,*) "Only Profile mode choosen, exiting."
+         stop
+      end if
      ! write(*,*) sum(solvent_area)
    end if
    
    select case (trim(model))
       case ("sac")! Do a COSMO-SAC calculation instead COSMO-RS
-         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
+         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
          Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case("sac2010")
          
-         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
+         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
          Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case("sac2013")
-         Call sac_gas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,solute_pot)
+         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
          Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
          Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
          !dG_disp=log(sac_disp(2))*(-0.5924)
@@ -126,8 +132,11 @@ program COSMO
          &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
       end select
-
-      if (model .NE. "crs") then
+      if (ML) then
+         write(*,*) "Writing ML data in ML.data"
+         Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
+         Call System ("rm ML.energy ML.pr")
+      else if (model .NE. "crs") then
          write(*,*) "Free Energy contributions:"
          write(*,*) "Ideal State (dG_is):", dG_is
          write(*,*) "Averaging correction (dG_cc):", dG_cc
