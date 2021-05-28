@@ -12,3 +12,5 @@ source-dir="src"
 name="csm"
 source-dir="app"
 main="main.f90"
+[dependencies]
+numsa.git = "git@github.com:MtoLStoN/numsa.git"
