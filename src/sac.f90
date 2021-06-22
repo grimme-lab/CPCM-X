@@ -62,6 +62,7 @@ module sac_mod
             open(5,file='ML.energy')
             write(5,'(F0.10A)',advance='no') dG_is,","
             write(5,'(F0.10A)',advance='no') dG_cc,","
+            write(5,'(F0.10A)',advance='no') dG_disp,","
             close(5)
          end if
    end subroutine sac_gas
@@ -74,12 +75,12 @@ function E_dd1(sigma1,sigma2)
    real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime,aef,s_hb,c_hb
 
    aef=param(5)
-   c_hb=param(6)*1000 !Parameter is scaled up to allow better fitting
+   c_hb=param(6)
    s_hb=param(7)
 
   ! fpol=(EPS-1.0_8)/(EPS+0.5_8)
   ! alpha=(0.3_8*aef**(1.5))/e0
-   alphaprime=param(8)*1000
+   alphaprime=param(8)
    
    svac=0
    svdo=0
@@ -114,9 +115,9 @@ function E_dd3(sigma1,sigma2,t,s)
    ! t and s are the sigma profile types (1=NH, 2=OH, 3=OT)
 
 
-   c_ohoh=param(6)*1000 ! Rescaling for
-   c_otot=param(7)*1000 ! compliance with
-   c_ohot=param(8)*1000 ! MFIT
+   c_ohoh=param(6)
+   c_otot=param(7)
+   c_ohot=param(8)
   c_hb=0.0_8
    if ((sigma1*sigma2) .LT. 0.0_8) then
       if ((s .EQ. 2) .AND. (t .EQ. 2)) then
@@ -128,9 +129,9 @@ function E_dd3(sigma1,sigma2,t,s)
       end if
    end if
 
-    A_es=param(9)*1000 ! Parameter need to be rescaled for MFIT
-    B_es=param(10)*1000000 ! Parameter need to be rescaled for MFIT
-    c_es=A_es+(B_es/(SysTemp**2)) !Temperaturabhängige elektrostatische interactiom
+   A_es=param(9)
+   B_es=param(10) 
+   c_es=A_es+(B_es/(SysTemp**2)) !Temperaturabhängige elektrostatische interactiom
 
    E_hb=0.0_8
    E_es=0.0_8
@@ -304,8 +305,8 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
       do i=0,50
          if (ML) then
             write(5,'(F0.10A)',advance='no') mix_gam(i),","
-            write(5,'(F0.10A)',advance='no') gam(i),","
-            write(5,'(F0.10A)',advance='no') gam_sol(i),","
+            ! write(5,'(F0.10A)',advance='no') gam(i),","
+            ! write(5,'(F0.10A)',advance='no') gam_sol(i),","
          end if
          !gamma_test=gamma_test+(profil(i)/param(5)*log(gam(i)))
          !gamma_test2=gamma_test2+(profil2(i)/param(5)*log(gam_sol(i)))

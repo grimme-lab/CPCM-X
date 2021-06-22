@@ -184,6 +184,7 @@ module initialize_cosmo
                   do i=2,8
                      read(1,*,iostat=io_error) param(i)
                   end do
+                  read(1,*) dG_shift
 
                case("sac2010")
 

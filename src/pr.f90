@@ -50,7 +50,7 @@ module pr
 
          dG_vdw=dG_vdw*jtokcal
          
-         dG_disp = dG_vdw + dG_hb + dG_ring
+         ! dG_disp = dG_vdw + dG_hb + dG_ring
         ! write(*,*)  dG_vdw, dG_hb, dG_ring, dG_disp
         if (ML) then
            open(5,file='ML.pr')

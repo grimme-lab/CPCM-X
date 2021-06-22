@@ -9,7 +9,7 @@ module globals
    real(8), dimension(10) :: param, pr_param !Parameter for several methods
    real(8) :: SysTemp !System Temperature
 
-   real(8) :: dG_is, dG_cc, dG_res, dG_disp !contributions to free energy of solvation
+   real(8) :: dG_is, dG_cc, dG_res, dG_disp, dG_shift !contributions to free energy of solvation
    character(7) :: model ! Chosen COSMO model
    logical :: onlyprof ! Only creates a sigma profile
    logical :: ML !Data Preperation for ML

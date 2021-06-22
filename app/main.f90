@@ -42,7 +42,7 @@ program COSMO
    Call initialize_param(r_cav,disp_con)
    Call init_pr
 
-   !if (ML) write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
+   if (ML) write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
 
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
@@ -80,6 +80,15 @@ program COSMO
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,trim(solvent))
       Call single_sigma(solute_sv,solute_area,solute_sigma,trim(solute))
 
+      allocate (int_ident(int(maxval(solute_ident))))
+     ! write(*,*) size(int_ident)
+     ! write(*,*) size(solute_elements)
+     ! write(*,*) size(solat_xyz(1,:))
+      do i=1,int(maxval(solute_ident))
+         int_ident(i)=i
+      end do
+   
+      Call get_surface_area(int_ident,solute_elements,solat_xyz,1.3_wp)
 
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
@@ -126,7 +135,7 @@ program COSMO
          !Calculation of the Solvent Phase (ideal conductor --> real solution)
          Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume)
          !Calculation of NES contributions (real gas --> ideal gas?)
-         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+         if (ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
 
       case("sac2010")
          
@@ -173,29 +182,30 @@ program COSMO
          write(*,*) "calc_gas_chem: ", gas_chem
          write(*,*) "calc_sol_chem: ", chem_pot_sol
          write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
-         deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
-         &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
+         deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
+         &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
          stop
       end select
-      !if (ML) then
-      !   write(*,*) "Writing ML data in ML.data"
-      !   Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
-      !   Call System ("rm ML.energy ML.pr")
-      !else if (model .NE. "crs") then
+      if (ML) then
+         write(*,*) "Writing ML data in ML.data"
+         Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
+         Call System ("rm ML.energy ML.pr")
+      else if (model .NE. "crs") then
          write(*,*) "Free Energy contributions:"
          write(*,*) "Ideal State (dG_is):", dG_is
          write(*,*) "Averaging correction (dG_cc):", dG_cc
          write(*,*) "restoring free energy (dG_res):", dG_res
-         write(*,*) "dispersion contribution (dG_disp):", dG_disp
+         write(*,*) "SMD Contribution (dG_CDS):", dG_disp
+         write(*,*) "conversion shift bar to mol/l: ", dG_shift
          write(*,*) "-------------------------------------------------"
-         write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp
-      !end if
+         write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp+dG_shift
+      end if
 
 
-      deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
-         &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
-         &solv_pot,sol_pot)
+     ! deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
+     !    &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
+     !    &solv_pot,sol_pot)
    
 end program COSMO
 
