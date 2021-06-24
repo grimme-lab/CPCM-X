@@ -34,6 +34,7 @@ module bonding
          cov_a=radius%param
          do j=i+1,int(maxval(ident))
             radius=dict_get_key(cov_r,elements(i))
+           ! write(*,*) cov_a, cov_b
             cov_b=radius%param
             if (distance(xyz(i,:),xyz(j,:)) .LE. ((cov_a+cov_b)*1.15)) then
                is_bonded(i,j)=.TRUE.
@@ -67,7 +68,7 @@ module bonding
                   end do
             end select                    
          end do
-      !   write(*,*) oh_count, nh_count
+        ! write(*,*) oh_count, nh_count
       end if
 
 

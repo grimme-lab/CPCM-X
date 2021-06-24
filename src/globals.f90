@@ -9,8 +9,10 @@ module globals
    real(8), dimension(10) :: param, pr_param !Parameter for several methods
    real(8) :: SysTemp !System Temperature
 
-   real(8) :: dG_is, dG_cc, dG_res, dG_disp !contributions to free energy of solvation
+   real(8) :: dG_is, dG_cc, dG_res, dG_disp, dG_shift !contributions to free energy of solvation
    character(7) :: model ! Chosen COSMO model
+   logical :: onlyprof ! Only creates a sigma profile
+   logical :: ML !Data Preperation for ML
 
    ! Covalent Radii of Elements
 
@@ -33,4 +35,51 @@ module globals
          
       end function distance
 
+   Pure Function to_upper (str) Result (string)
+
+   !   ==============================
+   !   Changes a string to upper case
+   !   ==============================
+
+      Implicit None
+      Character(*), Intent(In) :: str
+      Character(LEN(str))      :: string
+
+      Integer :: ic, i
+
+      Character(26), Parameter :: cap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+       Character(26), Parameter :: low = 'abcdefghijklmnopqrstuvwxyz'
+
+   !   Capitalize each letter if it is lowecase
+       string = str
+       do i = 1, LEN_TRIM(str)
+         ic = INDEX(low, str(i:i))
+           if (ic > 0) string(i:i) = cap(ic:ic)
+       end do
+
+   End Function to_upper
+
+   Pure Function to_lower (str) Result (string)
+
+   !   ==============================
+   !   Changes a string to upper case
+   !   ==============================
+
+      Implicit None
+      Character(*), Intent(In) :: str
+      Character(LEN(str))      :: string
+
+      Integer :: ic, i
+
+      Character(26), Parameter :: low = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+       Character(26), Parameter :: cap = 'abcdefghijklmnopqrstuvwxyz'
+
+   !   Capitalize each letter if it is lowecase
+       string = str
+       do i = 1, LEN_TRIM(str)
+         ic = INDEX(low, str(i:i))
+           if (ic > 0) string(i:i) = cap(ic:ic)
+       end do
+
+   End Function to_lower
 end module globals
