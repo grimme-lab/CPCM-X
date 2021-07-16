@@ -150,7 +150,7 @@ module profile
          real(8), dimension(:), allocatable,intent(in) :: sv,area
          character(2), dimension(:), allocatable, intent(in) :: hb_group
          character(len=*), intent(in), optional :: nam
-         real(8), dimension(:), allocatable, intent(in) :: ident
+         integer, dimension(:), allocatable, intent(in) :: ident
          character(2), dimension(:), allocatable, intent(in) :: elements
 
          real(8), dimension(0:50) :: prob_hb !hb bond probability function

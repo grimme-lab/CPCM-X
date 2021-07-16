@@ -11,7 +11,8 @@ module pr
          use element_dict
          implicit none
          !New version of PR EOS 
-         real(8), dimension(:), allocatable, intent(in) :: area, ident
+         real(8), dimension(:), allocatable, intent(in) :: area
+         integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: elements
          integer, intent(in) :: oh_count, nh_count, n_ear
 

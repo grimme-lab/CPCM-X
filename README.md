@@ -6,9 +6,17 @@ https://github.com/fortran-lang/fpm
 fpm build &&
 fpm install prefix [path without bin]
 
-Setting Home Directory Global Variable:
-export CSMHOME=path/to/source/directory
+USES INPUT File, use with
+./csm file.inp
 
-Searches for .param Files and .cosmo files in home directory and working directory.
+Example Input File:
 
-USAGE: ./csm --c solute --s solvent [--sigma --model (sac,crs,sac2010,sac2013) --T temperatur(default=298.15)]
+/path/to/sac/parameters/sac.param 
+/path/to/SMD_Parameters/ 
+sac #Keywords
+#Comment Line
+/path/to/solvent/cosmo/file.cosmo
+/path/to/solute/cosmo/file.cosmo
+smd_solvent smd_probe_radius
+Temperature
+0.995 0.005

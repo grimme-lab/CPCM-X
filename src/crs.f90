@@ -8,7 +8,8 @@ module crs
          use element_dict
          real(8), intent(out) :: id_scr, gas_chem
          real(8), intent(in) :: T, E_cosmo
-         real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot,ident
+         real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot
+         integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
          type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
          !real(8), dimension(10) :: param
@@ -64,9 +65,9 @@ module crs
          real(8), intent(in) :: c_hb, alpha, f_corr,s_hb
          real(8), intent(in) :: sv1, svt1, sv2, svt2
          character(2), dimension(:), allocatable, intent(in) :: element
-         real(8), dimension(:), allocatable, intent(in) :: ident
+         integer, dimension(:), allocatable, intent(in) :: ident
          character(2), dimension(:), allocatable, intent(in),optional :: ele2
-         real(8), dimension(:), allocatable, intent(in),optional :: id2
+         integer, dimension(:), allocatable, intent(in),optional :: id2
 
          ! LOCAL
 
@@ -135,7 +136,8 @@ module crs
          use globals
          implicit none
          !real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area,ident
+         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area
+         integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
          real(8), dimension(:), allocatable :: W_v 
@@ -171,7 +173,8 @@ module crs
          implicit none
          !real(8), dimension(10), intent(in) :: param
          real(8), intent(out) :: chem_pot_sol
-         real(8), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol,ident_sol,ident_solv
+         real(8), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol
+         integer, allocatable, intent(in), dimension(:) :: ident_sol, ident_solv
          real(8), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
          character(2), dimension(:), allocatable, intent(in) :: elem_sol, elem_solv
          real(8), dimension(:), allocatable :: W_v 
@@ -220,7 +223,8 @@ module crs
          use globals
          implicit none
          !real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable :: sv, svt, area, ident
+         real(8), dimension(:), allocatable :: sv, svt, area
+         integer, allocatable :: ident(:)
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
          character(2), dimension(:), allocatable, intent(in) :: element
          real(8), intent(in) :: T

@@ -141,14 +141,15 @@ function E_dd3(sigma1,sigma2,t,s)
 
 end function E_dd3
 
-subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
+subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
    use globals
+   use mctc_env, only: wp
    implicit none
 
    real(8), dimension(0:50) :: profil,profil2
    !real(8), dimension(1:9), intent(in) :: param
   ! real(8), dimension(1:2,0:49) :: sigma_profiles
-
+   real(wp) :: z1,z2
    real(8) :: gam(0:50),maxsig,punit,profile(0:50), gam_saved(0:50),gam_sol(0:50)
    real(8) :: gamma_solv, gamma_sol,gamma_test,gamma_test2, summ, mix_prof(0:50), mix_gam(0:50)
    real(8) :: T, VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
@@ -159,8 +160,8 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2)
    integer :: i,j
    logical :: not_conv
 
-   z(1)=0.995_8
-   z(2)=0.005_8
+   z(1)=z1
+   z(2)=z2
    
   ! comp_num=2
 
