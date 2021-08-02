@@ -13,4 +13,4 @@ name="csm"
 source-dir="app"
 main="main.f90"
 [dependencies]
-numsa = {path = "../numsa"}
+numsa.git = "https://github.com/grimme-lab/numsa"
