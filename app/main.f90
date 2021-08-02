@@ -59,9 +59,9 @@ program COSMO
 
    Call get_arguments(config,error)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con)
-   Call init_pr
-
+   
    if (config%ML) then
+      Call init_pr
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
       ML=.TRUE.
    end if
