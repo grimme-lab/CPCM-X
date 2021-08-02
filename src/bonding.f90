@@ -12,7 +12,7 @@ module bonding
       use element_dict
       implicit none
 
-      real(8), dimension(:), allocatable, intent(in) :: ident
+      integer, dimension(:), allocatable, intent(in) :: ident
       character(2), dimension(:), allocatable, intent(in) :: elements
       real(8), dimension(:,:), allocatable, intent(in) :: xyz
 
@@ -85,7 +85,7 @@ module bonding
    subroutine hb_grouping(ident,elements,is_bonded,hb_group)
       implicit none
       
-      real(8), dimension(:), allocatable, intent(in) :: ident
+      integer, dimension(:), allocatable, intent(in) :: ident
       character(2), dimension(:), allocatable, intent(in) :: elements
       logical, dimension(:,:), allocatable, intent(in) :: is_bonded
 
@@ -148,7 +148,7 @@ module bonding
    subroutine det_rings(ident,is_bonded,is_ring,N_ear)
       implicit none
 
-      real(8), dimension(:), intent(in) :: ident
+      integer, dimension(:), intent(in) :: ident
       logical, dimension(:,:), intent(in) :: is_bonded
       logical, dimension(:), intent(out), allocatable :: is_ring
       integer, intent(out) :: N_ear ! Number of effective atoms in rings
