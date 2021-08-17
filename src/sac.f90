@@ -70,6 +70,7 @@ module sac_mod
 function E_dd1(sigma1,sigma2)
    use globals
    implicit none
+
    real(8), intent(in) :: sigma1,sigma2
    !real(8), parameter :: EPS=3.667_8, e0=2.395E-4
    real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime,aef,s_hb,c_hb

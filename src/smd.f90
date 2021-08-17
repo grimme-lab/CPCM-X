@@ -5,7 +5,7 @@ module sdm
       !> Example implementation to calculate surface area for a molecule input
       subroutine calculate_cds(species, symbols, coord, probe, solvent, path, default)
       use mctc_env, only : wp
-      use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_bondi, grid_size
+      use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds, ascii_cds
       use globals, only: dG_disp, BtoA
       !> Unique chemical species in the input structure, shape: [nat]
@@ -64,15 +64,19 @@ module sdm
          end do
       end do
       
-      rad = get_vdw_rad_bondi(symbols)
-      rad = rad+0.4
-      call new_surface_integrator(sasa, species, rad, probe, grid_size(8))
-      call sasa%get_surface(species, coord_rev, surface, dsdr)
+      rad = get_vdw_rad_smd(symbols)
       if (default) then
          Call init_smd(param,solvent)
       else
          Call init_smd(param,solvent,path)
       end if
+
+      if (param%alpha .lt. 0.43) then
+        rad(8)=rad(8)+1.8*(0.43-param%alpha)
+      end if
+        
+      call new_surface_integrator(sasa, species, rad, probe, grid_size(8))
+      call sasa%get_surface(species, coord_rev, surface, dsdr)
       Call calc_surft(coord_rev,species,symbols,param,surft)
       Call calc_cds(surft,surface,cds,cds_sm)
       dG_disp= (sum(cds)+cds_sm)/1000
