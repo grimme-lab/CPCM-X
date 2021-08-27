@@ -201,6 +201,7 @@ contains
                do i=1,10
                   read(1,*) param(i)
                end do
+               read(1,*) dG_shift
 
             case("sac2013")
 

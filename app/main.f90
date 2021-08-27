@@ -106,7 +106,7 @@ program COSMO
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
-   if (config%ML) then
+   if ((config%ML) .OR. (.NOT. (config%model .EQ. "sac"))) then
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
@@ -161,8 +161,15 @@ program COSMO
          
          Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
-         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+         if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
 
+         allocate (int_ident(maxval(solute_ident)))
+         do i=1,maxval(solute_ident)
+            int_ident(i)=i
+         end do
+   
+         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+         &config%smd_solvent,config%smd_param_path,config%smd_default)
    !! ------------------------------------------------------------------------------------
    !! The SAC 2013 Routine is not fully implemented and not supported anymore
    !! ------------------------------------------------------------------------------------
