@@ -225,6 +225,9 @@ contains
 
       end if
 
+      ! Negative makes no sense
+      param(1)=abs(param(1))
+
          !Hard Coded Covalent Radii
 
          data1%param=0.31_8

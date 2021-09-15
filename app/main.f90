@@ -112,7 +112,7 @@ program COSMO
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
       
-      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      if (config%ML) Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
    end if
 
    !! ------------------------------------------------------------------------------------

@@ -72,7 +72,7 @@ function E_dd1(sigma1,sigma2)
    implicit none
 
    real(8), intent(in) :: sigma1,sigma2
-   !real(8), parameter :: EPS=3.667_8, e0=2.395E-4
+   real(8), parameter :: EPS=3.667_8, e0=2.395E-4
    real(8) :: E_dd1,svdo,svac,E_misfit,E_hb, fpol, alpha, alphaprime,aef,s_hb,c_hb
 
    aef=param(5)
@@ -81,7 +81,7 @@ function E_dd1(sigma1,sigma2)
 
   ! fpol=(EPS-1.0_8)/(EPS+0.5_8)
   ! alpha=(0.3_8*aef**(1.5))/e0
-   alphaprime=param(8)
+   alphaprime=fpol*alpha!param(8) !alphaprime is not really a parameter
    
    svac=0
    svdo=0
@@ -97,7 +97,7 @@ function E_dd1(sigma1,sigma2)
    E_misfit=0.0_8
    E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
   ! write(*,*) sigma1,sigma2
-   E_misfit=alphaprime/2*(sigma1+sigma2)**2.0_8
+   E_misfit=(alphaprime/2.0_8)*((sigma1+sigma2)**2.0_8)
    E_dd1=E_misfit+E_hb
  !  Write(*,*) E_dd1
 
@@ -158,7 +158,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
 
    
   ! integer :: comp_num
-   integer :: i,j
+   integer :: i,j, cycles
    logical :: not_conv
 
    z(1)=z1
@@ -190,8 +190,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       gam_saved(:)=1.0
       summ=0.0_8
 
-
+      cycles=0
       do while (not_conv)
+      cycles=cycles+1
          gam_saved(:)=mix_gam(:)
          do i=0,50
             do j=0,50
@@ -210,6 +211,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
                exit
             end if
          end do
+        if (cycles .gt. 10000) then
+          error stop "Error, mixed profile not converged"
+        end if
       end do
 
       !! Pure Activity Coefficient of 1
@@ -221,8 +225,10 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       gam(:)=1.0
       gam_saved(:)=1.0
       summ=0.0_8
-      not_conv=.true. 
+      not_conv=.true.
+      cycles=0
       do while (not_conv)
+      cycles=cycles+1
          gam_saved(:)=gam(:)
          do i=0,50
             do j=0,50
@@ -241,6 +247,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
                exit
             end if
          end do
+        if (cycles .gt. 10000) then
+          error stop "Error, pure profile 1 not converged"
+        end if
       end do
 
       !! Pure Activity Coefficient of 2
@@ -254,7 +263,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       gam_saved(:)=1.0
       summ=0.0_8
       not_conv=.true.
+      cycles=0
       do while (not_conv)
+      cycles=cycles+1
          gam_saved(:)=gam_sol(:)
          do i=0,50
             do j=0,50
@@ -273,6 +284,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
                exit
             end if
          end do
+        if (cycles .gt. 10000) then
+          error stop "Error, pure profile 2 not converged"
+        end if
       end do
 
       !! Staverman-Guggenheim equation
@@ -342,7 +356,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
 
    
   ! integer :: comp_num
-   integer :: i,j,s,t
+   integer :: i,j,s,t, cycles
    logical :: not_conv
 
    z(1)=0.995_8
@@ -369,9 +383,9 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    mix_gam=1.0
    gam_saved=1.0
    summ=0.0_8
-
-
+  cycles=0
    do while (not_conv)
+   cycles=cycles+1
       gam_saved(:,:)=mix_gam(:,:)
       do t=1,3
          do i=0,50
@@ -398,6 +412,9 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
             end if
          end do
       end do
+      if (cycles .gt. 10000) then
+        error stop "Error, not converged"
+      end if
    end do
 
    if (ML) then
@@ -420,8 +437,9 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    gam_saved=1.0
    summ=0.0_8
    not_conv=.true.
-   
+   cycles=0
    do while (not_conv)
+   cycles=cycles+1
       gam_saved(:,:)=gam(:,:)
       do t=1,3
          do i=0,50
@@ -446,12 +464,16 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
             end if
          end do
       end do
+      if (cycles .gt. 10000) then
+        error stop "Error, not converged"
+      end if
    end do
 
 
    !! Pure Activity Coefficient of 2
 
    profile=0.0_8
+   cycles=0
    do t=1,3
       do i=0,50
          profile(t,i)=profil2(t,i)/sum(profil2)
@@ -464,6 +486,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    not_conv=.true.
 
    do while (not_conv)
+   cycles=cycles+1
       gam_saved(:,:)=gam_sol(:,:)
       do t=1,3
          do i=0,50
@@ -488,6 +511,9 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
             end if
          end do
       end do
+      if (cycles .gt. 10000) then
+        error stop "Error, not converged"
+      end if
    end do
 
    !! Staverman-Guggenheim equation
