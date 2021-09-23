@@ -58,7 +58,7 @@ program COSMO
    !! ------------------------------------------------------------
 
    Call get_arguments(config,error)
-   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con)
+   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent)
    
    if (config%ML) then
       Call init_pr
@@ -187,13 +187,13 @@ program COSMO
 
          ! Calculate sv0,svt for COSMO-RS
 
-         Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
+         Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
       
-         Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
+         Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
          Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
-         ! Calcualtion of Gas Phase energies
+         ! Calculation of Gas Phase energies
 
          if (gas) then
             Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&

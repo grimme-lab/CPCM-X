@@ -139,7 +139,7 @@ contains
      
    end subroutine read_cosmo
 
-   subroutine initialize_param(filename,model,r_cav,disp_con)
+   subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
       use element_dict
       use globals, only: param, cov_r, dG_shift
 
@@ -148,7 +148,7 @@ contains
 
       type(DICT_DATA) :: data1, r_c, d_c
       character(len=3) :: symbol
-      character(len=*) :: filename, model
+      character(len=*) :: filename, model, solvent
       logical :: g_exists
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
