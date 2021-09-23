@@ -11,7 +11,7 @@ contains
       real(8), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
       character(2), allocatable, dimension(:),intent(out) :: elements
       real(8), intent(out) :: volume, c_energy
-      integer :: io_error, dummy1, num
+      integer :: io_error, dummy1, num, ele_num
       real(8) :: dummy3, dummy4, dummy5
       integer, allocatable :: ident(:)
       character(2) :: element
@@ -88,8 +88,23 @@ contains
          read(1,*) line
       end do
       
-      allocate(elements((maxval(ident))))
-      allocate(atom_xyz(int(maxval(ident)),3))
+      ele_num=0
+      do while (.TRUE.)
+         read(1,'(A1)',advance='no',iostat=io_error) line
+         if (line .NE. "$") then
+           ele_num=ele_num+1
+         else
+            exit
+         end if
+      end do
+
+      allocate(elements(ele_num))
+      allocate(atom_xyz(ele_num,3))
+
+      rewind(1)
+      do while (line .NE. "#atom")
+         read(1,*) line
+      end do
 
       do while (.TRUE.)
          read(1,'(A1)',advance='no',iostat=io_error) line
@@ -124,7 +139,7 @@ contains
      
    end subroutine read_cosmo
 
-   subroutine initialize_param(filename,model,r_cav,disp_con)
+   subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
       use element_dict
       use globals, only: param, cov_r, dG_shift
 
@@ -133,7 +148,7 @@ contains
 
       type(DICT_DATA) :: data1, r_c, d_c
       character(len=3) :: symbol
-      character(len=*) :: filename, model
+      character(len=*) :: filename, model, solvent
       logical :: g_exists
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
@@ -186,6 +201,7 @@ contains
                do i=1,10
                   read(1,*) param(i)
                end do
+               read(1,*) dG_shift
 
             case("sac2013")
 
@@ -208,6 +224,9 @@ contains
          end select
 
       end if
+
+      ! Negative makes no sense
+      param(1)=abs(param(1))
 
          !Hard Coded Covalent Radii
 

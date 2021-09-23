@@ -58,7 +58,7 @@ program COSMO
    !! ------------------------------------------------------------
 
    Call get_arguments(config,error)
-   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con)
+   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent)
    
    if (config%ML) then
       Call init_pr
@@ -106,13 +106,13 @@ program COSMO
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
-   if (config%ML) then
+   if ((config%ML) .OR. (.NOT. (config%model .EQ. "sac"))) then
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
       
-      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      if (config%ML) Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
    end if
 
    !! ------------------------------------------------------------------------------------
@@ -161,8 +161,15 @@ program COSMO
          
          Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
          Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
-         Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+         if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
 
+         allocate (int_ident(maxval(solute_ident)))
+         do i=1,maxval(solute_ident)
+            int_ident(i)=i
+         end do
+   
+         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+         &config%smd_solvent,config%smd_param_path,config%smd_default)
    !! ------------------------------------------------------------------------------------
    !! The SAC 2013 Routine is not fully implemented and not supported anymore
    !! ------------------------------------------------------------------------------------
@@ -180,13 +187,13 @@ program COSMO
 
          ! Calculate sv0,svt for COSMO-RS
 
-         Call average_charge(param(2), solvent_xyz,solvent_su,solvent_area,solvent_sv0)
+         Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
       
-         Call average_charge(param(2), solute_xyz, solute_su, solute_area, solute_sv0)
+         Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
          Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
-         ! Calcualtion of Gas Phase energies
+         ! Calculation of Gas Phase energies
 
          if (gas) then
             Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
