@@ -9,6 +9,7 @@ program COSMO
    use profile
    use pr
    use crs
+   use qc_calc, only: qc_cal
    use mctc_env, only : wp, get_argument, fatal_error, error_type
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use sdm
@@ -39,9 +40,10 @@ program COSMO
       real(wp) :: T
       real(wp) :: probe
       real(wp) :: z1,z2
+      real(wp) :: qc_eps
       character(len=:), allocatable :: sac_param_path
       character(len=:), allocatable :: smd_param_path
-      logical :: ML, sig_in, prof, smd_default
+      logical :: ML, sig_in, prof, smd_default, TM
       character(len=:), allocatable :: model
    end type configuration
 
@@ -78,7 +80,13 @@ program COSMO
       
       Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
       Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
-   else
+   else   
+   !! ----------------------------------------------------------------------------------
+   !! Creating COSMO Files with QC packages
+   !! ----------------------------------------------------------------------------------
+      if (config%TM) then
+         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent) 
+      end if 
    !! ----------------------------------------------------------------------------------
    !! Create the Sigma Profile from COSMO files
    !! ----------------------------------------------------------------------------------
@@ -284,8 +292,10 @@ subroutine read_input(config,error)
 
    character(len=100) :: sac_param_path, smd_param_path, line
 
-   integer :: io_error, i, n,j
+   integer :: io_error, i, n,j, equal
    logical :: ex, started
+
+   character(len=:), allocatable :: keyword, substring
 
    !> Check if the COSMO-SACMD Input File Exists.
    ex=.false.
@@ -298,6 +308,8 @@ subroutine read_input(config,error)
    config%sig_in=.FALSE.
    config%prof=.FALSE.
    config%smd_default=.FALSE.
+   config%TM=.FALSE.
+   config%qc_eps=0
 
    Open(input_unit,file=config%input)
    Read(input_unit,'(A)',iostat=io_error,err=255) line
@@ -309,7 +321,27 @@ subroutine read_input(config,error)
    j=1
    do i=1,len(trim(line))+1
       if (line(i:i) .EQ. " ") then
-         select case(line(j:i-1))
+         equal=index(line(j:i-1),'=')
+         if (equal .ne. 0) then
+            Call move_line(line(j:(j+equal-2)),keyword)
+            Call move_line(line((j+equal):i-1),substring)
+         else
+            Call move_line(line(j:i-1),keyword)
+         end if
+         
+         select case(keyword)
+            case ('TM')
+               config%TM=.true.
+               if (equal .ne. 0) then
+                  select case(substring)
+                     case ('default','minnesota')
+                        config%qc_eps=-1
+                     case ('infinity')
+                        config%qc_eps=0
+                     case default
+                        read(substring,*) config%qc_eps
+                  end select
+               end if
             case('ML')
                config%ML=.true.
             case('sac','sac2010','sac2013')
@@ -321,6 +353,8 @@ subroutine read_input(config,error)
             case('smd_default', 'default_smd')
                config%smd_default=.true.
          end select
+         deallocate(keyword)
+         if (allocated(substring)) deallocate(substring)
          j=i+1
       end if
    end do 
@@ -342,7 +376,6 @@ end subroutine read_input
 subroutine move_line(line,aline)
    character(*), intent(in) :: line
    character(:), allocatable, intent(inout) :: aline
-
    allocate(character(len(trim(line))) :: aline)
    aline=trim(line)
 end subroutine move_line
