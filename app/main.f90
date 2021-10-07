@@ -85,7 +85,7 @@ program COSMO
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
       if (config%TM) then
-         Call qc_cal(config%qc_eps,config%csm_solute) 
+         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent) 
       end if 
    !! ----------------------------------------------------------------------------------
    !! Create the Sigma Profile from COSMO files
@@ -325,7 +325,6 @@ subroutine read_input(config,error)
          if (equal .ne. 0) then
             Call move_line(line(j:(j+equal-2)),keyword)
             Call move_line(line((j+equal):i-1),substring)
-            write(*,*) keyword, substring
          else
             Call move_line(line(j:i-1),keyword)
          end if
@@ -333,7 +332,16 @@ subroutine read_input(config,error)
          select case(keyword)
             case ('TM')
                config%TM=.true.
-               if (equal .ne. 0) read(substring,*) config%qc_eps
+               if (equal .ne. 0) then
+                  select case(substring)
+                     case ('default','minnesota')
+                        config%qc_eps=-1
+                     case ('infinity')
+                        config%qc_eps=0
+                     case default
+                        read(substring,*) config%qc_eps
+                  end select
+               end if
             case('ML')
                config%ML=.true.
             case('sac','sac2010','sac2013')
