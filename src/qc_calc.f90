@@ -21,6 +21,12 @@ contains
 
         !> Control File exists?
         logical :: ex
+        !> Reading the control file
+        character(len=100) :: line
+        !> Charge of molecule from control file
+        integer :: charge
+        !> Is Molecule charged?
+        logical :: ion
 
         INQUIRE(file='control', exist=ex)
 
@@ -30,19 +36,27 @@ contains
         write(*,*) 'Gas phase single point calculation.'
         Call execute_command_line('ridft > gas.out', WAIT=.true.)
         Call execute_command_line('kdg end')
-        open(11, file='control', access='append')
-        write(11,*) '$cosmo'
-        if (epsilon .ne. 0) then 
-            write(11,*) '   epsilon=',epsilon
-        else 
-            write(11,*) '   epsilon=infinity'
+        ion=.false.
+        INQUIRE(file='.CHRG', exist=ex)
+        if (ex) then
+            open(11, file='.CHRG')
+            read(11,*) charge
+            if (charge .ne. 0) ion=.true.
+            close(11)
         end if
-        write(11,*) '$cosmo_out file=',cosmo_out
-        write(11,*) '$end' 
+        open(11, file='control', access='append')
+        write(11,'(A)') '$cosmo'
         if (epsilon .ne. 0) then 
-            write(*,*) 'COSMO Calculation with epsilon=',epsilon
+            write(11,'(A11, F0.2, A4)')'   epsilon=',epsilon, merge(' ion','    ',ion)
+        else 
+            write(11,'(A11, F0.2, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
+        end if
+        write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
+        write(11,'(A4)') '$end' 
+        if (epsilon .ne. 0) then 
+            write(*,'(A,F0.2,A),A') 'COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
-            write(*,*) 'COSMO Calculation with epsilon=infinity'
+            write(*,'(A,A)') 'COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
         end if
         Call execute_command_line('ridft > solv.out', WAIT=.true.)
     end subroutine turbomole
