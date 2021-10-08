@@ -77,7 +77,7 @@ function E_dd1(sigma1,sigma2)
 
    aef=param(5)
    c_hb=param(6)
-   s_hb=param(7)
+   s_hb=abs(param(7)) !Sigma_Hb can't be negative
 
   ! fpol=(EPS-1.0_8)/(EPS+0.5_8)
   ! alpha=(0.3_8*aef**(1.5))/e0
