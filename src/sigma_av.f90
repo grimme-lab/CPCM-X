@@ -50,6 +50,7 @@ module sigma_av
             tmpcounter=0.0_8
             tmpdenominator=0.0_8
             av_charge(i)=tmpcharge
+            !write(*,*) av_charge(i)
          end do
       end subroutine average_charge
 

@@ -67,7 +67,6 @@ program COSMO
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
       ML=.TRUE.
    end if
-
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
    !! ----------------------------------------------------------------------------------
@@ -104,23 +103,21 @@ program COSMO
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
    !! ------------------------------------------------------------------------------------
-
       Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,"solvent")
       Call single_sigma(solute_sv,solute_area,solute_sigma,"solute")
-
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
-   if ((config%ML) .OR. (.NOT. (config%model .EQ. "sac"))) then
+   if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
       
-      if (config%ML) Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
    end if
 
    !! ------------------------------------------------------------------------------------
@@ -190,14 +187,12 @@ program COSMO
      !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case ("crs")
    
-
          !! COSMO-RS calculation starts here !!
 
          ! Calculate sv0,svt for COSMO-RS
 
          Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
-      
          Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
          Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
@@ -210,7 +205,6 @@ program COSMO
          !end if
 
          ! Computation of COSMO-RS equations (here may be something wrong atm)
-
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
          Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
          &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
@@ -223,28 +217,17 @@ program COSMO
          Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
          &config%smd_solvent,config%smd_param_path,config%smd_default)
 
-         write(*,*) "Free Energy contributions:"
-         write(*,*) "Ideal State (dG_is):", dG_is
-         write(*,*) "Averaging correction (dG_cc):", dG_cc
-         write(*,*) "restoring free energy (dG_res):", chem_pot_sol
-         write(*,*) "Resulting chemical potential in mixture:", dG_is+dG_cc+chem_pot_sol
-         write(*,*) "SMD Contribution (dG_CDS):", dG_disp
-         write(*,*) "Systematic empirical shift (dG_shift)", dG_shift
-         write(*,*) "-------------------------------------------------"
-         write(*,*) "solvation free energy: ", dG_is+dG_cc+chem_pot_sol+dG_disp+dG_shift
-        ! write(*,*) "calc_gas_chem: ", gas_chem
-        ! write(*,*) "calc_sol_chem: ", chem_pot_sol
-        ! write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
+
+         dG_res=chem_pot_sol+param(9)*near_sol
          deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
          &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
-         stop
       end select
       if (config%ML) then
          write(*,*) "Writing ML data in ML.data"
          Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
          Call System ("rm ML.energy ML.pr")
-      else if (config%model .NE. "crs") then
+      else
          write(*,*) "Free Energy contributions:"
          write(*,*) "Ideal State (dG_is):", dG_is
          write(*,*) "Averaging correction (dG_cc):", dG_cc

@@ -54,7 +54,7 @@ module crs
 
          !!! RING CORRECTION IS MISSING ATM
          gas_chem=-id_scr+thermo-vdW_gain!-ring_corr
-         write(*,*) gas_chem
+         !write(*,*) gas_chem
          
 
       end subroutine calcgas
@@ -211,12 +211,12 @@ module crs
          end do
 
          chem_pot_sol=temppot*beta-(param(8)*R*Jtokcal*T*log(sum(area_solv)))
-         write(*,*) chem_pot_sol
+         !write(*,*) chem_pot_sol
          temppot=0
          do i=1,size(solv_pot)
             temppot=temppot+(area_solv(i)*solv_pot(i))
          end do
-         write(*,*) beta*temppot
+         !write(*,*) beta*temppot
       end subroutine compute_solute
 
       subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,element)

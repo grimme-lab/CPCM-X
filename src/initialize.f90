@@ -172,6 +172,7 @@ contains
                do i=3,10
                   read(1,*) param(i)
                end do
+               read(1,*) dG_shift
                read(1,*)
                io_error=0
 
