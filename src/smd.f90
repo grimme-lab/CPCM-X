@@ -1,4 +1,4 @@
-module sdm 
+module sdm
 
    contains
 
@@ -63,7 +63,7 @@ module sdm
             coord_rev(i,j)=coord(j,i)*(1/BtoA)
          end do
       end do
-      
+
       rad = get_vdw_rad_smd(symbols)
       if (default) then
          Call init_smd(param,solvent)
@@ -74,14 +74,14 @@ module sdm
       if (param%alpha .lt. 0.43) then
         rad(8)=rad(8)+1.8*(0.43-param%alpha)
       end if
-        
+
       call new_surface_integrator(sasa, species, rad, probe, grid_size(8))
       call sasa%get_surface(species, coord_rev, surface, dsdr)
       Call calc_surft(coord_rev,species,symbols,param,surft)
       Call calc_cds(surft,surface,cds,cds_sm)
       dG_disp= (sum(cds)+cds_sm)/1000
 end subroutine calculate_cds
-   
+
 
 
 

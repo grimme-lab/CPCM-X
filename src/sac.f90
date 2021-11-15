@@ -15,7 +15,7 @@ module sac_mod
          !real(wp), dimension(10) :: param
        !  type(DICT_DATA) :: a_disp,b_disp
          real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
-         integer :: dummy1, ioerror, i 
+         integer :: dummy1, ioerror, i
 
          open(1,file="energy")
          read(1,*,iostat=ioerror)
@@ -49,7 +49,7 @@ module sac_mod
  !           b_disp=dict_get_key(disp_conb, element(int(ident(i))))
   !          vdW_gain=vdW_gain+(area(i)*(a_disp%param*SysTemp+b_disp%param))
   !       end do
-     !    write(*,*) "EvdW: ", vdW_gain 
+     !    write(*,*) "EvdW: ", vdW_gain
          write(*,*) "Area: ", sum(area)
         ! thermo=param(10)*R*jtokcal*SysTemp
     !     write(*,*) "thermostatic correction: ", thermo
@@ -84,7 +84,7 @@ function E_dd1(sigma1,sigma2)
    fpol=(EPS-1.0_wp)/(EPS+0.5_wp)
    alpha=(0.3_wp*aef**(1.5))/e0
    alphaprime=fpol*alpha!param(8) !alphaprime is not really a parameter
-   
+
    svac=0
    svdo=0
 
@@ -133,7 +133,7 @@ function E_dd3(sigma1,sigma2,t,s)
    end if
 
    A_es=param(9)
-   B_es=param(10) 
+   B_es=param(10)
    c_es=A_es+(B_es/(SysTemp**2)) !Temperaturabhängige elektrostatische interactiom
 
    E_hb=0.0_wp
@@ -158,14 +158,14 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
    real(wp) :: T, VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
    real(wp) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
 
-   
+
   ! integer :: comp_num
    integer :: i,j, cycles
    logical :: not_conv
 
    z(1)=z1
    z(2)=z2
-   
+
   ! comp_num=2
 
    VNORM=param(3)
@@ -178,11 +178,11 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
   !    if (ML) write(5,'(F0.10A)',advance='no') mix_prof(i),","
    end do
-   if (ML) then 
+   if (ML) then
    !   close(5)
       open(5,file='ML.gamma')
    end if
-   
+
 
       !! Mixed Activity Coefficient
       T=SysTemp
@@ -260,7 +260,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       do i=0,50
          profile(i)=profil2(i)/sum(profil2)
       end do
-   
+
       gam_sol(:)=1.0
       gam_saved(:)=1.0
       summ=0.0_wp
@@ -294,15 +294,15 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       !! Staverman-Guggenheim equation
       coord=int(param(4))
 
-      RNORM(1) = VCOSMO1/VNORM 
+      RNORM(1) = VCOSMO1/VNORM
       QNORM(1) = sum(profil)/ANORM
       RNORM(2) = VCOSMO2/VNORM
       QNORM(2) = sum(profil2)/ANORM
 
       bt=z(1)*QNORM(1)+z(2)*QNORM(2)
       bp=z(1)*RNORM(1)+z(2)*RNORM(2)
-  
-   
+
+
       do i=1,2
          Theta(i)=(z(i)*QNORM(i))/(bt)
          Phi(i)=(z(i)*RNORM(i))/(bp)
@@ -310,11 +310,11 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       end do
       gammasg(1)=log(phi(1)/z(1))+(coord/2.0_wp)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
          &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
-   
+
       gammasg(2)=log(phi(2)/z(2))+(coord/2.0_wp)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
          &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
 
-      
+
       write(*,*) "COSMO-SAC Acitivity Coefficient Prediction:"
       gamma_solv=0.0_wp
       gamma_sol=0.0_wp
@@ -339,7 +339,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
       write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
       dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
-   
+
 
 end subroutine sac_2005
 
@@ -356,14 +356,14 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    real(wp) :: VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2
    real(wp) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
 
-   
+
   ! integer :: comp_num
    integer :: i,j,s,t, cycles
    logical :: not_conv
 
    z(1)=0.995_wp
    z(2)=0.005_wp
-   
+
   ! comp_num=2
 
    VNORM=param(3)
@@ -403,7 +403,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
       end do
       not_conv=.false.
  !     write(*,*) mix_gam
-      
+
       do t=1,3
          do i=0,50
             if (abs((mix_gam(t,i)-gam_saved(t,i))) .LT. 0.000001) then
@@ -481,7 +481,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
          profile(t,i)=profil2(t,i)/sum(profil2)
       end do
    end do
-   
+
    gam_sol=1.0
    gam_saved=1.0
    summ=0.0_wp
@@ -521,15 +521,15 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    !! Staverman-Guggenheim equation
    coord=int(param(4))
 
-   RNORM(1) = VCOSMO1/VNORM 
+   RNORM(1) = VCOSMO1/VNORM
    QNORM(1) = sum(profil)/ANORM
    RNORM(2) = VCOSMO2/VNORM
    QNORM(2) = sum(profil2)/ANORM
 
    bt=z(1)*QNORM(1)+z(2)*QNORM(2)
    bp=z(1)*RNORM(1)+z(2)*RNORM(2)
-  
-   
+
+
    do i=1,2
       Theta(i)=(z(i)*QNORM(i))/(bt)
       Phi(i)=(z(i)*RNORM(i))/(bp)
@@ -537,7 +537,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    end do
    gammasg(1)=log(phi(1)/z(1))+(coord/2.0_wp)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
       &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
-   
+
    gammasg(2)=log(phi(2)/z(2))+(coord/2.0_wp)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
       &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
 
@@ -559,7 +559,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
    write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
    write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
-  ! write(*,*) param(10) 
+  ! write(*,*) param(10)
    !write(*,*) gammasg(1), gammasg(2)
 
    dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
@@ -581,7 +581,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    real(wp) :: VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2, A, omega
    real(wp) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
    real(wp) :: gammadisp(2)
-   
+
   ! integer :: comp_num
    integer :: i,j,s,t
    logical :: not_conv
@@ -589,7 +589,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    omega=0.27027 !Needs some dispersion flags, should be negative for water + hb_only etc.
    z(1)=0.995_wp
    z(2)=0.005_wp
-   
+
   ! comp_num=2
 
    VNORM=param(3)
@@ -628,7 +628,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
       end do
       not_conv=.false.
  !     write(*,*) mix_gam
-      
+
       do t=1,3
          do i=0,50
             if (abs((mix_gam(t,i)-gam_saved(t,i))) .LT. 0.000001) then
@@ -653,7 +653,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    gam_saved=1.0
    summ=0.0_wp
    not_conv=.true.
-   
+
    do while (not_conv)
       gam_saved(:,:)=gam(:,:)
       do t=1,3
@@ -690,7 +690,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
          profile(t,i)=profil2(t,i)/sum(profil2)
       end do
    end do
-   
+
    gam_sol=1.0
    gam_saved=1.0
    summ=0.0_wp
@@ -726,15 +726,15 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    !! Staverman-Guggenheim equation
    coord=int(param(4))
 
-   RNORM(1) = VCOSMO1/VNORM 
+   RNORM(1) = VCOSMO1/VNORM
    QNORM(1) = sum(profil)/ANORM
    RNORM(2) = VCOSMO2/VNORM
    QNORM(2) = sum(profil2)/ANORM
 
    bt=z(1)*QNORM(1)+z(2)*QNORM(2)
    bp=z(1)*RNORM(1)+z(2)*RNORM(2)
-  
-   
+
+
    do i=1,2
       Theta(i)=(z(i)*QNORM(i))/(bt)
       Phi(i)=(z(i)*RNORM(i))/(bp)
@@ -742,7 +742,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    end do
    gammasg(1)=log(phi(1)/z(1))+(coord/2.0_wp)*QNORM(1)*log(Theta(1)/Phi(1))+L(1)-&
       &(Phi(1)/z(1))*(z(1)*L(1)+z(2)*L(2))
-   
+
    gammasg(2)=log(phi(2)/z(2))+(coord/2.0_wp)*QNORM(2)*log(Theta(2)/Phi(2))+L(2)-&
       &(Phi(2)/z(2))*(z(1)*L(1)+z(2)*L(2))
 
@@ -767,7 +767,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    write(*,*) "Results for Mixture with Compound 1 x= ",z(1)," and Compound 2 x= ",z(2),"."
    write(*,*) "Gamma(1)= ",gamma_solv, "Gamma(2)= ", gamma_sol
    write(*,*) "lnGamma(1)= ", log(gamma_solv),"lnGamma(2)= ", log(gamma_sol)
-  ! write(*,*) param(10) 
+  ! write(*,*) param(10)
    !write(*,*) gammasg(1), gammasg(2)
 
    dG_res=log(gamma_sol)*SysTemp*R*Jtokcal
@@ -811,7 +811,7 @@ subroutine sac2013_disp(nam,is_bonded,ident,elements,disp_con,sac_disp)
                bond_count=bond_count+1
             end if
          end do
-   
+
          write(bond_string,"(I1)") bond_count
          data_string=trim(symbol)//trim(bond_string)
       case ('h')
@@ -830,10 +830,10 @@ subroutine sac2013_disp(nam,is_bonded,ident,elements,disp_con,sac_disp)
                   end if
                end if
             end do
-         end if       
+         end if
          data_string=trim(symbol)//trim(bond_string)
    end select
-   
+
    disp=dict_get_key(disp_con, trim(data_string))
    atom_disp=disp%param
    sac_disp=sac_disp+atom_disp
@@ -851,4 +851,4 @@ subroutine sac2013_disp(nam,is_bonded,ident,elements,disp_con,sac_disp)
 end subroutine sac2013_disp
 
 end module sac_mod
-      
+

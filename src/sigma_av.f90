@@ -17,7 +17,7 @@ module sigma_av
    ! v0 = Averaged charge/area over the averaging radius 2*r_av
    ! Results:
    ! vt = Orthogonalized charge/area
-   
+
 
 
    contains

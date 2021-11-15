@@ -16,7 +16,7 @@ contains
       real(wp) :: dummy3, dummy4, dummy5
       integer, allocatable :: ident(:)
       character(2) :: element
-      
+
       logical :: exists
 
       filen=compound
@@ -48,7 +48,7 @@ contains
          stop
       end if
 
-      io_error=0 
+      io_error=0
       do while (io_error .GE. 0)
          read(1,*,iostat=io_error) line
       end do
@@ -63,7 +63,7 @@ contains
       do while (line .NE. "$segment_information")
          read(1,*) line
       end do
-      
+
       num=1
       dummy4=0
       do while (.TRUE.)
@@ -88,7 +88,7 @@ contains
       do while (line .NE. "#atom")
          read(1,*) line
       end do
-      
+
       ele_num=0
       do while (.TRUE.)
          read(1,'(A1)',advance='no',iostat=io_error) line
@@ -135,9 +135,9 @@ contains
       read (1,*)
       read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
 
-      
+
       close(1)
-     
+
    end subroutine read_cosmo
 
    subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
@@ -154,9 +154,9 @@ contains
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
 
-      
+
       INQUIRE(file=filename, exist=g_exists)
-   
+
       if (.NOT. g_exists) then
          error stop "No Parameter File for COSMO-SAC found."
       else
@@ -253,7 +253,7 @@ contains
          data1%param=0.58_wp
          call dict_add_key(cov_r, 'ne', data1)
          data1%param=1.66_wp
-         call dict_add_key(cov_r, 'na', data1) 
+         call dict_add_key(cov_r, 'na', data1)
          data1%param=1.41_wp
          call dict_add_key(cov_r, 'mg', data1)
          data1%param=1.21_wp

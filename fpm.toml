@@ -3,6 +3,9 @@ version="0.5.0"
 author="Marcel Stahn"
 maintainer="stahn@thch.uni-bonn.de"
 
+[build]
+link = ["lapack", "blas"]
+
 [library]
 source-dir="src"
 

@@ -7,12 +7,12 @@ module pr
    contains
 
 
-      
+
       subroutine pr2018(area,elements,ident,oh_count,nh_count,n_ear)
          use globals
          use element_dict
          implicit none
-         !New version of PR EOS 
+         !New version of PR EOS
          real(wp), dimension(:), allocatable, intent(in) :: area
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: elements
@@ -23,7 +23,7 @@ module pr
          real(wp) :: dG_hb, dG_ring, dG_vdw
          integer :: i
          type(DICT_DATA) :: A, B
-        
+
          !write(*,*) n_ear
          dG_hb = 0.0_wp
          dG_ring = 0.0_wp
@@ -52,7 +52,7 @@ module pr
          dG_ring=n_ear*(pr_param(1)*log(SysTemp)+pr_param(2))
 
          dG_vdw=dG_vdw*jtokcal
-         
+
          ! dG_disp = dG_vdw + dG_hb + dG_ring
         ! write(*,*)  dG_vdw, dG_hb, dG_ring, dG_disp
         if (ML) then

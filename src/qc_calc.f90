@@ -11,7 +11,7 @@ module qc_calc
 
 contains
 
-    !> turbomole subroutine - needs control file for gas phase calculation and coord file in 
+    !> turbomole subroutine - needs control file for gas phase calculation and coord file in
     subroutine turbomole(epsilon, cosmo_out, solvent)
         !> Dielectric Constant for COSMO Calculation
         real(wp), intent(inout) :: epsilon
@@ -47,14 +47,14 @@ contains
         end if
         open(11, file='control', access='append')
         write(11,'(A)') '$cosmo'
-        if (epsilon .ne. 0) then 
+        if (epsilon .ne. 0) then
             write(11,'(A11, F0.2, A4)')'   epsilon=',epsilon, merge(' ion','    ',ion)
-        else 
+        else
             write(11,'(A11, F0.2, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
         end if
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
-        write(11,'(A4)') '$end' 
-        if (epsilon .ne. 0) then 
+        write(11,'(A4)') '$end'
+        if (epsilon .ne. 0) then
             write(*,'(A,F0.2,A),A') 'COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
             write(*,'(A,A)') 'COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)

@@ -2,7 +2,7 @@ module globals
    use mctc_env, only : wp
    use element_dict
    implicit none
-   
+
    ! Global Parameters
    real(wp), parameter :: autokcal=627.509_wp, R=8.314_wp, jtokcal=0.000239006
    real(wp), parameter :: k_b=1.380649E-23,N_A=6.02214076E23, BtoA=0.529177
@@ -24,7 +24,7 @@ module globals
    type(DICT_STRUCT), pointer :: A_dsp, B_dsp, r_pr
 
 
-   contains 
+   contains
       ! Functions that are used in several modules
       function distance(xyz1,xyz2)
          implicit none
@@ -33,7 +33,7 @@ module globals
 
          distance=(sqrt((xyz1(1)-xyz2(1))**2.0_wp+(xyz1(2)&
                   &-xyz2(2))**2.0_wp+(xyz1(3)-xyz2(3))**2.0_wp))
-         
+
       end function distance
 
    Pure Function to_upper (str) Result (string)
