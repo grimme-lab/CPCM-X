@@ -132,7 +132,7 @@ module crs
 
       end function E_dd
 
-      subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element)
+      subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
          use globals
          implicit none
          !real(8), dimension(10), intent(in) :: param
@@ -140,28 +140,21 @@ module crs
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
          real(8), dimension(:), allocatable, intent(inout) :: pot_di
-         real(8), dimension(:), allocatable :: W_v 
+         real(8), intent(in) :: edd(:, :)
          real(8), intent(in) :: T
 
-         real(8) :: temppot, beta
+         real(8) :: temppot, area_total
          integer :: i, j
 
-         allocate(W_v(size(sv)))
-         W_v(:)=0.0_8
-         beta=(R*Jtokcal*T)/param(7)
-         temppot=0.0_8
-         W_v=0.0_8
+         area_total = sum(area)
          !! For mixed solvent, mole fraction needs to be introduced in the following loop
          do j=1,size(pot_di)
+            temppot=0.0_8
             do i=1,size(pot_di)
-               temppot=temppot+(area(i)*dexp((-E_dd&
-                      &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
-                      &/beta+pot_di(i))))
-               W_v(j)=W_v(j)+area(i)
+               temppot = temppot + area(i)*exp(-Edd(i,j)+pot_di(i))
             end do
             !exit
-            pot_di(j)=-log(temppot/W_v(j))
-            temppot=0.0_8
+            pot_di(j)=-log(temppot/area_total)
          end do
 
       end subroutine iterate_solvent
@@ -234,18 +227,20 @@ module crs
          integer :: i, j
          real(8), dimension(:), allocatable :: saved_potdi
          logical :: not_conv
-         
+         real(8), allocatable :: edd(:, :)
    
          not_conv=.TRUE.
          allocate(pot_di(size(sv)))
          allocate(saved_potdi(size(sv)))
+         allocate(edd(size(pot_di),size(pot_di)))
          pot_di(:)=0.0_8
          saved_potdi(:)=0.0_8
          i=0
+         call calculate_edd(edd,pot_di,sv,svt,area,T,ident,element)
          do while (not_conv) 
             i=i+1
             saved_potdi(:)=pot_di(:)
-            Call iterate_solvent(pot_di,sv,svt,area,T,ident,element)
+            Call iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
             not_conv=.FALSE.
             do j=1,size(pot_di)
                if (abs(saved_potdi(j)-pot_di(j)) .LE. (conv_crit/autokcal)) then
@@ -268,5 +263,29 @@ module crs
 
 
       end subroutine compute_solvent
+
+      subroutine calculate_edd(edd, pot_di, sv, svt, area, T, ident, element)
+         use globals
+         implicit none
+         real(8), intent(inout) :: edd(:, :)
+         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area
+         integer, allocatable, intent(in) :: ident(:)
+         character(2), dimension(:), allocatable, intent(in) :: element
+         real(8), dimension(:), allocatable, intent(in) :: pot_di
+         real(8), intent(in) :: T
+
+         integer :: i, j
+         real(8) :: temppot, beta
+
+         beta=(R*Jtokcal*T)/param(7)
+
+         do j=1,size(pot_di)
+            do i=1,size(pot_di)
+               edd(i, j) = E_dd&
+                      &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
+                      &/beta
+            end do
+         end do
+      end subroutine calculate_edd
 
 end module crs
