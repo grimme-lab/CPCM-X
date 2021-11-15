@@ -15,17 +15,17 @@ program COSMO
    use sdm
    implicit none
    integer :: oh_sol, nh_sol, near_sol
-   real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
-   real(8), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
-   real(8), dimension(:), allocatable :: sol_pot, solv_pot
-   real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
+   real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
+   real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
+   real(wp), dimension(:), allocatable :: sol_pot, solv_pot
+   real(wp), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
    character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
    logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
    logical, dimension(:), allocatable :: solute_rings
-   real(8), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
+   real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
-   !real(8), dimension(10) :: param
-   real(8) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
+   !real(wp), dimension(10) :: param
+   real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
    logical :: gas,sig_in
    integer :: sol_nat, i

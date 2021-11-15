@@ -1,4 +1,7 @@
+!
 module bonding
+   use mctc_env, only : wp
+   implicit none
    
    ! This module is used to determine the Bonding Situation of the Compounds
 
@@ -14,7 +17,7 @@ module bonding
 
       integer, dimension(:), allocatable, intent(in) :: ident
       character(2), dimension(:), allocatable, intent(in) :: elements
-      real(8), dimension(:,:), allocatable, intent(in) :: xyz
+      real(wp), dimension(:,:), allocatable, intent(in) :: xyz
 
       logical, dimension(:,:), allocatable, intent(out) :: is_bonded
 
@@ -22,13 +25,13 @@ module bonding
 
       type(DICT_DATA) :: radius
       integer :: i,j
-      real(8) :: cov_a, cov_b
+      real(wp) :: cov_a, cov_b
 
       allocate(is_bonded(size(ident),size(ident)))
       is_bonded(:,:) = .FALSE.
 
-      cov_a=0.0_8
-      cov_b=0.0_8
+      cov_a=0.0_wp
+      cov_b=0.0_wp
       do i=1,int(maxval(ident))
          radius=dict_get_key(cov_r,elements(i))
          cov_a=radius%param
@@ -40,9 +43,9 @@ module bonding
                is_bonded(i,j)=.TRUE.
                is_bonded(j,i)=.TRUE.
             end if
-            cov_b=0.0_8
+            cov_b=0.0_wp
          end do
-         cov_a=0.0_8
+         cov_a=0.0_wp
       end do
 
       if (present(nh_count)) then

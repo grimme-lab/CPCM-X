@@ -1,4 +1,6 @@
 module sigma_av
+   use mctc_env, only : wp
+   implicit none
 
    ! Module contains charge averaging and orthogonalizing algorythms
    !
@@ -23,32 +25,32 @@ module sigma_av
       subroutine average_charge (r_av, xyz, charges, area,av_charge)
          use globals
          implicit none
-         real(8), dimension(:), intent(in) :: charges, area
-         real(8), dimension(:,:), intent(in) :: xyz
-         real(8), intent(in) :: r_av
-         real(8), dimension(:), allocatable, intent(out) :: av_charge
-         real(8) :: tmpcharge, tmpcounter, tmpdenominator, r_u2, r_av2
+         real(wp), dimension(:), intent(in) :: charges, area
+         real(wp), dimension(:,:), intent(in) :: xyz
+         real(wp), intent(in) :: r_av
+         real(wp), dimension(:), allocatable, intent(out) :: av_charge
+         real(wp) :: tmpcharge, tmpcounter, tmpdenominator, r_u2, r_av2
          integer :: num, i, j
 
          num = size(charges)
          allocate(av_charge(num))
-         r_av2=r_av**2.0_8
-         r_u2=0.0_8
-         tmpcharge=0.0_8
-         tmpcounter=0.0_8
-         tmpdenominator=0.0_8
+         r_av2=r_av**2.0_wp
+         r_u2=0.0_wp
+         tmpcharge=0.0_wp
+         tmpcounter=0.0_wp
+         tmpdenominator=0.0_wp
          do i=1,num
             do j=1,num
                r_u2=(area(j)/pi)
                tmpcounter=tmpcounter+(charges(j)*((r_u2*r_av2)/(r_u2+r_av2))*&
-                         &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_u2+r_av2))))
+                         &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
                tmpdenominator=tmpdenominator+(((r_u2*r_av2)/(r_u2+r_av2))*&
-                             &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_8)/(r_u2+r_av2))))
-               r_u2=0.0_8
+                             &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
+               r_u2=0.0_wp
             end do
             tmpcharge=tmpcounter/tmpdenominator
-            tmpcounter=0.0_8
-            tmpdenominator=0.0_8
+            tmpcounter=0.0_wp
+            tmpdenominator=0.0_wp
             av_charge(i)=tmpcharge
             !write(*,*) av_charge(i)
          end do
@@ -57,15 +59,15 @@ module sigma_av
 
       subroutine ortho_charge (v,v0,vt)
          implicit none
-         real(8), dimension(:), allocatable, intent(in) :: v,v0
-         real(8), dimension(:), allocatable, intent(out) :: vt
+         real(wp), dimension(:), allocatable, intent(in) :: v,v0
+         real(wp), dimension(:), allocatable, intent(out) :: vt
 
          integer :: i
 
          allocate(vt(size(v)))
 
          do i=1,size(v)
-            vt(i)=v0(i)-0.816_8*v(i)
+            vt(i)=v0(i)-0.816_wp*v(i)
          end do
 
       end subroutine

@@ -1,4 +1,6 @@
 MODULE sort
+  use mctc_env, only : wp
+  implicit none
  
 CONTAINS
  
@@ -6,8 +8,8 @@ SUBROUTINE Shell_Sort(a)
  
   IMPLICIT NONE
   INTEGER :: i, j, increment
-  REAL(8) :: temp
-  REAL(8), INTENT(in out) :: a(:)
+  REAL(wp) :: temp
+  REAL(wp), INTENT(in out) :: a(:)
  
   increment = SIZE(a) / 2
   DO WHILE (increment > 0)
@@ -21,7 +23,7 @@ SUBROUTINE Shell_Sort(a)
          a(j) = temp
       END DO
       IF (increment == 2) THEN
-   	  increment = 1
+         increment = 1
       ELSE
          increment = increment * 5 / 11
       END IF      

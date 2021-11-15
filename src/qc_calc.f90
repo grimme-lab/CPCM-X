@@ -2,6 +2,7 @@
 
 module qc_calc
     use mctc_env, only : wp
+    implicit none
     private
     public :: qc_cal
     interface qc_cal

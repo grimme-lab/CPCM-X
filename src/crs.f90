@@ -1,4 +1,6 @@
 module crs
+   use mctc_env, only : wp
+   implicit none
 
       contains
 
@@ -6,15 +8,15 @@ module crs
       subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con, T,r_cav)
          use globals
          use element_dict
-         real(8), intent(out) :: id_scr, gas_chem
-         real(8), intent(in) :: T, E_cosmo
-         real(8),dimension(:),allocatable, intent(in) :: area, sv, su, pot
+         real(wp), intent(out) :: id_scr, gas_chem
+         real(wp), intent(in) :: T, E_cosmo
+         real(wp),dimension(:),allocatable, intent(in) :: area, sv, su, pot
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
          type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
-         !real(8), dimension(10) :: param
+         !real(wp), dimension(10) :: param
          type(DICT_DATA) :: disp!, r_c
-         real(8) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
+         real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
          integer :: dummy1, ioerror, i 
 
          open(1,file="energy")
@@ -32,7 +34,7 @@ module crs
             ediel=ediel+(area(i)*pot(i)*su(i))
             edielprime=edielprime+(area(i)*pot(i)*sv(i))
          end do
-         avcorr=(edielprime-ediel)/2.0_8*0.8_8
+         avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
          write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
          write(*,*) "E_gas: ", E_gas*autokcal
          dEreal=dEreal*autokcal
@@ -62,8 +64,8 @@ module crs
 
       function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
          implicit none
-         real(8), intent(in) :: c_hb, alpha, f_corr,s_hb
-         real(8), intent(in) :: sv1, svt1, sv2, svt2
+         real(wp), intent(in) :: c_hb, alpha, f_corr,s_hb
+         real(wp), intent(in) :: sv1, svt1, sv2, svt2
          character(2), dimension(:), allocatable, intent(in) :: element
          integer, dimension(:), allocatable, intent(in) :: ident
          character(2), dimension(:), allocatable, intent(in),optional :: ele2
@@ -72,11 +74,11 @@ module crs
          ! LOCAL
 
          character(2), dimension(:), allocatable :: element2
-         real(8), dimension(:), allocatable :: ident2
+         real(wp), dimension(:), allocatable :: ident2
          integer, intent(in) :: atom1, atom2
-         real(8) :: E_dd
-         real(8) :: svdo, svac
-         real(8) :: E_misfit, E_hb
+         real(wp) :: E_dd
+         real(wp) :: svdo, svac
+         real(wp) :: E_misfit, E_hb
 
 
          
@@ -115,9 +117,9 @@ module crs
 
          !! Start E_dd Calculation
          
-         E_hb=0.0_8
-         E_misfit=0.0_8
-            E_hb=c_hb*max(0.0_8,svac-s_hb)*min(0.0_8,svdo+s_hb)
+         E_hb=0.0_wp
+         E_misfit=0.0_wp
+            E_hb=c_hb*max(0.0_wp,svac-s_hb)*min(0.0_wp,svdo+s_hb)
          E_misfit=(alpha/2)*(sv1+sv2)&
                  &*((sv1+sv2)+f_corr*(svt1+svt2))
 
@@ -135,21 +137,21 @@ module crs
       subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
          use globals
          implicit none
-         !real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area
+         !real(wp), dimension(10), intent(in) :: param
+         real(wp), dimension(:), allocatable, intent(in) :: sv, svt, area
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
-         real(8), dimension(:), allocatable, intent(inout) :: pot_di
-         real(8), intent(in) :: edd(:, :)
-         real(8), intent(in) :: T
+         real(wp), dimension(:), allocatable, intent(inout) :: pot_di
+         real(wp), intent(in) :: edd(:, :)
+         real(wp), intent(in) :: T
 
-         real(8) :: temppot, area_total
+         real(wp) :: temppot, area_total
          integer :: i, j
 
          area_total = sum(area)
          !! For mixed solvent, mole fraction needs to be introduced in the following loop
          do j=1,size(pot_di)
-            temppot=0.0_8
+            temppot=0.0_wp
             do i=1,size(pot_di)
                temppot = temppot + area(i)*exp(-Edd(i,j)+pot_di(i))
             end do
@@ -164,29 +166,29 @@ module crs
                       &ident_sol,ident_solv,elem_sol,elem_solv)
          use globals
          implicit none
-         !real(8), dimension(10), intent(in) :: param
-         real(8), intent(out) :: chem_pot_sol
-         real(8), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol
+         !real(wp), dimension(10), intent(in) :: param
+         real(wp), intent(out) :: chem_pot_sol
+         real(wp), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol
          integer, allocatable, intent(in), dimension(:) :: ident_sol, ident_solv
-         real(8), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
+         real(wp), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
          character(2), dimension(:), allocatable, intent(in) :: elem_sol, elem_solv
-         real(8), dimension(:), allocatable :: W_v 
-         real(8), intent(in) :: T
+         real(wp), dimension(:), allocatable :: W_v 
+         real(wp), intent(in) :: T
 
-         real(8) :: temppot, beta,temp2
+         real(wp) :: temppot, beta,temp2
          integer :: i, j
 
          allocate(W_v(size(sv_sol)))
          allocate(sol_pot(size(sv_sol)))
-         W_v(:)=0.0_8
+         W_v(:)=0.0_wp
          beta=(R*Jtokcal*T)/param(7)
-         temppot=0.0_8
+         temppot=0.0_wp
          sol_pot(:)=0
          !! For mixed solvent, mole fraction needs to be introduced in the following loop
          do j=1,size(sol_pot)
             do i=1,size(solv_pot)
              !  if (i .NE. j) then
-               temppot=temppot+(area_solv(i)*dexp((-E_dd&
+               temppot=temppot+(area_solv(i)*exp((-E_dd&
                       &(param(5),param(3),param(4),param(6),sv_sol(j),svt_sol(j),sv_solv(i),svt_solv(i),ident_sol,elem_sol,&
                       j,i,ident_solv,elem_solv)&
                       &/beta)+solv_pot(i)))
@@ -194,16 +196,16 @@ module crs
                W_v(j)=W_v(j)+area_solv(i)
             end do
             sol_pot(j)=-log(sum(area_solv)**(-1)*temppot)
-            temppot=0.0_8
+            temppot=0.0_wp
          end do
-         temppot=0.0_8
+         temppot=0.0_wp
          temp2=0
          do i=1,size(sol_pot)
             temppot=temppot+(area_sol(i)*sol_pot(i))
         !    write(*,*) area_sol(i), sol_pot(i), area_sol(i)*sol_pot(i)
          end do
 
-         chem_pot_sol=temppot*beta-(param(8)*R*Jtokcal*T*log(sum(area_solv)))
+         chem_pot_sol=temppot*beta-(param(wp)*R*Jtokcal*T*log(sum(area_solv)))
          !write(*,*) chem_pot_sol
          temppot=0
          do i=1,size(solv_pot)
@@ -215,26 +217,26 @@ module crs
       subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,element)
          use globals
          implicit none
-         !real(8), dimension(10), intent(in) :: param
-         real(8), dimension(:), allocatable :: sv, svt, area
+         !real(wp), dimension(10), intent(in) :: param
+         real(wp), dimension(:), allocatable :: sv, svt, area
          integer, allocatable :: ident(:)
-         real(8), dimension(:), allocatable, intent(inout) :: pot_di
+         real(wp), dimension(:), allocatable, intent(inout) :: pot_di
          character(2), dimension(:), allocatable, intent(in) :: element
-         real(8), intent(in) :: T
+         real(wp), intent(in) :: T
          real(4), intent(in) :: conv_crit
          integer, intent(in) :: max_cycle
          
          integer :: i, j
-         real(8), dimension(:), allocatable :: saved_potdi
+         real(wp), dimension(:), allocatable :: saved_potdi
          logical :: not_conv
-         real(8), allocatable :: edd(:, :)
+         real(wp), allocatable :: edd(:, :)
    
          not_conv=.TRUE.
          allocate(pot_di(size(sv)))
          allocate(saved_potdi(size(sv)))
          allocate(edd(size(pot_di),size(pot_di)))
-         pot_di(:)=0.0_8
-         saved_potdi(:)=0.0_8
+         pot_di(:)=0.0_wp
+         saved_potdi(:)=0.0_wp
          i=0
          call calculate_edd(edd,pot_di,sv,svt,area,T,ident,element)
          do while (not_conv) 
@@ -267,15 +269,15 @@ module crs
       subroutine calculate_edd(edd, pot_di, sv, svt, area, T, ident, element)
          use globals
          implicit none
-         real(8), intent(inout) :: edd(:, :)
-         real(8), dimension(:), allocatable, intent(in) :: sv, svt, area
+         real(wp), intent(inout) :: edd(:, :)
+         real(wp), dimension(:), allocatable, intent(in) :: sv, svt, area
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: element
-         real(8), dimension(:), allocatable, intent(in) :: pot_di
-         real(8), intent(in) :: T
+         real(wp), dimension(:), allocatable, intent(in) :: pot_di
+         real(wp), intent(in) :: T
 
          integer :: i, j
-         real(8) :: temppot, beta
+         real(wp) :: temppot, beta
 
          beta=(R*Jtokcal*T)/param(7)
 

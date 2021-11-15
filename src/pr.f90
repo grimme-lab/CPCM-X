@@ -1,4 +1,6 @@
 module pr
+   use mctc_env, only : wp
+   implicit none
 
    !Peng-Robinson Equation of State model for disperive interactions
 
@@ -11,23 +13,23 @@ module pr
          use element_dict
          implicit none
          !New version of PR EOS 
-         real(8), dimension(:), allocatable, intent(in) :: area
+         real(wp), dimension(:), allocatable, intent(in) :: area
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: elements
          integer, intent(in) :: oh_count, nh_count, n_ear
 
          character(2) :: element
-         real(8), dimension(:), allocatable :: atom_area
-         real(8) :: dG_hb, dG_ring, dG_vdw
+         real(wp), dimension(:), allocatable :: atom_area
+         real(wp) :: dG_hb, dG_ring, dG_vdw
          integer :: i
          type(DICT_DATA) :: A, B
         
          !write(*,*) n_ear
-         dG_hb = 0.0_8
-         dG_ring = 0.0_8
-         dG_vdw = 0.0_8
+         dG_hb = 0.0_wp
+         dG_ring = 0.0_wp
+         dG_vdw = 0.0_wp
          allocate(atom_area(int(maxval(ident))))
-         atom_area=0.0_8
+         atom_area=0.0_wp
          do i=1,size(area)
             atom_area(int(ident(i)))=atom_area(int(ident(i)))+area(i)
          end do
