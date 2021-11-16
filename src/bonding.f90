@@ -1,10 +1,13 @@
+!
 module bonding
-   
+   use mctc_env, only : wp
+   implicit none
+
    ! This module is used to determine the Bonding Situation of the Compounds
 
    contains
 
-   ! This Subroutine determines covalent bonds between Atoms/Segments 
+   ! This Subroutine determines covalent bonds between Atoms/Segments
    ! It uses the Positions of the Segments and the hard coded covalent Radii
    ! A Covalent Bond is assumed when the distance is lower than the sum of the convalent Radii*1.15
    subroutine det_bonds(ident,xyz,elements,is_bonded,oh_count,nh_count)
@@ -14,7 +17,7 @@ module bonding
 
       integer, dimension(:), allocatable, intent(in) :: ident
       character(2), dimension(:), allocatable, intent(in) :: elements
-      real(8), dimension(:,:), allocatable, intent(in) :: xyz
+      real(wp), dimension(:,:), allocatable, intent(in) :: xyz
 
       logical, dimension(:,:), allocatable, intent(out) :: is_bonded
 
@@ -22,13 +25,13 @@ module bonding
 
       type(DICT_DATA) :: radius
       integer :: i,j
-      real(8) :: cov_a, cov_b
+      real(wp) :: cov_a, cov_b
 
       allocate(is_bonded(size(ident),size(ident)))
       is_bonded(:,:) = .FALSE.
 
-      cov_a=0.0_8
-      cov_b=0.0_8
+      cov_a=0.0_wp
+      cov_b=0.0_wp
       do i=1,int(maxval(ident))
          radius=dict_get_key(cov_r,elements(i))
          cov_a=radius%param
@@ -40,9 +43,9 @@ module bonding
                is_bonded(i,j)=.TRUE.
                is_bonded(j,i)=.TRUE.
             end if
-            cov_b=0.0_8
+            cov_b=0.0_wp
          end do
-         cov_a=0.0_8
+         cov_a=0.0_wp
       end do
 
       if (present(nh_count)) then
@@ -54,19 +57,19 @@ module bonding
                   cycle
                case ("o")
                   do j=1,int(maxval(ident))
-                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then 
+                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then
                         oh_count=oh_count+1
                         exit
                      end if
-                  end do 
+                  end do
                case ("n")
                   do j=1,int(maxval(ident))
-                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then 
+                     if ((is_bonded(i,j)) .AND. (elements(j) .eq. "h")) then
                         nh_count=nh_count+1
                         exit
                      end if
                   end do
-            end select                    
+            end select
          end do
         ! write(*,*) oh_count, nh_count
       end if
@@ -79,22 +82,22 @@ module bonding
      !       write(*,*) "to ",j,is_bonded(i,j)
      !    end do
      ! end do
-         
+
    end subroutine
 
    subroutine hb_grouping(ident,elements,is_bonded,hb_group)
       implicit none
-      
+
       integer, dimension(:), allocatable, intent(in) :: ident
       character(2), dimension(:), allocatable, intent(in) :: elements
       logical, dimension(:,:), allocatable, intent(in) :: is_bonded
 
       character(2), dimension(:), allocatable, intent(out) :: hb_group
 
-      
+
       integer :: i,j
 
-      
+
       allocate(hb_group(size(ident)))
 
       hb_group(:) = 'NH'
@@ -130,9 +133,9 @@ module bonding
             if (hb_group(i) .EQ. 'NH') then
                hb_group(i) = 'OT'
             end if
-         end if 
+         end if
 
-         if (elements(int(ident(i))) .EQ. 'n') hb_group(i)='OT' 
+         if (elements(int(ident(i))) .EQ. 'n') hb_group(i)='OT'
          if (elements(int(ident(i))) .EQ. 'f') hb_group(i)='OT'
 
        ! write(*,*) i, elements(int(ident(i))), hb_group(i)
@@ -144,7 +147,7 @@ module bonding
 !      end do
 
    end subroutine hb_grouping
-      
+
    subroutine det_rings(ident,is_bonded,is_ring,N_ear)
       implicit none
 
@@ -161,7 +164,7 @@ module bonding
 
       allocate(is_ring(eles))
       allocate(visited(eles))
-      
+
       do i=1,eles
          visited(:)=.false.
          is_ring(i)=.false.
@@ -191,7 +194,7 @@ module bonding
             end do
          end if
       end do
-                  
+
 
 
    end subroutine det_rings
@@ -205,7 +208,7 @@ module bonding
       logical, dimension(:) :: visited
 
       integer :: z
-      
+
       visited(j)=.true.
 
       do z=1,eles
@@ -217,7 +220,7 @@ module bonding
             else if (is_ring) then
                exit
             else
-         
+
                if (cut .GE. 11) exit
                Call iter_ring(check,j,z,is_ring,eles,is_bonded,cut+1,visited)
             end if
@@ -228,6 +231,6 @@ module bonding
 
 
 
-   
-      
+
+
 end module bonding

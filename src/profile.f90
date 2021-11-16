@@ -1,4 +1,6 @@
 module profile
+   use mctc_env, only : wp, sp
+   implicit none
 
    !! This Module contains algorythms for reading sigma profiles from file
    !! or creating Sigma Profiles from COSMO Files.
@@ -15,12 +17,12 @@ module profile
          !! Volume: Volume of the Compound from COSMO Calculation
 
          character(len=*), intent(in) :: nam
-         real(8), intent(out) :: volume
-         real(8), dimension(:), intent(out) :: sigma (0:50)
+         real(wp), intent(out) :: volume
+         real(wp), dimension(:), intent(out) :: sigma (0:50)
 
          character(len=20) :: dummy1, dummy2
          integer :: io_error,i
-         real(8) :: dummy3
+         real(wp) :: dummy3
 
          open(unit=2,file=nam)
 
@@ -48,12 +50,12 @@ module profile
          !! Volume: Volume of the Compound from COSMO Calculation
 
          character(len=*), intent(in) :: nam
-         real(8), intent(out) :: volume
-         real(8), dimension(:), intent(out) :: sigma3 (3,0:50)
+         real(wp), intent(out) :: volume
+         real(wp), dimension(:), intent(out) :: sigma3 (3,0:50)
 
          character(len=20) :: dummy1, dummy2
          integer :: io_error,i,t
-         real(8) :: dummy3
+         real(wp) :: dummy3
 
          open(unit=2,file=nam)
 
@@ -85,21 +87,21 @@ module profile
          !! sigma: Single Sigma Profile for the Compound
 
 
-         real(8), dimension(:), allocatable,intent(in) :: sv,area
+         real(wp), dimension(:), allocatable,intent(in) :: sv,area
 
-         real(8), dimension(0:50),intent(out) :: sigma
+         real(wp), dimension(0:50),intent(out) :: sigma
 
          character(len=*), intent(in), optional :: nam
 
          integer :: sigma_min, sigma_max, i, j,tmp
 
-         real(4) :: punit
+         real(sp) :: punit
 
-         real(4), parameter :: sig_width=0.025_8
+         real(sp), parameter :: sig_width=0.025_8
          integer, parameter :: n_sig=51
-         real(4) :: counter(0:n_sig-1)
+         real(sp) :: counter(0:n_sig-1)
 
-         real(8) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
+         real(wp) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
 
          punit=0.001
 
@@ -147,20 +149,20 @@ module profile
          !! Output:
          !! sigma3: Sigma Profiles for each HB Group (1: NH, 2: OH, 3: OT)
 
-         real(8), dimension(:), allocatable,intent(in) :: sv,area
+         real(wp), dimension(:), allocatable,intent(in) :: sv,area
          character(2), dimension(:), allocatable, intent(in) :: hb_group
          character(len=*), intent(in), optional :: nam
          integer, dimension(:), allocatable, intent(in) :: ident
          character(2), dimension(:), allocatable, intent(in) :: elements
 
-         real(8), dimension(0:50) :: prob_hb !hb bond probability function
-         real(8), dimension(3,0:50),intent(out) :: sigma3
+         real(wp), dimension(0:50) :: prob_hb !hb bond probability function
+         real(wp), dimension(3,0:50),intent(out) :: sigma3
 
          character(2), dimension(:), allocatable :: profile_group
-         real(8), dimension(:), allocatable :: sv_oh, sv_ot, sv_nh, area_oh, area_ot, area_nh
-         real(8) :: s_0, punit, max_sig,save1,save2,save3
+         real(wp), dimension(:), allocatable :: sv_oh, sv_ot, sv_nh, area_oh, area_ot, area_nh
+         real(wp) :: s_0, punit, max_sig,save1,save2,save3
          integer :: oh_count, ot_count, nh_count, i
-         real(8), dimension(0:50) :: temp_sigma !Surpresses runtime error
+         real(wp), dimension(0:50) :: temp_sigma !Surpresses runtime error
 
          allocate(profile_group(size(hb_group)))
          profile_group="NH"

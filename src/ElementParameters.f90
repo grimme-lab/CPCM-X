@@ -1,9 +1,10 @@
 module EleData_Module
+   use mctc_env, only : wp
    implicit none
    integer, parameter :: DICT_KEY_LENGTH = 2
 
    type EleData
-      real(8) :: param
+      real(wp) :: param
    end type EleData
 
    type(EleData), parameter :: DICT_NULL = eledata(0)

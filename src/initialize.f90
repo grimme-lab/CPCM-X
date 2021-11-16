@@ -1,4 +1,5 @@
 module initialize_cosmo
+   use mctc_env, only : wp
    implicit none
 
 contains
@@ -6,16 +7,16 @@ contains
       use globals
       character(*), intent(in) :: compound
       character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
-      real(8), dimension(:), allocatable,intent(out) :: charges,&
+      real(wp), dimension(:), allocatable,intent(out) :: charges,&
          &area,pot
-      real(8), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
+      real(wp), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
       character(2), allocatable, dimension(:),intent(out) :: elements
-      real(8), intent(out) :: volume, c_energy
+      real(wp), intent(out) :: volume, c_energy
       integer :: io_error, dummy1, num, ele_num
-      real(8) :: dummy3, dummy4, dummy5
+      real(wp) :: dummy3, dummy4, dummy5
       integer, allocatable :: ident(:)
       character(2) :: element
-      
+
       logical :: exists
 
       filen=compound
@@ -47,7 +48,7 @@ contains
          stop
       end if
 
-      io_error=0 
+      io_error=0
       do while (io_error .GE. 0)
          read(1,*,iostat=io_error) line
       end do
@@ -62,7 +63,7 @@ contains
       do while (line .NE. "$segment_information")
          read(1,*) line
       end do
-      
+
       num=1
       dummy4=0
       do while (.TRUE.)
@@ -87,7 +88,7 @@ contains
       do while (line .NE. "#atom")
          read(1,*) line
       end do
-      
+
       ele_num=0
       do while (.TRUE.)
          read(1,'(A1)',advance='no',iostat=io_error) line
@@ -134,16 +135,16 @@ contains
       read (1,*)
       read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
 
-      
+
       close(1)
-     
+
    end subroutine read_cosmo
 
    subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
       use element_dict
       use globals, only: param, cov_r, dG_shift
 
-      !real(8), dimension(10) :: param
+      !real(wp), dimension(10) :: param
       type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
       type(DICT_DATA) :: data1, r_c, d_c
@@ -153,9 +154,9 @@ contains
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
 
-      
+
       INQUIRE(file=filename, exist=g_exists)
-   
+
       if (.NOT. g_exists) then
          error stop "No Parameter File for COSMO-SAC found."
       else
@@ -168,7 +169,7 @@ contains
                ! Setting global COSMO-RS Parameters from parameter file
 
                read(1,*) param(1)
-               param(2)=2.0_8*param(1)
+               param(2)=2.0_wp*param(1)
                do i=3,10
                   read(1,*) param(i)
                end do
@@ -231,49 +232,49 @@ contains
 
          !Hard Coded Covalent Radii
 
-         data1%param=0.31_8
+         data1%param=0.31_wp
          call dict_create(cov_r, 'h', data1)
-         data1%param=0.28_8
+         data1%param=0.28_wp
          call dict_add_key(cov_r, 'he', data1)
-         data1%param=1.28_8
+         data1%param=1.28_wp
          call dict_add_key(cov_r, 'li', data1)
-         data1%param=0.96_8
+         data1%param=0.96_wp
          call dict_add_key(cov_r, 'be', data1)
-         data1%param=0.84_8
+         data1%param=0.84_wp
          call dict_add_key(cov_r, 'b', data1)
-         data1%param=0.76_8
+         data1%param=0.76_wp
          call dict_add_key(cov_r, 'c', data1)
-         data1%param=0.71_8
+         data1%param=0.71_wp
          call dict_add_key(cov_r, 'n', data1)
-         data1%param=0.66_8
+         data1%param=0.66_wp
          call dict_add_key(cov_r, 'o', data1)
-         data1%param=0.57_8
+         data1%param=0.57_wp
          call dict_add_key(cov_r, 'f', data1)
-         data1%param=0.58_8
+         data1%param=0.58_wp
          call dict_add_key(cov_r, 'ne', data1)
-         data1%param=1.66_8
-         call dict_add_key(cov_r, 'na', data1) 
-         data1%param=1.41_8
+         data1%param=1.66_wp
+         call dict_add_key(cov_r, 'na', data1)
+         data1%param=1.41_wp
          call dict_add_key(cov_r, 'mg', data1)
-         data1%param=1.21_8
+         data1%param=1.21_wp
          call dict_add_key(cov_r, 'al', data1)
-         data1%param=1.11_8
+         data1%param=1.11_wp
          call dict_add_key(cov_r, 'si', data1)
-         data1%param=1.07_8
+         data1%param=1.07_wp
          call dict_add_key(cov_r, 'p', data1)
-         data1%param=1.05_8
+         data1%param=1.05_wp
          call dict_add_key(cov_r, 's', data1)
-         data1%param=1.02_8
+         data1%param=1.02_wp
          call dict_add_key(cov_r, 'cl', data1)
-         data1%param=1.06_8
+         data1%param=1.06_wp
          call dict_add_key(cov_r, 'ar', data1)
-         data1%param=2.03_8
+         data1%param=2.03_wp
          call dict_add_key(cov_r, 'k', data1)
-         data1%param=1.76_8
+         data1%param=1.76_wp
          call dict_add_key(cov_r, 'ca', data1)
-         data1%param=1.70_8
+         data1%param=1.70_wp
          call dict_add_key(cov_r, 'sc', data1)
-         data1%param=1.60_8
+         data1%param=1.60_wp
          call dict_add_key(cov_r, 'ti', data1)
 
    end subroutine initialize_param
