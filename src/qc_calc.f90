@@ -49,8 +49,8 @@ contains
         write(11,'(A)') '$cosmo'
         if (epsilon .ne. 0) then
             write(11,'(A11, F0.2, A4)')'   epsilon=',epsilon, merge(' ion','    ',ion)
-        else
-            write(11,'(A11, F0.2, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
+        else 
+            write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
         end if
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
