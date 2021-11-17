@@ -11,6 +11,7 @@ program COSMO
    use crs
    use qc_calc, only: qc_cal
    use mctc_env, only : wp, get_argument, fatal_error, error_type
+   use crs_timer, only: timer_type, format_time
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use sdm
    implicit none
@@ -32,6 +33,8 @@ program COSMO
    integer, allocatable :: int_ident(:),solute_ident(:),solvent_ident(:)
    real(wp), allocatable :: surface(:), dsdr(:,:,:)
 
+   type(timer_type) :: timer
+
    type :: configuration
       character(len=:), allocatable :: input
       character(len=:), allocatable :: smd_solvent
@@ -43,7 +46,7 @@ program COSMO
       real(wp) :: qc_eps
       character(len=:), allocatable :: sac_param_path
       character(len=:), allocatable :: smd_param_path
-      logical :: ML, sig_in, prof, smd_default, TM
+      logical :: ML, sig_in, prof, smd_default, TM, time
       character(len=:), allocatable :: model
    end type configuration
 
@@ -59,6 +62,7 @@ program COSMO
    !! Read Command Line Arguments and set Parameters accordingly
    !! ------------------------------------------------------------
 
+   Call timer%push("total")
    Call get_arguments(config,error)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent)
    
@@ -84,14 +88,16 @@ program COSMO
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
       if (config%TM) then
-         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent) 
+         Call timer%push("qc_calc")
+         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
+         Call timer%pop() 
       end if 
    !! ----------------------------------------------------------------------------------
    !! Create the Sigma Profile from COSMO files
    !! ----------------------------------------------------------------------------------
-
+      
       write(*,*) "Creating Sigma Profile from COSMO data"
-
+      Call timer%push("sigma_av")
    !! ------------------------------------------------------------------------------------
    !! Read necessary COSMO Data
    !! ------------------------------------------------------------------------------------
@@ -107,17 +113,20 @@ program COSMO
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,"solvent")
       Call single_sigma(solute_sv,solute_area,solute_sigma,"solute")
+      Call timer%pop()
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
    if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
+      Call timer%push("bondings")
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
       
       Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      Call timer%pop()
    end if
 
    !! ------------------------------------------------------------------------------------
@@ -125,10 +134,12 @@ program COSMO
    !! ------------------------------------------------------------------------------------
 
       if (.NOT. (config%model .EQ. "sac")) then
-      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
+         Call timer%push("sigma_split")
+         Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
             &solvent_sigma3,"solvent")
-      Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
+         Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
             &solute_sigma3,"solute")
+         Call timer%pop()
       end if
 
    !! ------------------------------------------------------------------------------------
@@ -190,7 +201,7 @@ program COSMO
          !! COSMO-RS calculation starts here !!
 
          ! Calculate sv0,svt for COSMO-RS
-
+         
          Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
          Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
@@ -205,18 +216,22 @@ program COSMO
          !end if
 
          ! Computation of COSMO-RS equations (here may be something wrong atm)
+         Call timer%push("solv")
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
+         Call timer%pop()
+         Call timer%push("solu")
          Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
          &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
-
+         Call timer%pop()
          allocate (int_ident(maxval(solute_ident)))
          do i=1,maxval(solute_ident)
             int_ident(i)=i
          end do
-   
+         
+         Call timer%push("cds")
          Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
          &config%smd_solvent,config%smd_param_path,config%smd_default)
-
+         Call timer%pop()
 
          dG_res=chem_pot_sol+param(9)*near_sol
          deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
@@ -237,6 +252,25 @@ program COSMO
          write(*,*) "Systematic empirical shift (dG_shift)", dG_shift
          write(*,*) "-------------------------------------------------"
          write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp+dG_shift
+      end if
+
+      Call timer%pop()
+
+      if (config%time) then
+      block
+         integer :: i
+         real(wp) :: ttime, stime
+         character(len=*), parameter :: label(*) = [character(len=20) :: &
+         & "qc_calc","sigma_av","bondings","sigma_split","solv","solu","cds"]
+         ttime=timer%get("total")
+         write(*,*)
+         write(*,*) "Timings:"
+         write(*,*) "total"//repeat(" ", 18)//format_time(ttime)
+         do i = 1,size(label)
+            stime = timer%get(label(i))
+            write(*,*) label(i)//repeat(" ",3)//format_time(stime) 
+         end do
+      end block
       end if
 
 
@@ -310,6 +344,7 @@ subroutine read_input(config,error)
    config%prof=.FALSE.
    config%smd_default=.FALSE.
    config%TM=.FALSE.
+   config%time=.FALSE.
    config%qc_eps=0
 
    Open(input_unit,file=config%input)
@@ -343,6 +378,8 @@ subroutine read_input(config,error)
                         read(substring,*) config%qc_eps
                   end select
                end if
+            case('time')
+               config%time=.true.
             case('ML')
                config%ML=.true.
             case('sac','sac2010','sac2013','crs')
