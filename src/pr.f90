@@ -1,33 +1,51 @@
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
 module pr
+   use mctc_env, only : wp
+   implicit none
 
    !Peng-Robinson Equation of State model for disperive interactions
 
    contains
 
 
-      
+
       subroutine pr2018(area,elements,ident,oh_count,nh_count,n_ear)
          use globals
          use element_dict
          implicit none
-         !New version of PR EOS 
-         real(8), dimension(:), allocatable, intent(in) :: area
+         !New version of PR EOS
+         real(wp), dimension(:), allocatable, intent(in) :: area
          integer, allocatable, intent(in) :: ident(:)
          character(2), dimension(:), allocatable, intent(in) :: elements
          integer, intent(in) :: oh_count, nh_count, n_ear
 
          character(2) :: element
-         real(8), dimension(:), allocatable :: atom_area
-         real(8) :: dG_hb, dG_ring, dG_vdw
+         real(wp), dimension(:), allocatable :: atom_area
+         real(wp) :: dG_hb, dG_ring, dG_vdw
          integer :: i
          type(DICT_DATA) :: A, B
-        
+
          !write(*,*) n_ear
-         dG_hb = 0.0_8
-         dG_ring = 0.0_8
-         dG_vdw = 0.0_8
+         dG_hb = 0.0_wp
+         dG_ring = 0.0_wp
+         dG_vdw = 0.0_wp
          allocate(atom_area(int(maxval(ident))))
-         atom_area=0.0_8
+         atom_area=0.0_wp
          do i=1,size(area)
             atom_area(int(ident(i)))=atom_area(int(ident(i)))+area(i)
          end do
@@ -50,7 +68,7 @@ module pr
          dG_ring=n_ear*(pr_param(1)*log(SysTemp)+pr_param(2))
 
          dG_vdw=dG_vdw*jtokcal
-         
+
          ! dG_disp = dG_vdw + dG_hb + dG_ring
         ! write(*,*)  dG_vdw, dG_hb, dG_ring, dG_disp
         if (ML) then

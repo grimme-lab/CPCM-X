@@ -1,4 +1,20 @@
-program COSMO
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
+program COSMOX
    use element_dict
    use globals
    use sort
@@ -11,26 +27,30 @@ program COSMO
    use crs
    use qc_calc, only: qc_cal
    use mctc_env, only : wp, get_argument, fatal_error, error_type
+   use crs_timer, only: timer_type, format_time
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use sdm
    implicit none
+   character(len=*), parameter :: prog_name = "csx"
    integer :: oh_sol, nh_sol, near_sol
-   real(8), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
-   real(8), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
-   real(8), dimension(:), allocatable :: sol_pot, solv_pot
-   real(8), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
+   real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
+   real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
+   real(wp), dimension(:), allocatable :: sol_pot, solv_pot
+   real(wp), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
    character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
    logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
    logical, dimension(:), allocatable :: solute_rings
-   real(8), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
+   real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
-   !real(8), dimension(10) :: param
-   real(8) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
+   !real(wp), dimension(10) :: param
+   real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
    logical :: gas,sig_in
    integer :: sol_nat, i
    integer, allocatable :: int_ident(:),solute_ident(:),solvent_ident(:)
    real(wp), allocatable :: surface(:), dsdr(:,:,:)
+
+   type(timer_type) :: timer
 
    type :: configuration
       character(len=:), allocatable :: input
@@ -43,7 +63,8 @@ program COSMO
       real(wp) :: qc_eps
       character(len=:), allocatable :: sac_param_path
       character(len=:), allocatable :: smd_param_path
-      logical :: ML, sig_in, prof, smd_default, TM
+      character(len=:), allocatable :: database
+      logical :: ML, sig_in, prof, smd_default, TM, time
       character(len=:), allocatable :: model
    end type configuration
 
@@ -59,6 +80,7 @@ program COSMO
    !! Read Command Line Arguments and set Parameters accordingly
    !! ------------------------------------------------------------
 
+   Call timer%push("total")
    Call get_arguments(config,error)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent)
    
@@ -67,7 +89,6 @@ program COSMO
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
       ML=.TRUE.
    end if
-
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
    !! ----------------------------------------------------------------------------------
@@ -85,42 +106,45 @@ program COSMO
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
       if (config%TM) then
-         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent) 
+         Call timer%push("qc_calc")
+         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
+         Call timer%pop() 
       end if 
    !! ----------------------------------------------------------------------------------
    !! Create the Sigma Profile from COSMO files
    !! ----------------------------------------------------------------------------------
-
+      
       write(*,*) "Creating Sigma Profile from COSMO data"
-
+      Call timer%push("sigma_av")
    !! ------------------------------------------------------------------------------------
    !! Read necessary COSMO Data
    !! ------------------------------------------------------------------------------------
       Call read_cosmo(config%csm_solvent,solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz)
+          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz,config%database)
       Call read_cosmo(config%csm_solute,solute_elements,solute_ident, solute_xyz, solute_su,&
-         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz)
+         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz,config%database)
  
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
    !! ------------------------------------------------------------------------------------
-
       Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,"solvent")
       Call single_sigma(solute_sv,solute_area,solute_sigma,"solute")
-
+      Call timer%pop()
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
-   if ((config%ML) .OR. (.NOT. (config%model .EQ. "sac"))) then
+   if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
+      Call timer%push("bondings")
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
       Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
       
-      if (config%ML) Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      Call timer%pop()
    end if
 
    !! ------------------------------------------------------------------------------------
@@ -128,16 +152,18 @@ program COSMO
    !! ------------------------------------------------------------------------------------
 
       if (.NOT. (config%model .EQ. "sac")) then
-      Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
+         Call timer%push("sigma_split")
+         Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
             &solvent_sigma3,"solvent")
-      Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
+         Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
             &solute_sigma3,"solute")
+         Call timer%pop()
       end if
 
    !! ------------------------------------------------------------------------------------
    !! Exit here if you only want Sigma Profiles to be created 
    !! ------------------------------------------------------------------------------------
-      if (onlyprof) then;
+      if (config%prof) then;
          write(*,*) "Only Profile mode choosen, exiting."
          stop
       end if
@@ -190,43 +216,51 @@ program COSMO
      !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case ("crs")
    
-
          !! COSMO-RS calculation starts here !!
 
          ! Calculate sv0,svt for COSMO-RS
-
+         
          Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
-      
          Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
          Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
          ! Calculation of Gas Phase energies
 
-         if (gas) then
-            Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
-               &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
-         end if
+         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
+         !if (gas) then
+         !   Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
+         !      &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+         !end if
 
          ! Computation of COSMO-RS equations (here may be something wrong atm)
-
+         Call timer%push("solv")
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
+         Call timer%pop()
+         Call timer%push("solu")
          Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
          &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
-  
-         write(*,*) "calc_gas_chem: ", gas_chem
-         write(*,*) "calc_sol_chem: ", chem_pot_sol
-         write(*,*) "G_solvshift: ", chem_pot_sol-gas_chem-4.28!-R*T*Jtokcal*log((solute_volume*(BtoA**3.0_8)*N_a*1000_8*10E-30)/22.414)
+         Call timer%pop()
+         allocate (int_ident(maxval(solute_ident)))
+         do i=1,maxval(solute_ident)
+            int_ident(i)=i
+         end do
+         
+         Call timer%push("cds")
+         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+         &config%smd_solvent,config%smd_param_path,config%smd_default)
+         Call timer%pop()
+
+         dG_res=chem_pot_sol+param(9)*near_sol
          deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
          &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
-         stop
       end select
       if (config%ML) then
          write(*,*) "Writing ML data in ML.data"
          Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
          Call System ("rm ML.energy ML.pr")
-      else if (config%model .NE. "crs") then
+      else
          write(*,*) "Free Energy contributions:"
          write(*,*) "Ideal State (dG_is):", dG_is
          write(*,*) "Averaging correction (dG_cc):", dG_cc
@@ -238,11 +272,89 @@ program COSMO
          write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp+dG_shift
       end if
 
+      Call timer%pop()
+
+      if (config%time) then
+      block
+         integer :: i
+         real(wp) :: ttime, stime
+         character(len=*), parameter :: label(*) = [character(len=20) :: &
+         & "qc_calc","sigma_av","bondings","sigma_split","solv","solu","cds"]
+         ttime=timer%get("total")
+         write(*,*)
+         write(*,*) "Timings:"
+         write(*,*) "total"//repeat(" ", 18)//format_time(ttime)
+         do i = 1,size(label)
+            stime = timer%get(label(i))
+            write(*,*) label(i)//repeat(" ",3)//format_time(stime) 
+         end do
+      end block
+      end if
+
 
      ! deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
      !    &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
      !    &solv_pot,sol_pot)
 contains
+
+subroutine help(unit)
+   integer, intent(in) :: unit
+
+   write(unit, '(a, *(1x, a))') &
+      "Usage: "//prog_name//" [options]/<inputfile>"
+
+   write(unit, '(a)') &
+      "Calculates the solvation free energy of a compound in a solvent.", &
+      ""
+
+   write(unit, '(2x, a, t25, a)') &
+      "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
+      "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
+      "    --help", "Show this help message"
+
+   write(unit, '(a)')
+   
+end subroutine help
+
+subroutine sample(unit)
+   integer, intent(in) :: unit
+
+   open(unit,file="csx.input")
+   write(unit,'(a)') &
+      "/path/to/crs/parameter/file.param   &
+      &#This needs to directly point to the respective parameter file (crs.param_h2o or crs.param_ot)", &
+      "/path/to/smd/parameters   #This needs to point to the folder, where the smd_h2o and smd_ot files are included.", &
+      "KEYWORDS", &
+      "#Comment line.", &
+      "/path/to/solvent.cosmo   #Needs to point at the correct Solvent from the Database", &
+      "solute.cosmo   #Needs to point to the solute. Will be automatically created with the TM keyword.", &
+      "solvent 0.4   #Will set the solvent used for the SMD(CDS) part and the probe radius (default=0.4).", &
+      "298.15   #Sets the temperature."
+   close(unit)
+
+end subroutine sample
+
+subroutine print_keywords(unit)
+   integer, intent(in) :: unit
+
+   write(unit, '(a)') &
+      "Keywords are used in the keyword line in the .input file.", &
+      "", &
+      "Available Keywords:", &
+      ""
+
+   write(unit, '(2x, a, t25, a)') &
+      "    crs", "Invokes the standard COSMO-X model.", &
+      "    sac, sac2010", "Invokes an SAC based model with or without HB splitting (needs different parameters).", &
+      "    TM/TM=epsilon", "Starts with single point calculation for the solute. Needs control file. (default: epsilon=infinity)", &
+      "    time", "Shows additional Information about the time needed for various steps of the algorithm.", &
+      "    onlyprof", "Only calculates a Sigma Profile and prints it in a .sigma file.", &
+      "    sigma_in", "Expects Sigma Profiles instead of .cosmo files (only for SAC based models).", &
+      "    smd_default", "Uses SMD default Parameters instead of fitted Parameters (use only if you know what you are doing).", &
+      "    DB=path", "Optionally defines the Path to a COSMO file database (e.g. DATABASE-COSMO)"
+   write(unit, '(a)')
+end subroutine print_keywords
+
 
 subroutine get_arguments(config, error)
    type(configuration), intent(out) :: config
@@ -259,9 +371,15 @@ subroutine get_arguments(config, error)
       iarg = iarg + 1
       call get_argument(iarg, arg)
       select case(arg)
-      ! case("--help")
-      !    call help(output_unit)
-      !    stop
+      case("--help", "-h")
+         call help(output_unit)
+         stop
+      case("--newinput")
+         call sample(output_unit)
+         stop
+      case ("--keyword", "--keywords")
+         call print_keywords(output_unit)
+         stop
       ! case("--version")
       !    call version(output_unit)
       !   stop
@@ -277,8 +395,8 @@ subroutine get_arguments(config, error)
 
     if (.not.(allocated(config%input))) then
        if (.not.allocated(error)) then
-   !       call help(output_unit)
-          error stop
+          call help(output_unit)
+          stop
        end if
     end if
    Call read_input(config,error)
@@ -300,7 +418,12 @@ subroutine read_input(config,error)
    !> Check if the COSMO-SACMD Input File Exists.
    ex=.false.
    INQUIRE(file=config%input,exist=ex)
-   IF (.NOT. ex) error stop "No Input File."
+   IF (.NOT. ex) then
+      write(output_unit,'(a)') "Error: No Input File defined.", &
+      ""
+      Call help(output_unit)
+      stop
+   end if
 
    !> Set Defaults
    config%T=298.15_wp
@@ -309,7 +432,9 @@ subroutine read_input(config,error)
    config%prof=.FALSE.
    config%smd_default=.FALSE.
    config%TM=.FALSE.
+   config%time=.FALSE.
    config%qc_eps=0
+   Call move_line("NONE",config%database)
 
    Open(input_unit,file=config%input)
    Read(input_unit,'(A)',iostat=io_error,err=255) line
@@ -342,9 +467,13 @@ subroutine read_input(config,error)
                         read(substring,*) config%qc_eps
                   end select
                end if
+            case ('DB')
+               if (equal .ne. 0) Call move_line(substring,config%database)
+            case('time')
+               config%time=.true.
             case('ML')
                config%ML=.true.
-            case('sac','sac2010','sac2013')
+            case('sac','sac2010','sac2013','crs')
                config%model=line(j:i-1)
             case('onlyprof')
                config%prof=.true.
@@ -368,7 +497,8 @@ subroutine read_input(config,error)
    Call move_line(line,config%smd_solvent)
    Read(input_unit,*,iostat=io_error,err=255) config%T
    SysTemp=config%T 
-   Read(input_unit,*,iostat=io_error,err=255) config%z1, config%z2
+   config%z1=0.995
+   config%z2=0.005
    
 255 if (io_error .NE. 0) error stop "Check Input File."
 end subroutine read_input
@@ -376,9 +506,23 @@ end subroutine read_input
 subroutine move_line(line,aline)
    character(*), intent(in) :: line
    character(:), allocatable, intent(inout) :: aline
-   allocate(character(len(trim(line))) :: aline)
-   aline=trim(line)
+
+   integer :: i
+
+   if (allocated(aline)) deallocate(aline)
+   do i= 1,len(trim(line))
+      if (line(i:i) .EQ. "#") then 
+         allocate(character(len(trim(line(1:i-1)))) :: aline)
+         aline=trim(line(1:i-1))
+         exit
+      end if 
+      if (i .EQ. len(trim(line))) then
+         allocate(character(len(trim(line(1:i)))) :: aline)
+         aline=trim(line(1:i))
+         exit
+      end if 
+   end do
 end subroutine move_line
 
-end program COSMO
+end program COSMOX
 

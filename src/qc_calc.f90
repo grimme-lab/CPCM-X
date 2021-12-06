@@ -1,7 +1,24 @@
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
 !> External QC Packages Driver Program
 
 module qc_calc
     use mctc_env, only : wp
+    implicit none
     private
     public :: qc_cal
     interface qc_cal
@@ -10,7 +27,7 @@ module qc_calc
 
 contains
 
-    !> turbomole subroutine - needs control file for gas phase calculation and coord file in 
+    !> turbomole subroutine - needs control file for gas phase calculation and coord file in
     subroutine turbomole(epsilon, cosmo_out, solvent)
         !> Dielectric Constant for COSMO Calculation
         real(wp), intent(inout) :: epsilon
@@ -46,14 +63,14 @@ contains
         end if
         open(11, file='control', access='append')
         write(11,'(A)') '$cosmo'
-        if (epsilon .ne. 0) then 
+        if (epsilon .ne. 0) then
             write(11,'(A11, F0.2, A4)')'   epsilon=',epsilon, merge(' ion','    ',ion)
         else 
-            write(11,'(A11, F0.2, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
+            write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
         end if
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
-        write(11,'(A4)') '$end' 
-        if (epsilon .ne. 0) then 
+        write(11,'(A4)') '$end'
+        if (epsilon .ne. 0) then
             write(*,'(A,F0.2,A),A') 'COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
             write(*,'(A,A)') 'COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)

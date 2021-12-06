@@ -1,4 +1,22 @@
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
 MODULE sort
+  use mctc_env, only : wp
+  implicit none
  
 CONTAINS
  
@@ -6,8 +24,8 @@ SUBROUTINE Shell_Sort(a)
  
   IMPLICIT NONE
   INTEGER :: i, j, increment
-  REAL(8) :: temp
-  REAL(8), INTENT(in out) :: a(:)
+  REAL(wp) :: temp
+  REAL(wp), INTENT(in out) :: a(:)
  
   increment = SIZE(a) / 2
   DO WHILE (increment > 0)
@@ -21,7 +39,7 @@ SUBROUTINE Shell_Sort(a)
          a(j) = temp
       END DO
       IF (increment == 2) THEN
-   	  increment = 1
+         increment = 1
       ELSE
          increment = increment * 5 / 11
       END IF      
