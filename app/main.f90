@@ -1,4 +1,20 @@
-program COSMO
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
+program COSMOX
    use element_dict
    use globals
    use sort
@@ -15,6 +31,7 @@ program COSMO
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use sdm
    implicit none
+   character(len=*), parameter :: prog_name = "csx"
    integer :: oh_sol, nh_sol, near_sol
    real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
    real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
@@ -46,6 +63,7 @@ program COSMO
       real(wp) :: qc_eps
       character(len=:), allocatable :: sac_param_path
       character(len=:), allocatable :: smd_param_path
+      character(len=:), allocatable :: database
       logical :: ML, sig_in, prof, smd_default, TM, time
       character(len=:), allocatable :: model
    end type configuration
@@ -102,9 +120,9 @@ program COSMO
    !! Read necessary COSMO Data
    !! ------------------------------------------------------------------------------------
       Call read_cosmo(config%csm_solvent,solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz)
+          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz,config%database)
       Call read_cosmo(config%csm_solute,solute_elements,solute_ident, solute_xyz, solute_su,&
-         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz)
+         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz,config%database)
  
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
@@ -279,6 +297,65 @@ program COSMO
      !    &solv_pot,sol_pot)
 contains
 
+subroutine help(unit)
+   integer, intent(in) :: unit
+
+   write(unit, '(a, *(1x, a))') &
+      "Usage: "//prog_name//" [options]/<inputfile>"
+
+   write(unit, '(a)') &
+      "Calculates the solvation free energy of a compound in a solvent.", &
+      ""
+
+   write(unit, '(2x, a, t25, a)') &
+      "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
+      "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
+      "    --help", "Show this help message"
+
+   write(unit, '(a)')
+   
+end subroutine help
+
+subroutine sample(unit)
+   integer, intent(in) :: unit
+
+   open(unit,file="csx.input")
+   write(unit,'(a)') &
+      "/path/to/crs/parameter/file.param   &
+      &#This needs to directly point to the respective parameter file (crs.param_h2o or crs.param_ot)", &
+      "/path/to/smd/parameters   #This needs to point to the folder, where the smd_h2o and smd_ot files are included.", &
+      "KEYWORDS", &
+      "#Comment line.", &
+      "/path/to/solvent.cosmo   #Needs to point at the correct Solvent from the Database", &
+      "solute.cosmo   #Needs to point to the solute. Will be automatically created with the TM keyword.", &
+      "solvent 0.4   #Will set the solvent used for the SMD(CDS) part and the probe radius (default=0.4).", &
+      "298.15   #Sets the temperature."
+   close(unit)
+
+end subroutine sample
+
+subroutine print_keywords(unit)
+   integer, intent(in) :: unit
+
+   write(unit, '(a)') &
+      "Keywords are used in the keyword line in the .input file.", &
+      "", &
+      "Available Keywords:", &
+      ""
+
+   write(unit, '(2x, a, t25, a)') &
+      "    crs", "Invokes the standard COSMO-X model.", &
+      "    sac, sac2010", "Invokes an SAC based model with or without HB splitting (needs different parameters).", &
+      "    TM/TM=epsilon", "Starts with single point calculation for the solute. Needs control file. (default: epsilon=infinity)", &
+      "    time", "Shows additional Information about the time needed for various steps of the algorithm.", &
+      "    onlyprof", "Only calculates a Sigma Profile and prints it in a .sigma file.", &
+      "    sigma_in", "Expects Sigma Profiles instead of .cosmo files (only for SAC based models).", &
+      "    smd_default", "Uses SMD default Parameters instead of fitted Parameters (use only if you know what you are doing).", &
+      "    DB=path", "Optionally defines the Path to a COSMO file database (e.g. DATABASE-COSMO)"
+   write(unit, '(a)')
+end subroutine print_keywords
+
+
 subroutine get_arguments(config, error)
    type(configuration), intent(out) :: config
    !> Error handling
@@ -294,9 +371,15 @@ subroutine get_arguments(config, error)
       iarg = iarg + 1
       call get_argument(iarg, arg)
       select case(arg)
-      ! case("--help")
-      !    call help(output_unit)
-      !    stop
+      case("--help", "-h")
+         call help(output_unit)
+         stop
+      case("--newinput")
+         call sample(output_unit)
+         stop
+      case ("--keyword", "--keywords")
+         call print_keywords(output_unit)
+         stop
       ! case("--version")
       !    call version(output_unit)
       !   stop
@@ -312,8 +395,8 @@ subroutine get_arguments(config, error)
 
     if (.not.(allocated(config%input))) then
        if (.not.allocated(error)) then
-   !       call help(output_unit)
-          error stop
+          call help(output_unit)
+          stop
        end if
     end if
    Call read_input(config,error)
@@ -335,7 +418,12 @@ subroutine read_input(config,error)
    !> Check if the COSMO-SACMD Input File Exists.
    ex=.false.
    INQUIRE(file=config%input,exist=ex)
-   IF (.NOT. ex) error stop "No Input File."
+   IF (.NOT. ex) then
+      write(output_unit,'(a)') "Error: No Input File defined.", &
+      ""
+      Call help(output_unit)
+      stop
+   end if
 
    !> Set Defaults
    config%T=298.15_wp
@@ -346,6 +434,7 @@ subroutine read_input(config,error)
    config%TM=.FALSE.
    config%time=.FALSE.
    config%qc_eps=0
+   Call move_line("NONE",config%database)
 
    Open(input_unit,file=config%input)
    Read(input_unit,'(A)',iostat=io_error,err=255) line
@@ -378,6 +467,8 @@ subroutine read_input(config,error)
                         read(substring,*) config%qc_eps
                   end select
                end if
+            case ('DB')
+               if (equal .ne. 0) Call move_line(substring,config%database)
             case('time')
                config%time=.true.
             case('ML')
@@ -406,7 +497,8 @@ subroutine read_input(config,error)
    Call move_line(line,config%smd_solvent)
    Read(input_unit,*,iostat=io_error,err=255) config%T
    SysTemp=config%T 
-   Read(input_unit,*,iostat=io_error,err=255) config%z1, config%z2
+   config%z1=0.995
+   config%z2=0.005
    
 255 if (io_error .NE. 0) error stop "Check Input File."
 end subroutine read_input
@@ -414,9 +506,23 @@ end subroutine read_input
 subroutine move_line(line,aline)
    character(*), intent(in) :: line
    character(:), allocatable, intent(inout) :: aline
-   allocate(character(len(trim(line))) :: aline)
-   aline=trim(line)
+
+   integer :: i
+
+   if (allocated(aline)) deallocate(aline)
+   do i= 1,len(trim(line))
+      if (line(i:i) .EQ. "#") then 
+         allocate(character(len(trim(line(1:i-1)))) :: aline)
+         aline=trim(line(1:i-1))
+         exit
+      end if 
+      if (i .EQ. len(trim(line))) then
+         allocate(character(len(trim(line(1:i)))) :: aline)
+         aline=trim(line(1:i))
+         exit
+      end if 
+   end do
 end subroutine move_line
 
-end program COSMO
+end program COSMOX
 

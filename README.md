@@ -1,22 +1,20 @@
-# COSMO-SE
+# COSMO-X
 
+## Building
 Building with Fortran Package Manager:
 https://github.com/fortran-lang/fpm
 
-fpm build &&
-fpm install prefix [path without bin]
+e.g.
+fpm install -profile release -prefix [path without bin]
 
-USES INPUT File, use with
-./csm file.inp
+## Usage
+Uses input file, use with
+```
+csx csx.input
+```
 
-Example Input File:
+Create sample input file with
 
-/path/to/sac/parameters/sac.param 
-/path/to/SMD_Parameters/ 
-sac #Keywords
-#Comment Line
-/path/to/solvent/cosmo/file.cosmo
-/path/to/solute/cosmo/file.cosmo
-smd_solvent smd_probe_radius
-Temperature
-0.995 0.005
+```
+csx -newinput
+```

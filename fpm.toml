@@ -1,4 +1,4 @@
-name="COSMO-SE"
+name="COSMO-X"
 version="0.5.0"
 author="Marcel Stahn"
 maintainer="stahn@thch.uni-bonn.de"
@@ -12,8 +12,11 @@ source-dir="src"
 
 
 [[executable]]
-name="csm"
+name="csx"
 source-dir="app"
 main="main.f90"
+
 [dependencies]
 numsa.git = "https://github.com/MtoLStoN/numsa"
+mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
+tblite.git = "https://github.com/awvwgk/tblite"

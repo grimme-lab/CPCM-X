@@ -1,12 +1,29 @@
+! This file is part of COSMO-X.
+! SPDX-Identifier: LGPL-3.0-or-later
+!
+! COSMO-X is free software: you can redistribute it and/or modify it under
+! the terms of the GNU Lesser General Public License as published by
+! the Free Software Foundation, either version 3 of the License, or
+! (at your option) any later version.
+!
+! COSMO-X is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public License
+! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+
 module initialize_cosmo
    use mctc_env, only : wp
    implicit none
 
 contains
-   subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy,atom_xyz)
+   subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy,atom_xyz,database)
       use globals
       character(*), intent(in) :: compound
-      character(50) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
+      character(*), intent(in) :: database
+      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
       real(wp), dimension(:), allocatable,intent(out) :: charges,&
          &area,pot
       real(wp), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
@@ -24,14 +41,21 @@ contains
       INQUIRE(file=trim(filen),EXIST=exists)
 
       if (.NOT. exists) then
+         if (database .ne. "NONE") then
+            filen=trim(database)//"/"//compound
+            INQUIRE(file=trim(filen), EXIST=exists)
+            write(*,*) "Database specified, reading .cosmo file from", filen
+         end if
+      end if
+      if (.NOT. exists) then
          Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
          if (io_error .EQ. 0) then
             filen=trim(home)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)
                if (exists) then
-                  write(*,*) "No COSMO file in working directory, reading COSMO file from", filen
+                  write(*,*) "No COSMO file in working directory, reading COSMO file from ", filen
                else
-                  write(*,*) "No COSMO file in working directory or HOME directory for", compound
+                  write(*,*) "No COSMO file in working directory or HOME directory for ", compound
                   stop
                end if
          else
@@ -156,9 +180,8 @@ contains
 
 
       INQUIRE(file=filename, exist=g_exists)
-
       if (.NOT. g_exists) then
-         error stop "No Parameter File for COSMO-SAC found."
+         error stop "No Parameter File for COSMO-X found."
       else
          write(*,*) "Reading COSMO Parameters from "//filename
          open(1,file=filename)
@@ -174,19 +197,19 @@ contains
                   read(1,*) param(i)
                end do
                read(1,*) dG_shift
-               read(1,*)
-               io_error=0
+               ! read(1,*)
+               ! io_error=0
 
          ! Creating element specific Parameter Dictionaries from parameter file
 
-               read(1,*) symbol, r_c%param, d_c%param
-               Call dict_create(r_cav, trim(symbol), r_c)
-               Call dict_create(disp_con, trim(symbol), d_c)
-               do while (io_error .GE. 0)
-                  read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
-                  Call dict_add_key(r_cav, trim(symbol), r_c)
-                  Call dict_add_key(disp_con,trim(symbol), d_c)
-               end do
+            !    read(1,*) symbol, r_c%param, d_c%param
+            !    Call dict_create(r_cav, trim(symbol), r_c)
+            !    Call dict_create(disp_con, trim(symbol), d_c)
+            !    do while (io_error .GE. 0)
+            !       read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
+            !       Call dict_add_key(r_cav, trim(symbol), r_c)
+            !       Call dict_add_key(disp_con,trim(symbol), d_c)
+            !    end do
             case("sac")
 
                ! Setting global COSMO-SAC Parameters from parameter file
