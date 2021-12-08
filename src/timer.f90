@@ -16,7 +16,6 @@
 
 module crs_timer
    use mctc_env_accuracy, only : wp, i8
-   use tblite_output_format, only : format_string
    implicit none
    private
 
@@ -37,6 +36,11 @@ module crs_timer
       procedure :: pop
       procedure :: get
    end type timer_type
+
+   interface format_string
+      module procedure :: format_string_int
+      module procedure :: format_string_real_dp
+   end interface format_string
 
 contains
 
@@ -210,5 +214,37 @@ pure subroutine resize(var, n)
    end if
 
 end subroutine resize
+
+function format_string_real_dp(val, format) result(str)
+   real(wp), intent(in) :: val
+   character(len=*), intent(in) :: format
+   character(len=:), allocatable :: str
+
+   character(len=128) :: buffer
+   integer :: stat
+
+   write(buffer, format, iostat=stat) val
+   if (stat == 0) then
+      str = trim(buffer)
+   else
+      str = "*"
+   end if
+end function format_string_real_dp
+
+function format_string_int(val, format) result(str)
+   integer, intent(in) :: val
+   character(len=*), intent(in) :: format
+   character(len=:), allocatable :: str
+
+   character(len=128) :: buffer
+   integer :: stat
+
+   write(buffer, format, iostat=stat) val
+   if (stat == 0) then
+      str = trim(buffer)
+   else
+      str = "*"
+   end if
+end function format_string_int
 
 end module crs_timer

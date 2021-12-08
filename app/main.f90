@@ -316,10 +316,12 @@ subroutine help(unit)
    
 end subroutine help
 
-subroutine sample(unit)
-   integer, intent(in) :: unit
+subroutine sample(filename)
+   character(len=*), intent(in) :: filename
 
-   open(unit,file="csx.input")
+   integer :: unit
+
+   open(newunit=unit,file=filename)
    write(unit,'(a)') &
       "/path/to/crs/parameter/file.param   &
       &#This needs to directly point to the respective parameter file (crs.param_h2o or crs.param_ot)", &
@@ -375,7 +377,8 @@ subroutine get_arguments(config, error)
          call help(output_unit)
          stop
       case("--newinput")
-         call sample(output_unit)
+         call sample("csx.input")
+         write(output_unit, '(a)') "[Info] Sample input file 'csx.input' created."
          stop
       case ("--keyword", "--keywords")
          call print_keywords(output_unit)
