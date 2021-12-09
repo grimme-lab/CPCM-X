@@ -16,6 +16,7 @@
 
 module initialize_cosmo
    use mctc_env, only : wp
+   use, intrinsic :: iso_fortran_env, only : output_unit
    implicit none
 
 contains
@@ -166,6 +167,7 @@ contains
 
    subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
       use element_dict
+      use, intrinsic :: iso_fortran_env, only: output_unit
       use globals, only: param, cov_r, dG_shift
 
       !real(wp), dimension(10) :: param
@@ -183,7 +185,6 @@ contains
       if (.NOT. g_exists) then
          error stop "No Parameter File for COSMO-X found."
       else
-         write(*,*) "Reading COSMO Parameters from "//filename
          open(1,file=filename)
 
          select case (trim(model))

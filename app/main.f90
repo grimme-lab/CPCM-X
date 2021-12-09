@@ -82,8 +82,9 @@ program COSMOX
 
    Call timer%push("total")
    Call get_arguments(config,error)
-   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent)
-   
+   Call echo_init(config)
+   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent) 
+
    if (config%ML) then
       Call init_pr
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
@@ -114,11 +115,16 @@ program COSMOX
    !! Create the Sigma Profile from COSMO files
    !! ----------------------------------------------------------------------------------
       
-      write(*,*) "Creating Sigma Profile from COSMO data"
       Call timer%push("sigma_av")
    !! ------------------------------------------------------------------------------------
    !! Read necessary COSMO Data
    !! ------------------------------------------------------------------------------------
+      write(output_unit,'(10x,a)') &
+         " ------------------------------------------------- ",&
+         "|                   Calculation                   |",&
+         " ------------------------------------------------- ", &
+         ""
+      write(output_unit,'(5x,a)') "Reading COSMO data."
       Call read_cosmo(config%csm_solvent,solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
           &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz,config%database)
       Call read_cosmo(config%csm_solute,solute_elements,solute_ident, solute_xyz, solute_su,&
@@ -127,6 +133,7 @@ program COSMOX
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
    !! ------------------------------------------------------------------------------------
+      write(output_unit,'(5x,a)') "Creating Sigma Profile from COSMO data."
       Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
       Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
       Call single_sigma(solvent_sv,solvent_area,solvent_sigma,"solvent")
@@ -137,7 +144,8 @@ program COSMOX
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
    !! ------------------------------------------------------------------------------------
    if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
-      Call timer%push("bondings")
+      Call timer%push("bondings") 
+      write(output_unit,'(5x,a)') "Determine Ring atoms and HB groups."
       Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
       Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
       Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
@@ -226,7 +234,8 @@ program COSMOX
          Call ortho_charge(solute_sv,solute_sv0,solute_svt)
 
          ! Calculation of Gas Phase energies
-
+         write(output_unit,'(5x,a)') "Calculating Gas Phase Energies.", &
+            ""
          Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
          !if (gas) then
          !   Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
@@ -256,20 +265,34 @@ program COSMOX
          &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
       end select
+      
+      write(output_unit,'(10x,a)') &
+         " ------------------------------------------------- ",&
+         "|                     Results                     |",&
+         " ------------------------------------------------- ", &
+         ""
+      
       if (config%ML) then
          write(*,*) "Writing ML data in ML.data"
          Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
          Call System ("rm ML.energy ML.pr")
       else
-         write(*,*) "Free Energy contributions:"
-         write(*,*) "Ideal State (dG_is):", dG_is
-         write(*,*) "Averaging correction (dG_cc):", dG_cc
-         write(*,*) "restoring free energy (dG_res):", dG_res
-         write(*,*) "Resulting chemical potential in mixture:", dG_is+dG_cc+dG_res
-         write(*,*) "SMD Contribution (dG_CDS):", dG_disp
-         write(*,*) "Systematic empirical shift (dG_shift)", dG_shift
-         write(*,*) "-------------------------------------------------"
-         write(*,*) "solvation free energy: ", dG_is+dG_cc+dG_res+dG_disp+dG_shift
+         write(output_unit,'(4x,a)') repeat('-',73)
+         write(output_unit,'(5x,a,t55,a,t66,a)') &
+            "Free Energy contributions:", "[Eh]", " [kcal/mol]"
+         write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
+         "Ideal State (dG_is):", dG_is/autokcal, dG_is, &
+         "Averaging correction (dG_cc):", dG_cc/autokcal, dG_cc, &
+         "restoring free energy (dG_res):", dG_res/autokcal, dG_res, &
+         "Resulting chemical potential in mixture:", (dG_is+dG_cc+dG_res)/autokcal,&
+         & dG_is+dG_cc+dG_res, &
+         "SMD Contribution (dG_CDS):", dG_disp/autokcal, dG_disp, &
+         "Systematic empirical shift (dG_shift)", dG_shift/autokcal, dG_shift
+         write(output_unit,'(4x,a)') repeat('-',73)
+         write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
+         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift)/autokcal,&
+         & dG_is+dG_cc+dG_res+dG_disp+dG_shift
+         write(output_unit,*) ""
       end if
 
       Call timer%pop()
@@ -526,6 +549,27 @@ subroutine move_line(line,aline)
       end if 
    end do
 end subroutine move_line
+
+subroutine echo_init(config)
+   type(configuration) :: config
+
+
+   write(output_unit,'(10x,a)') &
+      " ------------------------------------------------- ",&
+      "|                 Initialization                  |",&
+      " ------------------------------------------------- ", &
+      ""
+
+   write(output_unit,'(5x,a,t35,a)') &
+      "SMD Parameter Path:", config%smd_param_path, &
+      "CRS Parameter Path:", config%sac_param_path, &
+      "Solvent:", config%smd_solvent, &
+      "Corresponding COSMO File:", config%csm_solvent
+
+   if (.NOT. config%TM) write(output_unit,'(5x,a,t35,a)') &
+                           "Solute COSMO File:", config%csm_solute
+      
+end subroutine echo_init
 
 end program COSMOX
 

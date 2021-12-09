@@ -16,6 +16,7 @@
 
 module crs
    use mctc_env, only : wp
+   use, intrinsic :: iso_fortran_env, only: output_unit
    use crs_broyden, only : broyden_mixer, new_broyden
    implicit none
 
@@ -36,14 +37,14 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
    real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
    integer :: dummy1, ioerror, i
 
-   open(1,file="energy")
-   read(1,*,iostat=ioerror)
-   if (ioerror .NE. 0) then
-      write(*,*) "Problem while reading energies (check energy file)."
-      error stop
-   else
-      read(1,*) dummy1,E_gas
-   end if
+   !> Check if gas phase energy exists.
+   logical :: ex
+
+   INQUIRE(file="gas.energy", exist=ex)
+   if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
+   open(1,file="gas.enery")
+   read(1,*,iostat=ioerror) E_gas
+   if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
    dEreal=(E_cosmo-E_gas)
    ediel=0
    edielprime=0
@@ -183,6 +184,8 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
 
    allocate(W_v(size(sv_sol)))
    allocate(sol_pot(size(sv_sol)))
+   write(output_unit,'(5x,a)') &
+      "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
    W_v(:)=0.0_wp
    beta=(R*Jtokcal*T)/param(7)
    temppot=0.0_wp
@@ -215,6 +218,8 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
       temppot=temppot+(area_solv(i)*solv_pot(i))
    end do
    !write(*,*) beta*temppot
+   write(output_unit,'(5x,a)') "Done!", &
+   ""
 end subroutine compute_solute
 
 subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,element)
@@ -233,6 +238,9 @@ subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,elemen
    real(wp), allocatable :: edd(:, :)
    type(broyden_mixer) :: mixer
    real(wp), parameter :: mixer_damping = 0.4_wp
+
+   write(output_unit,'(5x,a)') "", & 
+      "Converging Solvent Sigma Profile."
 
    converged = .false.
    allocate(pot_di(size(sv)))
@@ -257,7 +265,7 @@ subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,elemen
       write(*,*) "Error, chemical potential could not be converged"
       error stop
    end if
-   write(*,*) "Done! Chemical potential converged after Cycle ",iter
+   write(output_unit,'(5x,a,i3)') "Done! Chemical potential converged after Cycle ",iter
 
 end subroutine compute_solvent
 
