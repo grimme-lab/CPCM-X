@@ -23,6 +23,7 @@ module sac_mod
    subroutine sac_gas(E_cosmo,id_scr,area,sv,su,pot)
          use globals
          use element_dict
+         use, intrinsic :: iso_fortran_env, only: output_unit
          real(wp), intent(out) :: id_scr
          real(wp), intent(in) ::E_cosmo
          real(wp),dimension(:),allocatable, intent(in) :: area, sv, su, pot!,ident
@@ -49,15 +50,17 @@ module sac_mod
             edielprime=edielprime+(area(i)*pot(i)*sv(i))
          end do
          avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
-         write(*,*) "E_COSMO", E_cosmo*autokcal
-         write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
-         write(*,*) "E_gas: ", E_gas*autokcal
          dEreal=dEreal*autokcal
          id_scr=dEreal+avcorr*autokcal
-         write(*,*) "E_COSMO-E_gas", (E_cosmo-E_gas)*autokcal
-         write(*,*) "E_COSMO-E_gas+dE: ", (E_cosmo-E_gas+avcorr)*autokcal
-         write(*,*) "Ediel: ", ediel/2*autokcal
-         write(*,*) "Averaging corr dE: ", avcorr*autokcal
+         write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
+         "E_COSMO:", E_cosmo, "Eh", &
+         "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
+         "E_gas:", E_gas,"Eh", &
+         "E_COSMO-E_gas", (E_cosmo-E_gas),"Eh", &
+         "E_COSMO-E_gas+dE:", (E_cosmo-E_gas+avcorr),"Eh", &
+         "Ediel:", ediel/2,"Eh", &
+         "Averaging corr dE:", avcorr,"Eh", &
+         "Area:", sum(area), "Å"
 
          vdW_gain=0
 !         do i=1,size(area)
@@ -66,7 +69,6 @@ module sac_mod
   !          vdW_gain=vdW_gain+(area(i)*(a_disp%param*SysTemp+b_disp%param))
   !       end do
      !    write(*,*) "EvdW: ", vdW_gain
-         write(*,*) "Area: ", sum(area)
         ! thermo=param(10)*R*jtokcal*SysTemp
     !     write(*,*) "thermostatic correction: ", thermo
 

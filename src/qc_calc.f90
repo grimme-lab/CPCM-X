@@ -18,6 +18,7 @@
 
 module qc_calc
     use mctc_env, only : wp
+    use, intrinsic :: iso_fortran_env, only : output_unit
     implicit none
     private
     public :: qc_cal
@@ -44,14 +45,69 @@ contains
         integer :: charge
         !> Is Molecule charged?
         logical :: ion
+        !> Catches some Errors.
+        integer :: io_error
+        !> Necessary for reading gas phase energy.
+        integer :: lines, i
+        real(wp) :: E_gas
 
         INQUIRE(file='control', exist=ex)
-
         if (.not. ex) error stop 'Turbomole driver mode specified, but no control file found.'
         if (epsilon .lt. 0) epsilon=minnesota_eps(solvent)
-        write(*,*) 'Turbomole Driver initialized.'
-        write(*,*) 'Gas phase single point calculation.'
-        Call execute_command_line('ridft > gas.out', WAIT=.true.)
+        write(output_unit,'(a)') ""
+        write(output_unit,'(10x,a)') &
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+            " ------------------------------------------------- ",&
+            "|                TURBOMOLE Driver                 |",&
+            " ------------------------------------------------- "
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+        io_error=0
+        open(11, file="control" ,status='old')
+        do while (io_error .ge. 0)
+            read(11,'(A)',iostat=io_error) line
+            if (index(line,"cosmo") .ne. 0) then
+                write(output_unit,'(a)') ""
+                write(output_unit,'(5x,a, t20, a)') &
+                    "[WARNING]", "Found a COSMO command in the control file.", &
+                    "","Deleting the whole COSMO Block for the Gas Phase calculation.", &
+                    "","Carefully check your results."
+                write(output_unit,'(a)') ""
+                Call execute_command_line('kdg cosmo', WAIT=.true.)
+                exit
+            end if
+        end do
+        close(11)
+        write(output_unit,'(5x, A)') 'Starting Gas phase single point calculation.'
+        Call execute_command_line('ridft > gas.out 2>error', WAIT=.true.)
+        open(11,file="error")
+        read(11,'(a)') line
+        if (index(line,"abnormal") .ne. 0) error stop "Gas phase calculation stopped abnormally."
+        close(11)
+
+        write(output_unit,'(5x, A)') &
+            "Done! Gas phase calculation terminated normally.", &
+            ""
+
+        io_error=0
+        open(11, file="energy", status="OLD")
+        if (io_error .ne. 0) error stop 'Error while reading the gas phase energy. Check your control file.'
+        io_error=0
+        lines=0
+        do while (.TRUE.)
+            read(11,*,iostat=io_error)
+            if (io_error .lt. 0) exit
+            lines=lines+1
+        end do
+        rewind(11)
+        do i=1,lines-2
+            read(11,*)
+        end do
+        read(11,*) i, E_gas
+        close(11)
+        open(11,file="gas.energy")
+        write(11,*) E_gas
+        close(11)
+
         Call execute_command_line('kdg end')
         ion=.false.
         INQUIRE(file='.CHRG', exist=ex)
@@ -71,11 +127,16 @@ contains
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
         if (epsilon .ne. 0) then
-            write(*,'(A,F0.2,A),A') 'COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
+            write(output_unit,'(5x,A,F0.2,A),A') 'Starting COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
-            write(*,'(A,A)') 'COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
+            write(output_unit,'(5x,A,A)') 'Starting COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
         end if
-        Call execute_command_line('ridft > solv.out', WAIT=.true.)
+        Call execute_command_line('ridft > solv.out 2>error', WAIT=.true.)
+        if (index(line,"abnormal") .ne. 0) error stop "Gas phase calculation stopped abnormally."
+        write(output_unit,'(5x, A)') &
+            "Done! COSMO phase calculation terminated normally.", &
+            ""
+
     end subroutine turbomole
 
     !> Get default dielectric constant from Minnesota Solvation Database
