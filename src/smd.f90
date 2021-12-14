@@ -64,8 +64,10 @@ module sdm
          select case (solvent)
             case ('h2o','water')
                INQUIRE(file=path//"smd_h2o",exist=ex)
+               if (.not. ex) INQUIRE(file=path,exist=ex)
             case default
                INQUIRE(file=path//"smd_ot",exist=ex)
+               if (.not. ex) INQUIRE(file=path,exist=ex)
          end select
          if (.NOT. ex) then
             write(*,*) "Parameter file for SMD model does not exists in the specified path."
