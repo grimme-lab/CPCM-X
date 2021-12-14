@@ -82,6 +82,10 @@ program COSMOX
 
    Call timer%push("total")
    Call get_arguments(config,error)
+   if (allocated(error)) then
+      write(error_unit,'(a)') error%message
+      error stop
+   end if
    Call echo_init(config)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent) 
 
@@ -93,7 +97,8 @@ program COSMOX
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
    !! ----------------------------------------------------------------------------------
-   T=SysTemp
+   T=config%T
+   SysTemp=T
    if (config%sig_in) then
 
       write(*,*) "Reading Sigma Profile"
@@ -331,30 +336,61 @@ subroutine help(unit)
       ""
 
    write(unit, '(2x, a, t25, a)') &
+      "    --solvent", "Specify a solvent and uses configuration given in config.toml.", &
+      "    --newrc", "Creates a sample configuration file (config.toml).", &
       "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
       "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
+      "    --inp", "Allows to specify an input file for advanced configuration.", &
       "    --help", "Show this help message"
-
    write(unit, '(a)')
    
 end subroutine help
 
-subroutine sample(filename)
+subroutine sample(filename,rc)
+   !> Path, where the Sample should be created.
    character(len=*), intent(in) :: filename
+   !> Is TRUE for a sample configuration file and FALSE for a sample input.
+   logical, intent(in) :: rc
 
    integer :: unit
 
    open(newunit=unit,file=filename)
-   write(unit,'(a)') &
-      "/path/to/crs/parameter/file.param   &
-      &#This needs to directly point to the respective parameter file (crs.param_h2o or crs.param_ot)", &
-      "/path/to/smd/parameters   #This needs to point to the folder, where the smd_h2o and smd_ot files are included.", &
-      "KEYWORDS", &
-      "#Comment line.", &
-      "/path/to/solvent.cosmo   #Needs to point at the correct Solvent from the Database", &
-      "solute.cosmo   #Needs to point to the solute. Will be automatically created with the TM keyword.", &
-      "solvent 0.4   #Will set the solvent used for the SMD(CDS) part and the probe radius (default=0.4).", &
-      "298.15   #Sets the temperature."
+   if (rc) then
+      write(unit,'(a)') &
+         '# This is a Sample CSX Configuration File', &
+         '# To work with this file, an environmental variable CSXHOME has to be set.', &
+         '# This File has to be placed in the CSXHOME path.', &
+         '# All Parameters and the Database need to be placed in CSXHOME.', &
+         '', &
+         '# Path or Filename for the parameters for Water. (Path in respective to CSXHOME)', &
+         'smd_h2o="smd_h2o"', &
+         'crs_h2o="crs.param_h2o"', &
+         '', &
+         '# Path or Filename for the parameters for other solvents.', &
+         'smd_ot="smd_ot"', &
+         'crs_ot="crs.param_ot"', &
+         '', &
+         '# Path to the Solvent Database', &
+         '# Note, that the .cosmo files in the database need to be named according to SMD solvent names.', &
+         'DB="DATABASE-COSMO"', &
+         '', &
+         '# Temperature in Kelvin', &
+         'Temperature=298.15', &
+         '', &
+         '#Probe radius for the CDS term in Å (default=0.4)', &
+         'r_probe=0.4'
+   else
+      write(unit,'(a)') &
+         "/path/to/crs/parameter/file.param   &
+         &#This needs to directly point to the respective parameter file (crs.param_h2o or crs.param_ot)", &
+         "/path/to/smd/parameters   #This needs to point to the folder, where the smd_h2o and smd_ot files are included.", &
+         "KEYWORDS", &
+         "#Comment line.", &
+         "/path/to/solvent.cosmo   #Needs to point at the correct Solvent from the Database", &
+         "solute.cosmo   #Needs to point to the solute. Will be automatically created with the TM keyword.", &
+         "solvent 0.4   #Will set the solvent used for the SMD(CDS) part and the probe radius (default=0.4).", &
+         "298.15   #Sets the temperature."
+   end if
    close(unit)
 
 end subroutine sample
@@ -390,6 +426,7 @@ subroutine get_arguments(config, error)
    real(wp) :: val
    character(len=:), allocatable :: arg
 
+
    iarg = 0
    narg = command_argument_count()
    do while(iarg < narg)
@@ -400,18 +437,34 @@ subroutine get_arguments(config, error)
          call help(output_unit)
          stop
       case("--newinput")
-         call sample("csx.input")
+         call sample("csx.input",.FALSE.)
          write(output_unit, '(a)') "[Info] Sample input file 'csx.input' created."
+         stop
+      case("--newrc")
+         call sample("config.toml",.TRUE.)
+         write(output_unit, '(a)') "[Info] Sample config file 'config.toml' created."
          stop
       case ("--keyword", "--keywords")
          call print_keywords(output_unit)
          stop
+      case ("--solvent", "-s", "--solv")
+         iarg=iarg+1
+         call get_argument(iarg,arg)
+         if ((.not.allocated(config%smd_solvent)) .AND. (.not.allocated(config%input))) then
+            call use_default(config,arg,error)
+            cycle
+         end if
+         call fatal_error(error, "Too many positional arguments present")
+         exit
       ! case("--version")
       !    call version(output_unit)
       !   stop
-      case default
-         if (.not.allocated(config%input)) then
+      case ("--inp", "--input")
+         iarg=iarg+1
+         call get_argument(iarg,arg)
+         if ((.not.allocated(config%input)) .AND. (.not.allocated(config%smd_solvent))) then
             call move_alloc(arg, config%input)
+            Call read_input(config,error)
             cycle
          end if
          call fatal_error(error, "Too many positional arguments present")
@@ -419,13 +472,12 @@ subroutine get_arguments(config, error)
       end select
    end do
 
-    if (.not.(allocated(config%input))) then
+    if ((.not.(allocated(config%input))) .AND. (.not. (allocated(config%smd_solvent)))) then
        if (.not.allocated(error)) then
           call help(output_unit)
           stop
        end if
     end if
-   Call read_input(config,error)
 
 end subroutine get_arguments 
 
@@ -441,6 +493,16 @@ subroutine read_input(config,error)
 
    character(len=:), allocatable :: keyword, substring
 
+   !> Set Defaults
+   config%T=298.15_wp
+   config%ML=.FALSE.
+   config%sig_in=.FALSE.
+   config%prof=.FALSE.
+   config%smd_default=.FALSE.
+   config%TM=.FALSE.
+   config%time=.FALSE.
+   config%qc_eps=0
+   config%probe=0.4
    !> Check if the COSMO-SACMD Input File Exists.
    ex=.false.
    INQUIRE(file=config%input,exist=ex)
@@ -451,15 +513,6 @@ subroutine read_input(config,error)
       stop
    end if
 
-   !> Set Defaults
-   config%T=298.15_wp
-   config%ML=.FALSE.
-   config%sig_in=.FALSE.
-   config%prof=.FALSE.
-   config%smd_default=.FALSE.
-   config%TM=.FALSE.
-   config%time=.FALSE.
-   config%qc_eps=0
    Call move_line("NONE",config%database)
 
    Open(input_unit,file=config%input)
@@ -528,6 +581,157 @@ subroutine read_input(config,error)
    
 255 if (io_error .NE. 0) error stop "Check Input File."
 end subroutine read_input
+
+subroutine use_default(config, solv, error)
+   use mctc_env_system, only : get_variable
+   use tomlf, only : toml_table, toml_parse, toml_error, toml_key, get_value
+   !> Solvent used for default configuration
+   character(:), allocatable, intent(inout) :: solv
+   !> Configuration Type
+   type(configuration), intent(out) :: config
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+   !> Toml unit
+   type(toml_table), allocatable :: config_table
+   !> Toml error handling
+   type(toml_error), allocatable :: config_error
+   
+   
+   type(toml_key), allocatable, dimension(:) :: list
+   integer :: stat
+   character(len=255) :: line
+   character(:), allocatable :: home, line2
+   logical :: ex
+   character(len=10) :: control, command
+   integer :: nconf
+   
+   !> Set Defaults
+   config%T=298.15_wp
+   config%ML=.FALSE.
+   config%sig_in=.FALSE.
+   config%prof=.FALSE.
+   config%smd_default=.FALSE.
+   config%TM=.FALSE.
+   config%time=.FALSE.
+   config%qc_eps=0
+   config%probe=0.4
+   if (solv .eq. "h2o") call move_line("water",solv)
+   call move_line(solv,config%smd_solvent)
+   call move_line(solv//".cosmo",config%csm_solvent)
+   call move_line("solute.cosmo",config%csm_solute)
+   call move_line("crs",config%model)
+   config%TM=.TRUE.
+   Call get_variable("CSXHOME",home)
+   
+   if (.not.allocated(home)) then
+      call fatal_error(error, "CSXHOME Variable ist not set.")
+      RETURN
+   end if
+
+   ex=.false.
+
+   INQUIRE(file=home//"config.toml",exist=ex)
+   if (.not. ex) then 
+      call fatal_error(error, "No config.toml found in "//home)
+      if (home(len(home):len(home)) .ne. "/") call fatal_error(error, "No config.toml found in "//home&
+      &//"."//NEW_LINE('a')//'Your path should probable end with an "/".')
+      return
+   end if
+
+   open(input_unit,file=home//"config.toml")
+   call toml_parse(config_table,input_unit,config_error)
+   close(input_unit)
+
+   if (allocated(config_table)) then
+      call config_table%get_keys(list)
+      do nconf=1,size(list)
+         select case(list(nconf)%key)
+         case("smd_h2o")
+            if (solv .eq. "water") then
+               call get_value(config_table,list(nconf),line2)
+               call move_line(home//line2,config%smd_param_path)
+            end if
+         case("smd_ot")
+            if (solv .ne. "water") then
+               call get_value(config_table,list(nconf),line2)
+               call move_line(home//line2,config%smd_param_path)
+            end if
+         case("crs_h2o")
+            if (solv .eq. "water") then
+               call get_value(config_table,list(nconf),line2)
+               call move_line(home//line2,config%sac_param_path)
+            end if
+         case("crs_ot")
+            if (solv .ne. "water") then
+               call get_value(config_table,list(nconf),line2)
+               call move_line(home//line2,config%sac_param_path)
+            end if
+         case("DB")
+            call get_value(config_table,list(nconf),line2)
+            call move_line(home//line2,config%database)
+         case("Temperature")
+            call get_value(config_table,list(nconf),config%T)
+         case("r_probe")
+            call get_value(config_table,list(nconf),config%probe)
+         case default
+            call fatal_error(error, "Unrecognized key in your config file: "//list(nconf)%key)
+            return
+         end select
+      end do
+   else
+      call fatal_error(error, config_error%message)
+   end if
+
+   ! do while (.TRUE.)
+   !    if (index(line,"$") .eq. 0) read(11,'(a)',iostat=stat) line
+   !    write(*,*) line
+   !    if (stat .lt. 0) exit
+   !    if (index(line,"$") .eq. 0) cycle
+   !    line=line(2:len(line))
+   !    select case(solv)
+   !    case("H2O", "Water", "water")
+   !       if (trim(line) .eq. "H2O") then
+   !          do while (.TRUE.)
+   !             read(11,'(a)',iostat=stat) line
+   !             if (index(line, "$") .ne. 0) exit
+   !             control=line(1:index(line,"=")-1)
+   !             command=trim(line(index(line,"=")+1:len(line)))
+   !             select case(trim(control))
+   !             case("smd")
+   !                call move_line(trim(command),config%smd_param_path)
+   !             case("crs")
+   !                call move_line(trim(command),config%sac_param_path)
+   !             end select
+   !          end do
+   !       end if
+   !    case default
+   !       if (trim(line) .eq. "OT") then
+   !          do while (.TRUE.)
+   !             read(11,'(a)',iostat=stat) line
+   !             if (index(line, "$") .ne. 0) exit
+   !             control=line(1:index(line,"=")-1)
+   !             command=trim(line(index(line,"=")+1:len(line)))
+   !             select case(trim(control))
+   !             case("smd")
+   !                call move_line(trim(command),config%smd_param_path)
+   !             case("crs")
+   !                call move_line(trim(command),config%sac_param_path)
+   !             end select
+   !          end do
+   !       end if
+   !    end select
+
+   !    if (trim(line) .eq. "DB") then
+   !       read(11,'(a)',iostat=stat) line
+   !       control=line(1:index(line,"=")-1)
+   !       command=trim(line(index(line,"=")+1:len(line)))
+   !       call move_line(trim(command),config%database)
+   !    end if
+
+   ! end do
+
+
+end subroutine use_default
 
 subroutine move_line(line,aline)
    character(*), intent(in) :: line

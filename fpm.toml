@@ -19,3 +19,4 @@ main="main.f90"
 [dependencies]
 numsa.git = "https://github.com/MtoLStoN/numsa"
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
+toml-f.git = "https://github.com/toml-f/toml-f.git"

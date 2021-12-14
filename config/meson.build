@@ -49,3 +49,14 @@ numsa_dep = dependency(
   default_options: ['default_library=static'],
 )
 lib_deps += numsa_dep
+
+
+tomlf_prj = subproject(
+  'toml-f',
+  version: '>=0.2',
+  default_options: [
+    'default_library=static',
+  ],
+)
+tomlf_dep = tomlf_prj.get_variable('tomlf_dep')
+lib_deps += tomlf_dep

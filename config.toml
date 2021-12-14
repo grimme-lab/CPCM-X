@@ -1,0 +1,22 @@
+# This is a Sample CSX Configuration File
+# To work with this file, an environmental variable CSXHOME has to be set.
+# This File has to be placed in the CSXHOME path.
+# All Parameters and the Database need to be placed in CSXHOME.
+
+# Path or Filename for the parameters for Water. (Path in respective to CSXHOME)
+smd_h2o="smd_h2o"
+crs_h2o="crs.param_h2o"
+
+# Path or Filename for the parameters for other solvents.
+smd_ot="smd_ot"
+crs_ot="crs.param_ot"
+
+# Path to the Solvent Database
+# Note, that the .cosmo files in the database need to be named according to SMD solvent names.
+DB="DATABASE-COSMO"
+
+# Temperature in Kelvin
+Temperature=298.15
+
+#Probe radius for the CDS term in Å (default=0.4)
+r_probe=0.4
