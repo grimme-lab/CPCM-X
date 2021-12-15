@@ -37,11 +37,69 @@ elif fc_id == 'pgi' or fc_id == 'nvidia_hpc'
   )
 endif
 
-omp_dep = dependency('openmp')
-lib_deps += omp_dep
+if get_option('openmp')
+  omp_dep = dependency('openmp')
+  lib_deps += omp_dep
+endif
 
-lapack_dep = dependency('mkl', 'lapack')
-lib_deps += lapack_dep
+lapack_vendor = get_option('lapack')
+if lapack_vendor == 'auto'
+  if fc_id == 'intel'
+    lapack_vendor = 'mkl'
+  endif
+endif
+
+if lapack_vendor == 'mkl'
+  mkl_dep = []
+  if fc_id == 'intel'
+    mkl_dep += fc.find_library('mkl_intel_lp64')
+    if get_option('openmp')
+      mkl_dep += fc.find_library('mkl_intel_thread')
+    endif
+  elif fc_id == 'gcc'
+    mkl_dep += fc.find_library('mkl_gf_lp64')
+    if get_option('openmp')
+      mkl_dep += fc.find_library('mkl_gnu_thread')
+    endif
+  else
+    error('MKL not supported for this compiler')
+  endif
+  if not get_option('openmp')
+    mkl_dep += fc.find_library('mkl_tbb_thread')
+  endif
+  mkl_dep += fc.find_library('mkl_core')
+  lib_deps += mkl_dep
+
+elif lapack_vendor == 'mkl-rt'
+  mkl_dep = fc.find_library('mkl_rt')
+  lib_deps += mkl_dep
+
+elif lapack_vendor == 'openblas'
+  openblas_dep = dependency('openblas', required: false)
+  if not openblas_dep.found()
+    openblas_dep = fc.find_library('openblas')
+  endif
+  lib_deps += openblas_dep
+  if not fc.links('external dsytrs; call dsytrs(); end', dependencies: openblas_dep)
+    lapack_dep = dependency('lapack', required: false)
+    if not lapack_dep.found()
+      lapack_dep = fc.find_library('lapack')
+    endif
+    lib_deps += lapack_dep
+  endif
+
+else
+  lapack_dep = dependency('lapack', required: false)
+  if not lapack_dep.found()
+    lapack_dep = fc.find_library('lapack')
+  endif
+  lib_deps += lapack_dep
+  blas_dep = dependency('blas', required: false)
+  if not blas_dep.found()
+    blas_dep = fc.find_library('blas')
+  endif
+  lib_deps += blas_dep
+endif
 
 numsa_dep = dependency(
   'numsa',

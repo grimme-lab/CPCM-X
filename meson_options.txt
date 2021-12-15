@@ -1,0 +1,16 @@
+option(
+  'lapack',
+  type: 'combo',
+  value: 'auto',
+  yield: true,
+  choices: ['auto', 'mkl', 'mkl-rt', 'openblas', 'netlib'],
+  description : 'linear algebra backend',
+)
+
+option(
+  'openmp',
+  type: 'boolean',
+  value: true,
+  yield: true,
+  description: 'use OpenMP parallelisation',
+)
