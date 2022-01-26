@@ -33,15 +33,13 @@ module sac_mod
        !  type(DICT_DATA) :: a_disp,b_disp
          real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
          integer :: dummy1, ioerror, i
+         logical :: ex
 
-         open(1,file="energy")
-         read(1,*,iostat=ioerror)
-         if (ioerror .NE. 0) then
-            write(*,*) "Problem while reading energies (check energy file)."
-            error stop
-         else
-            read(1,*) dummy1,E_gas
-         end if
+         INQUIRE(file="gas.energy", exist=ex)
+         if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
+         open(1,file="gas.energy")
+         read(1,*,iostat=ioerror) E_gas
+         if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
          dEreal=(E_cosmo-E_gas)
          ediel=0
          edielprime=0

@@ -42,7 +42,7 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
 
    INQUIRE(file="gas.energy", exist=ex)
    if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
-   open(1,file="gas.enery")
+   open(1,file="gas.energy")
    read(1,*,iostat=ioerror) E_gas
    if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
    dEreal=(E_cosmo-E_gas)
