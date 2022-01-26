@@ -1,4 +1,4 @@
-name="COSMO-X"
+name="CPCM-X"
 version="version.txt"
 author="Marcel Stahn"
 maintainer="stahn@thch.uni-bonn.de"
@@ -12,7 +12,7 @@ source-dir="src"
 
 
 [[executable]]
-name="csx"
+name="cpx"
 source-dir="app"
 main="main.f90"
 

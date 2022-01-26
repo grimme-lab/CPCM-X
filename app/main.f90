@@ -1,20 +1,20 @@
-! This file is part of COSMO-X.
+! This file is part of CPCM-X.
 ! SPDX-Identifier: LGPL-3.0-or-later
 !
-! COSMO-X is free software: you can redistribute it and/or modify it under
+! CPCM-X is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! COSMO-X is distributed in the hope that it will be useful,
+! CPCM-X is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
-program COSMOX
+program CPCMX
    use element_dict
    use globals
    use sort
@@ -119,7 +119,8 @@ program COSMOX
             case('ORCA')
                Call qc_cal(config%xyz_input,error)
             case default
-               error stop "Chosen program "//config%qc_calc//"not supported"
+               write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
+               error stop
          end select
          Call check_error(error)
          Call timer%pop() 
@@ -192,7 +193,7 @@ program COSMOX
    
 
    !! ------------------------------------------------------------------------------------
-   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,COSMO-RS)
+   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-RS)
    !! ------------------------------------------------------------------------------------
 
    select case (trim(config%model))
@@ -237,9 +238,9 @@ program COSMOX
      !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case ("crs")
    
-         !! COSMO-RS calculation starts here !!
+         !! CPCM-RS calculation starts here !!
 
-         ! Calculate sv0,svt for COSMO-RS
+         ! Calculate sv0,svt for CPCM-RS
          
          Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
@@ -255,7 +256,7 @@ program COSMOX
          !      &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
          !end if
 
-         ! Computation of COSMO-RS equations (here may be something wrong atm)
+         ! Computation of CPCM-RS equations (here may be something wrong atm)
          Call timer%push("solv")
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
          Call timer%pop()
@@ -345,6 +346,7 @@ subroutine help(unit)
 
    write(unit, '(2x, a, t25, a)') &
       "    --solvent", "Specify a solvent and uses configuration given in config.toml.", &
+      "","For Orca this needs an .xyz file as input (e.g. csx inp.xyz --solvent water)",&
       "    --newrc", "Creates a sample configuration file (config.toml).", &
       "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
       "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
@@ -365,12 +367,15 @@ subroutine sample(filename,rc)
    open(newunit=unit,file=filename)
    if (rc) then
       write(unit,'(a)') &
-         '# This is a Sample CSX Configuration File', &
-         '# To work with this file, an environmental variable CSXHOME has to be set.', &
-         '# This File has to be placed in the CSXHOME path.', &
-         '# All Parameters and the Database need to be placed in CSXHOME.', &
+         '# This is a Sample CPX Configuration File', &
+         '# To work with this file, an environmental variable CPXHOME has to be set.', &
+         '# This File has to be placed in the CPXHOME path.', &
+         '# All Parameters and the Database need to be placed in CPXHOME.', &
          '', &
-         '# Path or Filename for the parameters for Water. (Path in respective to CSXHOME)', &
+         '# Default QC Program for the Single Point Calculations', &
+         'prog="TM"', &
+         '', &
+         '# Path or Filename for the parameters for Water. (Path in respective to CPXHOME)', &
          'smd_h2o="smd_h2o"', &
          'crs_h2o="crs.param_h2o"', &
          '', &
@@ -413,9 +418,10 @@ subroutine print_keywords(unit)
       ""
 
    write(unit, '(2x, a, t25, a)') &
-      "    crs", "Invokes the standard COSMO-X model.", &
+      "    crs", "Invokes the standard CPCM-X model.", &
       "    sac, sac2010", "Invokes an SAC based model with or without HB splitting (needs different parameters).", &
       "    TM/TM=epsilon", "Starts with single point calculation for the solute. Needs control file. (default: epsilon=infinity)", &
+      "    ORCA", "Starts with single point calculation for the solute with epsilon=infinity. Needs .xyz file.", &
       "    time", "Shows additional Information about the time needed for various steps of the algorithm.", &
       "    onlyprof", "Only calculates a Sigma Profile and prints it in a .sigma file.", &
       "    sigma_in", "Expects Sigma Profiles instead of .cosmo files (only for SAC based models).", &
@@ -496,7 +502,7 @@ subroutine get_arguments(config, error)
 
 end subroutine get_arguments 
 
-   !> Subroutine to Read the COSMO-SACMD Input File
+   !> Subroutine to Read the CPCM-SACMD Input File
 subroutine read_input(config,error)
    type(configuration) :: config
    type(error_type), allocatable :: error
@@ -517,7 +523,7 @@ subroutine read_input(config,error)
    config%time=.FALSE.
    config%qc_eps=0
    config%probe=0.4
-   !> Check if the COSMO-SACMD Input File Exists.
+   !> Check if the CPCM-SACMD Input File Exists.
    ex=.false.
    INQUIRE(file=config%input,exist=ex)
    IF (.NOT. ex) then
@@ -653,10 +659,10 @@ subroutine use_default(config, solv, error)
    call move_line(solv//".cosmo",config%csm_solvent)
    call move_line("solute.cosmo",config%csm_solute)
    call move_line("crs",config%model)
-   Call get_variable("CSXHOME",home)
+   Call get_variable("CPXHOME",home)
    
    if (.not.allocated(home)) then
-      call fatal_error(error, "CSXHOME Variable ist not set.")
+      call fatal_error(error, "CPXHOME Variable ist not set.")
       RETURN
    end if
 
@@ -837,5 +843,5 @@ subroutine check_error(error)
 
 end subroutine check_error
 
-end program COSMOX
+end program CPCMX
 
