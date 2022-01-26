@@ -3,8 +3,7 @@
 # This File has to be placed in the CSXHOME path.
 # All Parameters and the Database need to be placed in CSXHOME.
 
-#Default QC Program for the Single Point Calculations
-
+# Default QC Program for the Single Point Calculations
 prog="TM"
 
 # Path or Filename for the parameters for Water. (Path in respective to CSXHOME)

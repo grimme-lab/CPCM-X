@@ -345,6 +345,7 @@ subroutine help(unit)
 
    write(unit, '(2x, a, t25, a)') &
       "    --solvent", "Specify a solvent and uses configuration given in config.toml.", &
+      "","For Orca this needs an .xyz file as input (e.g. csx inp.xyz --solvent water)",&
       "    --newrc", "Creates a sample configuration file (config.toml).", &
       "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
       "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
@@ -369,6 +370,9 @@ subroutine sample(filename,rc)
          '# To work with this file, an environmental variable CSXHOME has to be set.', &
          '# This File has to be placed in the CSXHOME path.', &
          '# All Parameters and the Database need to be placed in CSXHOME.', &
+         '', &
+         '# Default QC Program for the Single Point Calculations', &
+         'prog="TM"', &
          '', &
          '# Path or Filename for the parameters for Water. (Path in respective to CSXHOME)', &
          'smd_h2o="smd_h2o"', &
@@ -416,6 +420,7 @@ subroutine print_keywords(unit)
       "    crs", "Invokes the standard COSMO-X model.", &
       "    sac, sac2010", "Invokes an SAC based model with or without HB splitting (needs different parameters).", &
       "    TM/TM=epsilon", "Starts with single point calculation for the solute. Needs control file. (default: epsilon=infinity)", &
+      "    ORCA", "Starts with single point calculation for the solute with epsilon=infinity. Needs .xyz file.", &
       "    time", "Shows additional Information about the time needed for various steps of the algorithm.", &
       "    onlyprof", "Only calculates a Sigma Profile and prints it in a .sigma file.", &
       "    sigma_in", "Expects Sigma Profiles instead of .cosmo files (only for SAC based models).", &
