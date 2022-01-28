@@ -1,18 +1,18 @@
-! This file is part of COSMO-X.
+! This file is part of CPCM-X.
 ! SPDX-Identifier: LGPL-3.0-or-later
 !
-! COSMO-X is free software: you can redistribute it and/or modify it under
+! CPCM-X is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! COSMO-X is distributed in the hope that it will be useful,
+! CPCM-X is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 module sac_mod
    use mctc_env, only : wp
@@ -33,15 +33,13 @@ module sac_mod
        !  type(DICT_DATA) :: a_disp,b_disp
          real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
          integer :: dummy1, ioerror, i
+         logical :: ex
 
-         open(1,file="energy")
-         read(1,*,iostat=ioerror)
-         if (ioerror .NE. 0) then
-            write(*,*) "Problem while reading energies (check energy file)."
-            error stop
-         else
-            read(1,*) dummy1,E_gas
-         end if
+         INQUIRE(file="gas.energy", exist=ex)
+         if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
+         open(1,file="gas.energy")
+         read(1,*,iostat=ioerror) E_gas
+         if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
          dEreal=(E_cosmo-E_gas)
          ediel=0
          edielprime=0

@@ -1,20 +1,20 @@
-! This file is part of COSMO-X.
+! This file is part of CPCM-X.
 ! SPDX-Identifier: LGPL-3.0-or-later
 !
-! COSMO-X is free software: you can redistribute it and/or modify it under
+! CPCM-X is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! COSMO-X is distributed in the hope that it will be useful,
+! CPCM-X is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
-program COSMOX
+program CPCMX
    use element_dict
    use globals
    use sort
@@ -64,7 +64,9 @@ program COSMOX
       character(len=:), allocatable :: sac_param_path
       character(len=:), allocatable :: smd_param_path
       character(len=:), allocatable :: database
-      logical :: ML, sig_in, prof, smd_default, TM, time
+      character(len=:), allocatable :: qc_calc
+      character(len=:), allocatable :: xyz_input
+      logical :: ML, sig_in, prof, smd_default, time
       character(len=:), allocatable :: model
    end type configuration
 
@@ -79,7 +81,6 @@ program COSMOX
    !! ------------------------------------------------------------ 
    !! Read Command Line Arguments and set Parameters accordingly
    !! ------------------------------------------------------------
-
    Call timer%push("total")
    Call get_arguments(config,error)
    if (allocated(error)) then
@@ -88,7 +89,6 @@ program COSMOX
    end if
    Call echo_init(config)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent) 
-
    if (config%ML) then
       Call init_pr
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
@@ -111,9 +111,18 @@ program COSMOX
    !! ----------------------------------------------------------------------------------
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
-      if (config%TM) then
+      if (allocated(config%qc_calc)) then
          Call timer%push("qc_calc")
-         Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
+         select case(config%qc_calc)
+            case('TM')
+               Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
+            case('ORCA')
+               Call qc_cal(config%xyz_input,error)
+            case default
+               write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
+               error stop
+         end select
+         Call check_error(error)
          Call timer%pop() 
       end if 
    !! ----------------------------------------------------------------------------------
@@ -184,7 +193,7 @@ program COSMOX
    
 
    !! ------------------------------------------------------------------------------------
-   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,COSMO-RS)
+   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-RS)
    !! ------------------------------------------------------------------------------------
 
    select case (trim(config%model))
@@ -229,9 +238,9 @@ program COSMOX
      !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
       case ("crs")
    
-         !! COSMO-RS calculation starts here !!
+         !! CPCM-RS calculation starts here !!
 
-         ! Calculate sv0,svt for COSMO-RS
+         ! Calculate sv0,svt for CPCM-RS
          
          Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
          Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
@@ -247,7 +256,7 @@ program COSMOX
          !      &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
          !end if
 
-         ! Computation of COSMO-RS equations (here may be something wrong atm)
+         ! Computation of CPCM-RS equations (here may be something wrong atm)
          Call timer%push("solv")
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
          Call timer%pop()
@@ -337,6 +346,7 @@ subroutine help(unit)
 
    write(unit, '(2x, a, t25, a)') &
       "    --solvent", "Specify a solvent and uses configuration given in config.toml.", &
+      "","For Orca this needs an .xyz file as input (e.g. csx inp.xyz --solvent water)",&
       "    --newrc", "Creates a sample configuration file (config.toml).", &
       "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
       "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
@@ -357,12 +367,15 @@ subroutine sample(filename,rc)
    open(newunit=unit,file=filename)
    if (rc) then
       write(unit,'(a)') &
-         '# This is a Sample CSX Configuration File', &
-         '# To work with this file, an environmental variable CSXHOME has to be set.', &
-         '# This File has to be placed in the CSXHOME path.', &
-         '# All Parameters and the Database need to be placed in CSXHOME.', &
+         '# This is a Sample CPX Configuration File', &
+         '# To work with this file, an environmental variable CPXHOME has to be set.', &
+         '# This File has to be placed in the CPXHOME path.', &
+         '# All Parameters and the Database need to be placed in CPXHOME.', &
          '', &
-         '# Path or Filename for the parameters for Water. (Path in respective to CSXHOME)', &
+         '# Default QC Program for the Single Point Calculations', &
+         'prog="TM"', &
+         '', &
+         '# Path or Filename for the parameters for Water. (Path in respective to CPXHOME)', &
          'smd_h2o="smd_h2o"', &
          'crs_h2o="crs.param_h2o"', &
          '', &
@@ -405,9 +418,10 @@ subroutine print_keywords(unit)
       ""
 
    write(unit, '(2x, a, t25, a)') &
-      "    crs", "Invokes the standard COSMO-X model.", &
+      "    crs", "Invokes the standard CPCM-X model.", &
       "    sac, sac2010", "Invokes an SAC based model with or without HB splitting (needs different parameters).", &
       "    TM/TM=epsilon", "Starts with single point calculation for the solute. Needs control file. (default: epsilon=infinity)", &
+      "    ORCA", "Starts with single point calculation for the solute with epsilon=infinity. Needs .xyz file.", &
       "    time", "Shows additional Information about the time needed for various steps of the algorithm.", &
       "    onlyprof", "Only calculates a Sigma Profile and prints it in a .sigma file.", &
       "    sigma_in", "Expects Sigma Profiles instead of .cosmo files (only for SAC based models).", &
@@ -469,6 +483,13 @@ subroutine get_arguments(config, error)
          end if
          call fatal_error(error, "Too many positional arguments present")
          exit
+      case default
+         if ((.not.allocated(config%xyz_input))) then
+            call move_alloc(arg, config%xyz_input)
+            cycle
+         end if
+         call fatal_error(error, "Too many positional arguments present")
+         exit
       end select
    end do
 
@@ -481,7 +502,7 @@ subroutine get_arguments(config, error)
 
 end subroutine get_arguments 
 
-   !> Subroutine to Read the COSMO-SACMD Input File
+   !> Subroutine to Read the CPCM-SACMD Input File
 subroutine read_input(config,error)
    type(configuration) :: config
    type(error_type), allocatable :: error
@@ -499,11 +520,10 @@ subroutine read_input(config,error)
    config%sig_in=.FALSE.
    config%prof=.FALSE.
    config%smd_default=.FALSE.
-   config%TM=.FALSE.
    config%time=.FALSE.
    config%qc_eps=0
    config%probe=0.4
-   !> Check if the COSMO-SACMD Input File Exists.
+   !> Check if the CPCM-SACMD Input File Exists.
    ex=.false.
    INQUIRE(file=config%input,exist=ex)
    IF (.NOT. ex) then
@@ -534,8 +554,28 @@ subroutine read_input(config,error)
          end if
          
          select case(keyword)
-            case ('TM')
-               config%TM=.true.
+            case ('TM','tm')
+               if (allocated(config%qc_calc)) then
+                  Call fatal_error(error,"Too many Arguments for QC calculation.")
+                  return
+               end if
+               Call move_line("TM",config%qc_calc)
+               if (equal .ne. 0) then
+                  select case(substring)
+                     case ('default','minnesota')
+                        config%qc_eps=-1
+                     case ('infinity')
+                        config%qc_eps=0
+                     case default
+                        read(substring,*) config%qc_eps
+                  end select
+               end if
+            case ('ORCA','Orca','orca')
+               if (allocated(config%qc_calc)) then
+                  Call fatal_error(error,"Too many Arguments for QC calculation.")
+                  return
+               end if
+               Call move_line("ORCA",config%qc_calc)
                if (equal .ne. 0) then
                   select case(substring)
                      case ('default','minnesota')
@@ -588,7 +628,7 @@ subroutine use_default(config, solv, error)
    !> Solvent used for default configuration
    character(:), allocatable, intent(inout) :: solv
    !> Configuration Type
-   type(configuration), intent(out) :: config
+   type(configuration), intent(inout) :: config
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
    !> Toml unit
@@ -611,7 +651,6 @@ subroutine use_default(config, solv, error)
    config%sig_in=.FALSE.
    config%prof=.FALSE.
    config%smd_default=.FALSE.
-   config%TM=.FALSE.
    config%time=.FALSE.
    config%qc_eps=0
    config%probe=0.4
@@ -620,32 +659,34 @@ subroutine use_default(config, solv, error)
    call move_line(solv//".cosmo",config%csm_solvent)
    call move_line("solute.cosmo",config%csm_solute)
    call move_line("crs",config%model)
-   config%TM=.TRUE.
-   Call get_variable("CSXHOME",home)
+   Call get_variable("CPXHOME",home)
    
    if (.not.allocated(home)) then
-      call fatal_error(error, "CSXHOME Variable ist not set.")
+      call fatal_error(error, "CPXHOME Variable ist not set.")
       RETURN
    end if
 
    ex=.false.
-
+  
+   if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
+  
    INQUIRE(file=home//"config.toml",exist=ex)
+
    if (.not. ex) then 
       call fatal_error(error, "No config.toml found in "//home)
-      if (home(len(home):len(home)) .ne. "/") call fatal_error(error, "No config.toml found in "//home&
-      &//"."//NEW_LINE('a')//'Your path should probable end with an "/".')
       return
    end if
 
    open(input_unit,file=home//"config.toml")
    call toml_parse(config_table,input_unit,config_error)
    close(input_unit)
-
    if (allocated(config_table)) then
       call config_table%get_keys(list)
       do nconf=1,size(list)
          select case(list(nconf)%key)
+         case("prog") 
+               call get_value(config_table,list(nconf),line2)
+               call move_line(line2,config%qc_calc)
          case("smd_h2o")
             if (solv .eq. "water") then
                call get_value(config_table,list(nconf),line2)
@@ -733,25 +774,42 @@ subroutine use_default(config, solv, error)
 
 end subroutine use_default
 
-subroutine move_line(line,aline)
+subroutine move_line(line,aline,hignore)
+   !> Line to write into the allocatable unit
    character(*), intent(in) :: line
+   !> Ignores everything after an hashtag (default=true)
+   logical, intent(in), optional :: hignore
+   !> Allocatable character array to be set to line
    character(:), allocatable, intent(inout) :: aline
 
    integer :: i
+   logical :: ignore
+
+   ignore=.true.
+
+   if (present(hignore)) then
+      if (.not. hignore) ignore=.false.
+   end if 
 
    if (allocated(aline)) deallocate(aline)
-   do i= 1,len(trim(line))
-      if (line(i:i) .EQ. "#") then 
-         allocate(character(len(trim(line(1:i-1)))) :: aline)
-         aline=trim(line(1:i-1))
-         exit
-      end if 
-      if (i .EQ. len(trim(line))) then
-         allocate(character(len(trim(line(1:i)))) :: aline)
-         aline=trim(line(1:i))
-         exit
-      end if 
-   end do
+
+   if (ignore) then
+      do i= 1,len(trim(line))
+         if (line(i:i) .EQ. "#") then 
+            allocate(character(len(trim(line(1:i-1)))) :: aline)
+            aline=trim(line(1:i-1))
+            exit
+         end if 
+         if (i .EQ. len(trim(line))) then
+            allocate(character(len(trim(line(1:i)))) :: aline)
+            aline=trim(line(1:i))
+            exit
+         end if 
+      end do
+   else
+      allocate(character(len(trim(line))) :: aline)
+      aline=trim(line)
+   end if
 end subroutine move_line
 
 subroutine echo_init(config)
@@ -770,10 +828,20 @@ subroutine echo_init(config)
       "Solvent:", config%smd_solvent, &
       "Corresponding COSMO File:", config%csm_solvent
 
-   if (.NOT. config%TM) write(output_unit,'(5x,a,t35,a)') &
+   if (.NOT. allocated(config%qc_calc)) write(output_unit,'(5x,a,t35,a)') &
                            "Solute COSMO File:", config%csm_solute
       
 end subroutine echo_init
 
-end program COSMOX
+subroutine check_error(error)
+   type(error_type), intent(in), allocatable :: error
+   
+   if (allocated(error)) then
+      write(error_unit,'(a)') error%message
+      error stop
+   end if
+
+end subroutine check_error
+
+end program CPCMX
 

@@ -1,18 +1,18 @@
-! This file is part of COSMO-X.
+! This file is part of CPCM-X.
 ! SPDX-Identifier: LGPL-3.0-or-later
 !
-! COSMO-X is free software: you can redistribute it and/or modify it under
+! CPCM-X is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
 ! the Free Software Foundation, either version 3 of the License, or
 ! (at your option) any later version.
 !
-! COSMO-X is distributed in the hope that it will be useful,
+! CPCM-X is distributed in the hope that it will be useful,
 ! but WITHOUT ANY WARRANTY; without even the implied warranty of
 ! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ! GNU Lesser General Public License for more details.
 !
 ! You should have received a copy of the GNU Lesser General Public License
-! along with COSMO-X.  If not, see <https://www.gnu.org/licenses/>.
+! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 module crs
    use mctc_env, only : wp
@@ -42,7 +42,7 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
 
    INQUIRE(file="gas.energy", exist=ex)
    if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
-   open(1,file="gas.enery")
+   open(1,file="gas.energy")
    read(1,*,iostat=ioerror) E_gas
    if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
    dEreal=(E_cosmo-E_gas)
