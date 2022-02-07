@@ -53,13 +53,17 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
       edielprime=edielprime+(area(i)*pot(i)*sv(i))
    end do
    avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
-   write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
-   write(*,*) "E_gas: ", E_gas*autokcal
    dEreal=dEreal*autokcal
    id_scr=dEreal+avcorr*autokcal
-   write(*,*) "E_COSMO-E_gas+dE: ", (E_cosmo-E_gas+avcorr)*autokcal
-   write(*,*) "Ediel: ", ediel/2*autokcal
-   write(*,*) "Averaging corr dE: ", avcorr*autokcal
+   write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
+   "E_COSMO:", E_cosmo, "Eh", &
+   "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
+   "E_gas:", E_gas,"Eh", &
+   "E_COSMO-E_gas", (E_cosmo-E_gas),"Eh", &
+   "E_COSMO-E_gas+dE:", (E_cosmo-E_gas+avcorr),"Eh", &
+   "Ediel:", ediel/2,"Eh", &
+   "Averaging corr dE:", avcorr,"Eh", &
+   "Area:", sum(area), "Å"
 
    vdW_gain=0
    do i=1,size(area)
@@ -73,7 +77,8 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
    write(*,*) "thermostatic correction: ", thermo
 
    !!! RING CORRECTION IS MISSING ATM
-   gas_chem=-id_scr+thermo-vdW_gain!-ring_corr
+   dG_is=-id_scr+thermo-vdW_gain!-ring_corr
+   dG_cc=avcorr*autokcal
    !write(*,*) gas_chem
 
 

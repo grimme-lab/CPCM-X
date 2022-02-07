@@ -198,19 +198,19 @@ contains
                   read(1,*) param(i)
                end do
                read(1,*) dG_shift
-               ! read(1,*)
-               ! io_error=0
+         !        read(1,*)
+         !        io_error=0
 
-         ! Creating element specific Parameter Dictionaries from parameter file
+         !  Creating element specific Parameter Dictionaries from parameter file
 
-            !    read(1,*) symbol, r_c%param, d_c%param
-            !    Call dict_create(r_cav, trim(symbol), r_c)
-            !    Call dict_create(disp_con, trim(symbol), d_c)
-            !    do while (io_error .GE. 0)
-            !       read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
-            !       Call dict_add_key(r_cav, trim(symbol), r_c)
-            !       Call dict_add_key(disp_con,trim(symbol), d_c)
-            !    end do
+         !        read(1,*) symbol, r_c%param, d_c%param
+         !        Call dict_create(r_cav, trim(symbol), r_c)
+         !        Call dict_create(disp_con, trim(symbol), d_c)
+         !        do while (io_error .GE. 0)
+         !           read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
+         !           Call dict_add_key(r_cav, trim(symbol), r_c)
+         !           Call dict_add_key(disp_con,trim(symbol), d_c)
+         !        end do
             case("sac")
 
                ! Setting global COSMO-SAC Parameters from parameter file

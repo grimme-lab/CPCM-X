@@ -21,7 +21,8 @@ module sdm
       !> Example implementation to calculate surface area for a molecule input
       subroutine calculate_cds(species, symbols, coord, probe, solvent, path, default)
       use mctc_env, only : wp
-      use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size
+      use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size &
+         & , get_vdw_rad_cosmo
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds, ascii_cds
       use globals, only: dG_disp, BtoA
       !> Unique chemical species in the input structure, shape: [nat]

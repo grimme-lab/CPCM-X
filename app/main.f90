@@ -252,8 +252,8 @@ program CPCMX
             ""
          Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
          !if (gas) then
-         !   Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
-         !      &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+            ! Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
+            !    &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
          !end if
 
          ! Computation of CPCM-RS equations (here may be something wrong atm)
