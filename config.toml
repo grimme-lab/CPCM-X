@@ -4,7 +4,7 @@
 # All Parameters and the Database need to be placed in CPXHOME.
 
 # Default QC Program for the Single Point Calculations
-prog="TM"
+prog="gTB"
 
 # Path or Filename for the parameters for Water. (Path in respective to CPXHOME)
 smd_h2o="smd_h2o"

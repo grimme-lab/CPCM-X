@@ -25,6 +25,7 @@ program CPCMX
    use profile
    use pr
    use crs
+   use data, only: AtomicMass, density
    use qc_calc, only: qc_cal
    use mctc_env, only : wp, get_argument, fatal_error, error_type
    use crs_timer, only: timer_type, format_time
@@ -42,6 +43,9 @@ program CPCMX
    logical, dimension(:), allocatable :: solute_rings
    real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
+
+   !> State Correction Energy
+   real(wp) :: dG_state
    !real(wp), dimension(10) :: param
    real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
@@ -118,6 +122,8 @@ program CPCMX
                Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
             case('ORCA')
                Call qc_cal(config%xyz_input,error)
+            case('P-gTB', 'gTB', 'GTB')
+               Call qc_cal(0.6_wp,0.20_wp,error)
             case default
                write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
                error stop
@@ -250,11 +256,12 @@ program CPCMX
          ! Calculation of Gas Phase energies
          write(output_unit,'(5x,a)') "Calculating Gas Phase Energies.", &
             ""
-         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
+         ! Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
          !if (gas) then
-            ! Call calcgas(solute_energy,id_scr,gas_chem,solute_area,solute_sv,solute_su,&
-            !    &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+             Call calcgas(solute_energy,id_scr,solute_area,solute_sv,solute_su,&
+                &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
          !end if
+         Call state_correction(density(config%smd_solvent),AtomicMass(solvent_elements),config%T,dG_state)
 
          ! Computation of CPCM-RS equations (here may be something wrong atm)
          Call timer%push("solv")
@@ -274,7 +281,9 @@ program CPCMX
          &config%smd_solvent,config%smd_param_path,config%smd_default)
          Call timer%pop()
 
+         !> Additional effective ring correction
          dG_res=chem_pot_sol+param(9)*near_sol
+
          deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
          &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
          &solv_pot,sol_pot)
@@ -301,11 +310,12 @@ program CPCMX
          "Resulting chemical potential in mixture:", (dG_is+dG_cc+dG_res)/autokcal,&
          & dG_is+dG_cc+dG_res, &
          "SMD Contribution (dG_CDS):", dG_disp/autokcal, dG_disp, &
+         "Standard state correction:", dG_state/autokcal, dG_state, &
          "Systematic empirical shift (dG_shift)", dG_shift/autokcal, dG_shift
          write(output_unit,'(4x,a)') repeat('-',73)
          write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
-         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift)/autokcal,&
-         & dG_is+dG_cc+dG_res+dG_disp+dG_shift
+         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift)&
+         &/autokcal, dG_is+dG_cc+dG_res+dG_disp+dG_shift+dG_state
          write(output_unit,*) ""
       end if
 
@@ -432,6 +442,7 @@ end subroutine print_keywords
 
 
 subroutine get_arguments(config, error)
+   use data, only: solvent_name
    type(configuration), intent(out) :: config
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -465,7 +476,7 @@ subroutine get_arguments(config, error)
          iarg=iarg+1
          call get_argument(iarg,arg)
          if ((.not.allocated(config%smd_solvent)) .AND. (.not.allocated(config%input))) then
-            call use_default(config,arg,error)
+            call use_default(config,solvent_name(arg),error)
             cycle
          end if
          call fatal_error(error, "Too many positional arguments present")
@@ -626,7 +637,7 @@ subroutine use_default(config, solv, error)
    use mctc_env_system, only : get_variable
    use tomlf, only : toml_table, toml_parse, toml_error, toml_key, get_value
    !> Solvent used for default configuration
-   character(:), allocatable, intent(inout) :: solv
+   character(:), allocatable, intent(in) :: solv
    !> Configuration Type
    type(configuration), intent(inout) :: config
    !> Error handling
@@ -644,7 +655,11 @@ subroutine use_default(config, solv, error)
    logical :: ex
    character(len=10) :: control, command
    integer :: nconf
-   
+  
+   if (solv .eq. '') then
+      Call fatal_error(error,'The Solvent you specified is not available.')
+      return
+   end if
    !> Set Defaults
    config%T=298.15_wp
    config%ML=.FALSE.
@@ -654,7 +669,6 @@ subroutine use_default(config, solv, error)
    config%time=.FALSE.
    config%qc_eps=0
    config%probe=0.4
-   if (solv .eq. "h2o") call move_line("water",solv)
    call move_line(solv,config%smd_solvent)
    call move_line(solv//".cosmo",config%csm_solvent)
    call move_line("solute.cosmo",config%csm_solute)
@@ -686,6 +700,7 @@ subroutine use_default(config, solv, error)
          select case(list(nconf)%key)
          case("prog") 
                call get_value(config_table,list(nconf),line2)
+               if (line2 .eq. "NONE") cycle
                call move_line(line2,config%qc_calc)
          case("smd_h2o")
             if (solv .eq. "water") then

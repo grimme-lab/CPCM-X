@@ -23,10 +23,10 @@ module crs
 contains
 
 
-subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con, T,r_cav)
+subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav)
    use globals
    use element_dict
-   real(wp), intent(out) :: id_scr, gas_chem
+   real(wp), intent(out) :: id_scr
    real(wp), intent(in) :: T, E_cosmo
    real(wp),dimension(:),allocatable, intent(in) :: area, sv, su, pot
    integer, allocatable, intent(in) :: ident(:)
@@ -55,6 +55,7 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
    avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
    dEreal=dEreal*autokcal
    id_scr=dEreal+avcorr*autokcal
+   thermo=param(10)*R*jtokcal*T
    write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
    "E_COSMO:", E_cosmo, "Eh", &
    "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
@@ -63,23 +64,20 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
    "E_COSMO-E_gas+dE:", (E_cosmo-E_gas+avcorr),"Eh", &
    "Ediel:", ediel/2,"Eh", &
    "Averaging corr dE:", avcorr,"Eh", &
+   "thermostatic correction: ", thermo/autokcal, "Eh", &
    "Area:", sum(area), "Å"
 
-   vdW_gain=0
-   do i=1,size(area)
-      disp=dict_get_key(disp_con, element(int(ident(i))))
-      vdW_gain=vdW_gain+(area(i)*disp%param)
-   end do
-   write(*,*) "EvdW: ", vdW_gain
-   write(*,*) "Area: ", sum(area)
-
-   thermo=param(10)*R*jtokcal*T
-   write(*,*) "thermostatic correction: ", thermo
-
-   !!! RING CORRECTION IS MISSING ATM
-   dG_is=-id_scr+thermo-vdW_gain!-ring_corr
+   ! vdW Correction is replaced by the SMD Model.
+   ! vdW_gain=0
+   ! do i=1,size(area)
+   !    disp=dict_get_key(disp_con, element(int(ident(i))))
+   !    vdW_gain=vdW_gain+(area(i)*disp%param)
+   ! end do
+   ! write(*,*) "EvdW: ", vdW_gain
+   ! write(*,*) "Area: ", sum(area)
+   
+   dG_is=dEreal-thermo
    dG_cc=avcorr*autokcal
-   !write(*,*) gas_chem
 
 
 end subroutine calcgas
@@ -295,5 +293,32 @@ subroutine calculate_edd(edd, sv, svt, T, ident, element)
       end do
    end do
 end subroutine calculate_edd
+
+subroutine state_correction(density,mass,T,dG_state)
+   use globals, only: R, autokcal, jtokcal
+   !> Density of the Solvent (kg/m^3)
+   real(wp), intent(in) :: density
+   !> Atomic Mass of the Solvent (a.u.)
+   real(wp), intent(in) :: mass
+   !> Temperature of the Sytem
+   real(wp), intent(in) :: T
+
+   !> Correction energy bar-mol/mol -> mol/L-mol/L
+   real(wp), intent(out) :: dG_state
+
+   !> Molar Volume of the Gas in L/mol
+   real(wp) :: V_m
+
+   V_m=(R*T)/100
+
+   dG_state=-R*(Jtokcal)*T*log((density*V_m)/mass)
+
+   write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
+   "Solvent density:", density, "g/l", &
+   "Solvent atomic mass:", mass, "a.u.", &
+   "State correction", dG_state/autokcal, "Eh"
+
+end subroutine state_correction
+
 
 end module crs

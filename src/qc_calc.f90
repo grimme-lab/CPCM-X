@@ -18,6 +18,8 @@
 
 module qc_calc
     use mctc_env, only : wp, error_type, fatal_error
+    use data, only: minnesota_eps
+    use globals, only: rename, autokcal
     use, intrinsic :: iso_fortran_env, only : output_unit, file_storage_size
 
     implicit none
@@ -26,9 +28,243 @@ module qc_calc
     interface qc_cal
         module procedure :: turbomole
         module procedure :: orca
+        module procedure :: gtb
     end interface qc_cal
 
 contains
+
+    subroutine gtb(damp,scale,error)
+
+        !> Damping for SCF
+        real(wp), intent(in) :: damp
+
+        !> Extrapolation scaling for SCF Energies
+        real(wp), intent(in) :: scale
+
+        !> Error Handling
+        type(error_type), allocatable, intent(out) :: error
+
+        !> File Handling
+        logical :: ex
+        integer :: io_error
+
+        !> Charge Handling
+        integer :: charge
+
+        logical :: ion
+
+        !> Determine UHF
+        integer :: nocc, nalpha,nbeta, nopen
+
+        !> Energy reading
+        real(wp), dimension(2) :: energies
+        integer :: dummyi, i
+
+        character(len=100) :: line, dummy
+
+        !> Check if coord file is in directory
+        INQUIRE(file="coord",exist=ex)
+
+        if (.not. ex) then
+            Call fatal_error(error,'gTB mode requested but no coord file in working directory.') 
+            return
+        end if
+
+        !> Clean up, if there are already mos
+        open(5741,file="mos",iostat=io_error,status="old")
+        if (io_error .eq. 0) close(5741, status="delete")
+
+        write(output_unit,'(a)') ""
+        write(output_unit,'(10x,a)') &
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+            " ------------------------------------------------- ",&
+            "|                   P-gTB Driver                   |",&
+            " ------------------------------------------------- "
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+        write(output_unit,'(a)') ""
+        write(output_unit,'(5x, A)') 'Running P-gTB Density Calculation.'
+        Call execute_command_line('gtb coord -stda > gtb.out', WAIT=.true.)
+        write(output_unit,'(5x, A)') 'Done.'
+        write(output_unit,'(5x, A)') 'Setting up Turbomole control file.'
+
+        nocc=0
+        nalpha=0
+        nbeta=0
+        nopen=0
+        open(11,file="gtb.out")
+
+        read(11,'(a)',iostat=io_error) line
+        do while (io_error .eq. 0)
+            if (index(line,'nalpha') .ne. 0) then
+                read(line,*) dummy, nalpha
+                read(11,*) dummy, nbeta
+                read(11,*) dummy, nocc
+                read(11,*) dummy, nopen
+                nocc=nocc/2
+                exit
+            end if
+            read(11,'(a)',iostat=io_error) line
+        end do
+
+        close(11)
+
+        if (nopen .eq. 0) then
+            call rename("mos.tmp", "mos",io_error)
+        else
+            call rename("alpha.tmp","alpha",io_error)
+            call rename("beta.tmp","beta",io_error)
+        end if
+
+        if (io_error .ne. 0) then
+            call fatal_error(error,"Could not rename MO files.")
+            return
+        end if
+
+        !> If there is a control file, delete it
+        open(11,file="control",status="old",iostat=io_error)
+        if (io_error .eq. 0) close(11, status="delete")
+
+        open(12,file="control.tmp",status="old",iostat=io_error)
+
+        if (io_error .ne. 0) then
+            Call fatal_error(error, "Could not find control.tmp. This should be created by gtb.")
+            return
+        end if
+
+        open(11, file="control", status="new")
+            write(11,'(a)') &
+                "$symmetry c1", &
+                "$coord file=coord", &
+                "$energy file=energy", &
+                "$grad file=gradient", &
+                "$atoms"
+        read(12,'(a)', iostat=io_error) line
+
+        do while (io_error .eq. 0)
+            write(11,'(a)') line
+            read(12,'(a)', iostat=io_error) line
+        end do
+
+        close(12)
+
+        write(11,'(a)') "$scfiterlimit 2"
+        write(11,'(a,F6.2,a)') "$scfdamp start=",damp," step=0.0"
+        write(11,'(a)') &
+            "$scfdiis maxiter=0", &
+            "$dft", &
+            " functional libxc 117", &
+            " functional libxc add 1 130", &
+            " gridsize 1", &
+            "$ricore 64000", &
+            "$rij", &
+            "$scfconv 5"!, &
+            !"$disp4 --param 1.0 0.36 0.627 2.836 0.0"
+        if (nopen .eq. 0) then
+            write(11,'(a)') &
+                "$scfmo file=mos", &
+                "$closed shells"
+            write(11,'(a,I4,a)') " a 1-",nocc,"   (2)"
+        else
+            write(11,'(a)') &
+                "$uhfmo_alpha   file=alpha", &
+                "$uhfmo_beta     file=beta", &
+                "$uhf", &
+                "$alpha shells"
+            write(11,'(a,I4,a)') " a 1-",nalpha,"   (1)"
+            if (nbeta .ne. 0) then
+                write(11,'(a)') "$beta shells"
+                write(11,'(a,I4,a)') " a 1-",nbeta,"   (1)"
+            end if
+        end if
+
+        write(11,'(a)') "$end"
+        close(11)
+
+        write(output_unit,'(5x, A)') 'Running gas phase single point on P-gTB density.'
+        Call execute_command_line("ridft > gas.out 2>/dev/null", WAIT=.true.)
+        write(output_unit,'(5x, A)') 'Done.'
+
+        open(11,file="gas.out")
+
+        read(11,'(a)', iostat=io_error) line
+
+        i=1
+        energies(:)=0.0_wp
+
+        do while (io_error .eq. 0)
+            if (index(line,"ITERATION") .ne. 0) then
+                read(11,*) dummyi, energies(i)
+                i=i+1
+            end if
+            if (i .eq. 3) exit
+            read(11,'(a)', iostat=io_error) line
+        end do
+        
+        close(11)
+        if (i .ne. 3) then
+            Call fatal_error(error, "Could not read two iteration energies from gas.out.")
+            RETURN
+        end if
+
+
+        open(11,file="gas.energy")
+            write(11,*) energies(2)+((energies(2)-energies(1))*scale)
+        close(11)
+
+        Call execute_command_line('kdg end')
+        ion=.false.
+        INQUIRE(file='.CHRG', exist=ex)
+        if (ex) then
+            open(11, file='.CHRG')
+            read(11,*) charge
+            if (charge .ne. 0) ion=.true.
+            close(11)
+        end if
+        open(11, file='control', access='append')
+        write(11,'(A)') '$cosmo'
+        write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
+        write(11,'(a)')'   force_cosmowrite'
+        write(11,'(a)') '$cosmo_out file=solute.cosmo'
+        write(11,'(A4)') '$end'
+
+        write(output_unit,'(5x, A)') 'Running single point on P-gTB density with epsilon=infinity.'
+        Call execute_command_line("ridft > solvent.out 2>/dev/null", WAIT=.true.)
+        write(output_unit,'(5x, A)') 'Done.'
+
+        open(11,file="solvent.out")
+
+        read(11,'(a)', iostat=io_error) line
+
+        i=1
+        energies(:)=0.0_wp
+
+        do while (io_error .eq. 0)
+            if (index(line,"ITERATION") .ne. 0) then
+                read(11,*) dummyi, energies(i)
+                i=i+1
+            end if
+            if (i .eq. 3) exit
+            read(11,'(a)', iostat=io_error) line
+        end do
+        
+        close(11)
+        if (i .ne. 3) then
+            Call fatal_error(error, "Could not read two iteration energies from solvent.out.")
+            RETURN
+        end if
+
+        open(11,file="solute.energy")
+        write(11,*) energies(2)+((energies(2)-energies(1))*scale)
+        close(11)
+        write(output_unit,'(a)') ""
+
+
+    end subroutine gtb
+        
+
+
+
+
 
     !> Orca subroutine, only supports eps=infinity, needs .xyz input file
     subroutine orca(input,error,new_functional,new_basis)
@@ -292,229 +528,6 @@ contains
             ""
 
     end subroutine turbomole
-
-    !> Get default dielectric constant from Minnesota Solvation Database
-    function minnesota_eps(solvent) result(epsilon)
-        character(len=*), intent(in) :: solvent
-        real(wp):: epsilon
-
-        select case(solvent)
-        case('2methylpyridine')
-            epsilon=9.9533_wp
-        case('4methyl2pentanone')
-            epsilon=12.8871
-        case('aceticacid')
-            epsilon=6.2528
-        case('acetonitrile')
-            epsilon=35.6881
-        case('acetophenone')
-            epsilon=17.44
-        case('aniline')
-            epsilon=6.8882
-        case('anisole')
-            epsilon=4.2247
-        case('benzene')
-            epsilon=2.2706
-        case('benzonitrile')
-            epsilon=25.592
-        case('benzylalcohol')
-            epsilon=12.4569
-        case('bromobenzene')
-            epsilon=5.3954
-        case('bromoethane')
-            epsilon=9.01
-        case('bromoform')
-            epsilon=4.2488
-        case('bromooctane')
-            epsilon=5.0244
-        case('butanol')
-            epsilon=17.3323
-        case('butanone')
-            epsilon=18.2457
-        case('butylacetate')
-            epsilon=4.9941
-        case('butylbenzene')
-            epsilon=2.36
-        case('carbondisulfide')
-            epsilon=2.6105
-        case('carbontet')
-            epsilon=2.228
-        case('chlorobenzene')
-            epsilon=5.6968
-        case('chloroform')
-            epsilon=4.7113
-        case('chlorohexane')
-            epsilon=5.9491
-        case('cyclohexane')
-            epsilon=2.0165
-        case('cyclohexanone')
-            epsilon=15.6186
-        case('decalin')
-            epsilon=2.196
-        case('decane')
-            epsilon=1.9846
-        case('decanol')
-            epsilon=7.5305
-        case('dibromoethane')
-            epsilon=4.9313
-        case('dibutylether')
-            epsilon=3.0473
-        case('dichloroethane')
-            epsilon=10.125
-        case('diethylether')
-            epsilon=4.24
-        case('diisopropylether')
-            epsilon=3.38
-        case('dimethylacetamide')
-            epsilon=37.7807
-        case('dimethylformamide')
-            epsilon=37.219
-        case('dimethylpyridine')
-            epsilon=7.1735
-        case('dimethylsulfoxide')
-            epsilon=46.826
-        case('dodecane')
-            epsilon=2.006
-        case('ethanol')
-            epsilon=24.852
-        case('ethoxybenzene')
-            epsilon=4.1797
-        case('ethylacetate')
-            epsilon=5.9867
-        case('ethylbenzene')
-            epsilon=2.4339
-        case('fluorobenzene')
-            epsilon=5.42
-        case('fluoroctane')
-            epsilon=3.89
-        case('heptane')
-            epsilon=1.9113
-        case('heptanol')
-            epsilon=11.321
-        case('hexadecane')
-            epsilon=2.0402
-        case('hexadecyliodide')
-            epsilon=3.5338
-        case('hexane')
-            epsilon=1.8819
-        case('hexanol')
-            epsilon=12.5102
-        case('iodobenzene')
-            epsilon=4.547
-        case('isobutanol')
-            epsilon=16.7766
-        case('isooctane')
-            epsilon=1.9358
-        case('isopropanol')
-            epsilon=19.2645
-        case('isopropylbenzene')
-            epsilon=2.3712
-        case('isopropyltoluene')
-            epsilon=2.2322
-        case('mcresol')
-            epsilon=12.44
-        case('mesitylene')
-            epsilon=2.265
-        case('methoxyethanol')
-            epsilon=17.2
-        case('methylenechloride')
-            epsilon=8.93
-        case('methylformamide')
-            epsilon=181.5619
-        case('nitrobenzene')
-            epsilon=34.8091
-        case('nitroethane')
-            epsilon=28.2896
-        case('nitromethane')
-            epsilon=36.5623
-        case('nonane')
-            epsilon=1.9605
-        case('nonanol')
-            epsilon=8.5991
-        case('octane')
-            epsilon=1.9406
-        case('octanol')
-            epsilon=9.8629
-        case('odichlorobenzene')
-            epsilon=9.9949
-        case('onitrotoluene')
-            epsilon=25.6692
-        case('pentadecane')
-            epsilon=2.0333
-        case('pentane')
-            epsilon=1.8371
-        case('pentanol')
-            epsilon=15.13
-        case('perfluorobenzene')
-            epsilon=2.029
-        case('phenylether')
-            epsilon=3.73
-        case('propanol')
-            epsilon=20.5237
-        case('pyridine')
-            epsilon=12.9776
-        case('secbutanol')
-            epsilon=15.9436
-        case('secbutylbenzene')
-            epsilon=2.3446
-        case('tbutylbenzene')
-            epsilon=2.3447
-        case('tetrachloroethene')
-            epsilon=2.268
-        case('tetrahydrofuran')
-            epsilon=7.4257
-        case('tetrahydrothiophenedioxide')
-            epsilon=43.9622
-        case('tetralin')
-            epsilon=2.771
-        case('toluene')
-            epsilon=2.3741
-        case('tributylphosphate')
-            epsilon=8.1781
-        case('triethylamine')
-            epsilon=2.3832
-        case('trimethylbenzene')
-            epsilon=2.3653
-        case('undecane')
-            epsilon=1.991
-        case('water','h2o')
-            epsilon=78.36_wp
-        case('xylene')
-            epsilon=2.3879
-        case('benzene-water')
-            epsilon=2.2706
-        case('carbontet-water')
-            epsilon=2.228
-        case('chlorobenzene-water')
-            epsilon=5.6968
-        case('chloroform-water')
-            epsilon=4.7113
-        case('cyclohexane-water')
-            epsilon=2.0165
-        case('dibromoethane-water')
-            epsilon=4.9313
-        case('dibutylether-water')
-            epsilon=3.0473
-        case('dichloroethane-water')
-            epsilon=10.125
-        case('diethylether-water')
-            epsilon=4.24
-        case('ethylacetate-water')
-            epsilon=5.9867
-        case('heptane-water')
-            epsilon=1.9113
-        case('hexane-water')
-            epsilon=1.8819
-        case('nitrobenzene-water')
-            epsilon=34.8091
-        case('octanol-water')
-            epsilon=9.8629
-        case('methanol')
-            epsilon=32.613
-        end select
-    end function minnesota_eps
-
-
 
     subroutine orcatocosmo(oc_inp,energy)
         use globals, only: BtoA

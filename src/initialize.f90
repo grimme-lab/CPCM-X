@@ -24,7 +24,8 @@ contains
       use globals
       character(*), intent(in) :: compound
       character(*), intent(in) :: database
-      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
+      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home
+      character(:), allocatable :: filen
       real(wp), dimension(:), allocatable,intent(out) :: charges,&
          &area,pot
       real(wp), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
@@ -37,7 +38,7 @@ contains
 
       logical :: exists
 
-      filen=compound
+      filen=trim(compound)
 
       INQUIRE(file=trim(filen),EXIST=exists)
 
@@ -45,7 +46,8 @@ contains
          if (database .ne. "NONE") then
             filen=trim(database)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)
-            write(*,*) "Database specified, reading .cosmo file from", filen
+            write(output_unit,'(5x,a)') "Database specified, reading .cosmo file from", &
+               filen
          end if
       end if
       if (.NOT. exists) then
@@ -116,8 +118,8 @@ contains
 
       ele_num=0
       do while (.TRUE.)
-         read(1,'(A1)',advance='no',iostat=io_error) line
-         if (line .NE. "$") then
+         read(1,'(A1)',iostat=io_error) line
+         if (index(line,"$") .eq. 0) then
            ele_num=ele_num+1
          else
             exit
@@ -153,13 +155,21 @@ contains
 
       read(1,*) line, volume
 
-      rewind(1)
-      do while (line .NE. "$cosmo_energy")
-         read(1,*) line
-      end do
-      read (1,*)
-      read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
-
+      INQUIRE(file=filen(:len(filen)-6)//".energy",exist=exists)
+      if (exists) then
+         write(output_unit,'(5x,a)') "Reading energy for compound "//trim(compound)&
+            &//" from "//filen(:len(filen)-6)//".energy"
+         open(11,file=filen(:len(filen)-6)//".energy")
+         read(11,*) c_energy
+         close(11)
+      else
+         rewind(1)
+         do while (line .NE. "$cosmo_energy")
+            read(1,*) line
+         end do
+         read (1,*)
+         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
+      end if
 
       close(1)
 

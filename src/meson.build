@@ -30,4 +30,5 @@ srcs += files(
   'smd.f90',
   'sort.f90',
   'timer.f90',
+  'data.f90',
 )

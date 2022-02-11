@@ -99,4 +99,24 @@ module globals
        end do
 
    End Function to_lower
+
+  subroutine rename(src, tgt, stat)
+    use, intrinsic :: iso_c_binding, only : c_null_char
+    character(len=*), intent(in) :: src
+    character(len=*), intent(in) :: tgt
+    integer, intent(out) :: stat
+    interface
+       function sys_rename(src, tgt, lena, lenb) bind(c, name="rename") result(stat)
+          use, intrinsic :: iso_c_binding, only : c_char, c_int
+          integer(c_int), intent(in) :: lena, lenb
+          character(kind=c_char), intent(in) :: src(lena)
+          character(kind=c_char), intent(in) :: tgt(lenb)
+          integer(c_int) :: stat
+       end function sys_rename
+    end interface
+
+ 
+    stat = sys_rename(src//c_null_char, tgt//c_null_char, len(src), len(tgt))
+ end subroutine rename
+
 end module globals
