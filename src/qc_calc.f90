@@ -431,8 +431,8 @@ contains
         logical :: ex
         !> Reading the control file
         character(len=100) :: line
-        !> Charge of molecule from control file
-        integer :: charge
+        !> Charge and multiplicity of molecule (from control file)
+        integer :: charge, multi
         !> Is Molecule charged?
         logical :: ion
         !> Catches some Errors.
@@ -441,8 +441,8 @@ contains
         integer :: lines, i
         real(wp) :: E_gas
 
-        INQUIRE(file='control', exist=ex)
-        if (.not. ex) error stop 'Turbomole driver mode specified, but no control file found.'
+        charge=0
+        multi=0
         if (epsilon .lt. 0) epsilon=minnesota_eps(solvent)
         write(output_unit,'(a)') ""
         write(output_unit,'(10x,a)') &
@@ -451,12 +451,57 @@ contains
             "|                TURBOMOLE Driver                 |",&
             " ------------------------------------------------- "
             !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+        write(output_unit,'(a)') ""
         io_error=0
+        INQUIRE(file='control', exist=ex)
+        if (ex) then
+            write(output_unit,'(5x,a, t20, a)') &
+                "[WARNING]", "Found a control file in the working directory.", &
+                "","CPCM-X will use this control file instead of writing its own.", &
+                "","Carefully check your results."
+            write(output_unit,'(a)') ""
+        else
+            write(output_unit,'(5x,a)') "Writing TURBOMOLE control file."
+            open(11,file="control", status='new')
+            write(11,'(a)') &
+            "$symmetry c1", &
+            "$coord file=coord", &
+            "$energy file=energy", &
+            "$atoms", &
+            " basis = def2-mTZVPP", &
+            " jbas  = def2-mTZVPP", &
+            "$rij", &
+            "$dft", &
+            " functional r2scan-3c", &
+            " gridsize m4", &
+            "$scfconv 6", &
+            "$escfiterlimit 250", &
+            "$ricore    16000"
+            INQUIRE(file=".CHRG",exist=ex)
+            if (ex) then
+                open(12,file=".CHRG")
+                read(12,*) charge
+                close(12)
+            end if
+
+            INQUIRE(file=".UHF",exist=ex)
+            if (ex) then
+                open(12,file=".UHF")
+                read(12,*) multi
+                close(12)
+            end if
+            if (multi .ne. 0) then
+                write(11,'(a,I3,a,I3)') "$eht charge=",charge," unpaired=", multi
+            else
+                write(11,'(a,I3)') "$eht charge=",charge
+            end if
+            write(11,'(a)') "$end"
+            write(output_unit,'(5x,a)') "Done."
+        end if
         open(11, file="control" ,status='old')
         do while (io_error .ge. 0)
             read(11,'(A)',iostat=io_error) line
             if (index(line,"cosmo") .ne. 0) then
-                write(output_unit,'(a)') ""
                 write(output_unit,'(5x,a, t20, a)') &
                     "[WARNING]", "Found a COSMO command in the control file.", &
                     "","Deleting the whole COSMO Block for the Gas Phase calculation.", &

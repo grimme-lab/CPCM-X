@@ -200,6 +200,7 @@ program CPCMX
 
    !! ------------------------------------------------------------------------------------
    !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-RS)
+   !! CPCM-RS is currently the only recommended Model.
    !! ------------------------------------------------------------------------------------
 
    select case (trim(config%model))
