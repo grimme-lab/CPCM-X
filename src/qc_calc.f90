@@ -419,11 +419,13 @@ contains
         
 
     !> turbomole subroutine - needs control file for gas phase calculation and coord file in
-    subroutine turbomole(epsilon, cosmo_out, solvent)
+    subroutine turbomole(epsilon, cosmo_out, error, solvent)
         !> Dielectric Constant for COSMO Calculation
         real(wp), intent(inout) :: epsilon
         !> Output File for COSMO Calculation
         character(len=*), intent(in) :: cosmo_out
+        !> Error Handling
+        type(error_type), intent(out), allocatable :: error
         !> SMD Solvent for default Epsilon (optional)
         character(len=*), intent(in), optional :: solvent
 
@@ -474,6 +476,7 @@ contains
             "$dft", &
             " functional r2scan-3c", &
             " gridsize m4", &
+            " radsize 8", &
             "$scfconv 6", &
             "$escfiterlimit 250", &
             "$ricore    16000"
@@ -515,8 +518,15 @@ contains
         write(output_unit,'(5x, A)') 'Starting Gas phase single point calculation.'
         Call execute_command_line('ridft > gas.out 2>error', WAIT=.true.)
         open(11,file="error")
-        read(11,'(a)') line
-        if (index(line,"abnormal") .ne. 0) error stop "Gas phase calculation stopped abnormally."
+        read(11,'(a)',iostat=io_error) line
+        do while (io_error .eq. 0)
+            if (index(line,"abnormal") .ne. 0) then
+                Call fatal_error(error,"Gas phase calculation stopped abnormally.&
+                &You should maybe try setting up a custom control file.") 
+                return
+            end if
+            read(11,'(a)',iostat=io_error) line
+        end do
         close(11)
 
         write(output_unit,'(5x, A)') &
@@ -525,7 +535,11 @@ contains
 
         io_error=0
         open(11, file="energy", status="OLD")
-        if (io_error .ne. 0) error stop 'Error while reading the gas phase energy. Check your control file.'
+        if (io_error .ne. 0) then
+            Call fatal_error(error,'Error while reading the gas phase energy.&
+            &Check your control file.')
+            return
+        end if
         io_error=0
         lines=0
         do while (.TRUE.)
@@ -559,6 +573,11 @@ contains
         else 
             write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
         end if
+        write(11,'(a)') &
+            " cavity closed", &
+            " use_contcav", &
+            " nspa=272", &
+            " nsph=162"
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
         if (epsilon .ne. 0) then
@@ -567,7 +586,16 @@ contains
             write(output_unit,'(5x,A,A)') 'Starting COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
         end if
         Call execute_command_line('ridft > solv.out 2>error', WAIT=.true.)
-        if (index(line,"abnormal") .ne. 0) error stop "Gas phase calculation stopped abnormally."
+        open(11,file="error")
+        read(11,'(a)',iostat=io_error) line
+        do while (io_error .eq. 0)
+            if (index(line,"abnormal") .ne. 0) then
+                Call fatal_error(error,"Solvent phase calculation stopped abnormally.") 
+                return
+            end if
+            read(11,'(a)',iostat=io_error) line
+        end do
+        close(11)
         write(output_unit,'(5x, A)') &
             "Done! COSMO phase calculation terminated normally.", &
             ""

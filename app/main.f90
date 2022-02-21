@@ -119,7 +119,7 @@ program CPCMX
          Call timer%push("qc_calc")
          select case(config%qc_calc)
             case('TM')
-               Call qc_cal(config%qc_eps,config%csm_solute,config%smd_solvent)
+               Call qc_cal(config%qc_eps,config%csm_solute, error, config%smd_solvent)
             case('ORCA')
                Call qc_cal(config%xyz_input,error)
             case('P-gTB', 'gTB', 'GTB')
@@ -161,7 +161,7 @@ program CPCMX
       Call timer%pop()
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
-   !! Determination of Atoms in Rings, necessary for the PR2018 EOS (only ML Model)
+   !! Determination of Atoms in Rings, necessary for the PR2018 EOS and ER Correction
    !! ------------------------------------------------------------------------------------
    if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
       Call timer%push("bondings") 
@@ -851,9 +851,18 @@ end subroutine echo_init
 
 subroutine check_error(error)
    type(error_type), intent(in), allocatable :: error
+
+   integer :: point
    
    if (allocated(error)) then
-      write(error_unit,'(a)') error%message
+      write(error_unit,'(a)') ""
+      point=index(error%message,".")
+      if (point .ne. 0) then
+         write(error_unit,'(5x,a,t20,a)') "[ERROR]",trim(error%message(:point))
+         write(error_unit,'(5x,a,t20,a)') "",trim(error%message(point+1:))
+      else
+         write(error_unit,'(5x,a,t20,a)') "[ERROR]",error%message
+      end if
       error stop
    end if
 
