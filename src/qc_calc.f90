@@ -19,7 +19,7 @@
 module qc_calc
     use mctc_env, only : wp, error_type, fatal_error
     use data, only: minnesota_eps
-    use globals, only: rename, autokcal
+    use globals, only: rename, autokcal, to_lower
     use, intrinsic :: iso_fortran_env, only : output_unit, file_storage_size
 
     implicit none
@@ -446,6 +446,7 @@ contains
         charge=0
         multi=0
         if (epsilon .lt. 0) epsilon=minnesota_eps(solvent)
+
         write(output_unit,'(a)') ""
         write(output_unit,'(10x,a)') &
             !< < < < < < < < < < < < < > > > > > > > > > > > > >!
@@ -455,52 +456,17 @@ contains
             !< < < < < < < < < < < < < > > > > > > > > > > > > >!
         write(output_unit,'(a)') ""
         io_error=0
-        INQUIRE(file='control', exist=ex)
-        if (ex) then
-            write(output_unit,'(5x,a, t20, a)') &
-                "[WARNING]", "Found a control file in the working directory.", &
-                "","CPCM-X will use this control file instead of writing its own.", &
-                "","Carefully check your results."
-            write(output_unit,'(a)') ""
-        else
-            write(output_unit,'(5x,a)') "Writing TURBOMOLE control file."
-            open(11,file="control", status='new')
-            write(11,'(a)') &
-            "$symmetry c1", &
-            "$coord file=coord", &
-            "$energy file=energy", &
-            "$atoms", &
-            " basis = def2-mTZVPP", &
-            " jbas  = def2-mTZVPP", &
-            "$rij", &
-            "$dft", &
-            " functional r2scan-3c", &
-            " gridsize m4", &
-            " radsize 8", &
-            "$scfconv 6", &
-            "$escfiterlimit 250", &
-            "$ricore    16000"
-            INQUIRE(file=".CHRG",exist=ex)
-            if (ex) then
-                open(12,file=".CHRG")
-                read(12,*) charge
-                close(12)
-            end if
 
-            INQUIRE(file=".UHF",exist=ex)
-            if (ex) then
-                open(12,file=".UHF")
-                read(12,*) multi
-                close(12)
-            end if
-            if (multi .ne. 0) then
-                write(11,'(a,I3,a,I3)') "$eht charge=",charge," unpaired=", multi
-            else
-                write(11,'(a,I3)') "$eht charge=",charge
-            end if
-            write(11,'(a)') "$end"
-            write(output_unit,'(5x,a)') "Done."
+        Call prepTM('r2scan-3c','def2-mTZVPP',error)
+        if (allocated(error)) return
+
+        INQUIRE(file='control', exist=ex)
+        if (.not. ex) then
+            Call fatal_error(error,'There is no control file in the working directory.&
+            &This should not happen.')
+            write(output_unit,'(a)') ""
         end if
+
         open(11, file="control" ,status='old')
         do while (io_error .ge. 0)
             read(11,'(A)',iostat=io_error) line
@@ -515,6 +481,7 @@ contains
             end if
         end do
         close(11)
+
         write(output_unit,'(5x, A)') 'Starting Gas phase single point calculation.'
         Call execute_command_line('ridft > gas.out 2>error', WAIT=.true.)
         open(11,file="error")
@@ -581,7 +548,7 @@ contains
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
         if (epsilon .ne. 0) then
-            write(output_unit,'(5x,A,F0.2,A),A') 'Starting COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
+            write(output_unit,'(5x,A,F0.2,A)') 'Starting COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
             write(output_unit,'(5x,A,A)') 'Starting COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
         end if
@@ -673,6 +640,204 @@ contains
         end do
 
     end subroutine orcatocosmo
+
+    subroutine prepTM(functional,basis, error)
+        use sort, only: unique
+        !> Functional and Basis for control file
+        character(len=*), intent(in) :: functional, basis
+        !> Error Handling
+        type(error_type), allocatable, intent(out) :: error
+
+        !> Elements of the molecule
+        character(len=2), allocatable :: elements(:)
+        !> Unique elements
+        character(len=2), allocatable :: unique_elements(:)
+
+        !> File I/O Handling
+        character(len=150) :: line
+        integer :: ele_count
+        integer :: io_error
+        logical :: ex
+        
+        !> Charge and Multiplicity of the System
+        real(wp) :: charge, multi
+
+        !> Dummy Variables and Loop Variable
+        integer :: i, j
+        real(wp) :: d1, d2, d3
+
+        character(len=2), parameter :: ecp28(32) = ['rb','sr','y ','zr','nb','mo','tc','ru','rh','pd','ag','cu', &
+                                    &'in','sn','sb','te','i ','xe','ce','pr','nd','pm','sm','eu',&
+                                    &'gd','tb','dy','ho','er','tm','yb','lu'], &
+                                &ecp46(3)=['cs','ba','la'],&
+                                &ecp60(15)=['hf', 'ta', 'w ', 're', 'os', 'ir', 'pt', 'au', 'hg', 'tl', 'pb', 'bi',&
+                                    &'po', 'at', 'rn']
+
+                        
+
+        
+        Inquire(file='coord', exist=ex)
+
+        if (.not. ex) then
+            Call fatal_error(error, 'There is no coord file in the working directory.')
+            return
+        end if
+        
+        Inquire(file='control', exist=ex)
+        if (ex) then
+            write(output_unit,'(5x,a, t20, a)') &
+                "[WARNING]", "Found a control file in the working directory.", &
+                "","CPCM-X will use this control file instead of writing its own.", &
+                "","Carefully check your results."
+            write(output_unit,'(a)') ""
+            return
+        end if
+
+        write(output_unit,'(a)') ""
+        write(output_unit,'(5x,a)') "Using internal prepTM routine to write a control file."
+        write(output_unit,'(5x,a,a,a,a)') "Using functional: ", functional, " and basis: ", basis
+
+        open(11,file='coord')
+        read(11,*,iostat=io_error) line
+        ele_count=0
+
+        do while (io_error .eq. 0)
+            read(11,'(a)',iostat=io_error) line
+            if (index(line,'$') .ne. 0) exit
+            ele_count=ele_count+1
+        end do
+
+        rewind(11)
+        
+        allocate(elements(ele_count))
+        read(11,('(a)')) line
+        do i=1,ele_count
+            read(11,*) d1, d2, d3, elements(i)
+            elements(i)=to_lower(elements(i))
+        end do
+        close(11)
+
+        charge=0
+        multi=0
+
+        INQUIRE(file=".CHRG",exist=ex)
+        if (ex) then
+            open(11,file=".CHRG")
+            read(11,*) charge
+            close(11)
+        end if
+
+        INQUIRE(file=".UHF",exist=ex)
+        if (ex) then
+            open(11,file=".UHF")
+            read(11,*) multi
+            close(11)
+        end if
+    
+        unique_elements=unique(elements)
+
+        open(11,file="control", status='new', iostat=io_error)
+        if (io_error .ne. 0) then
+            Call fatal_error(error,'Something went wrong while writing the control file.')
+            return
+        end if
+
+        write(11,'(a)') &
+        "$symmetry c1", &
+        "$coord file=coord", &
+        "$energy file=energy", &
+        "$atoms"
+        do i=1,size(unique_elements)
+            write(11,'(a,1x, a,1x, a)') unique_elements(i), positions(unique_elements(i),elements), '\'
+            write(11,'(a,a,1x,a)') '  basis =',unique_elements(i), basis
+            if (any(ecp28 .eq. unique_elements(i))) then
+                write(11,'(a,a,a)') '  jbas =',unique_elements(i),' universal-ecp-28'
+            else if (any(ecp46 .eq. unique_elements(i))) then
+                write(11,'(a,a,a)') '  jbas =',unique_elements(i),' universal-ecp-46'
+            else if (any(ecp60 .eq. unique_elements(i))) then
+                write(11,'(a,a,a)') '  jbas =',unique_elements(i),' universal-ecp-28'
+            else
+                write(11,'(a,a,a)') '  jbas =',unique_elements(i),' universal'
+            end if
+        end do
+        write(11,'(a)') &
+        "$rij", &
+        "$dft"
+        write(11,'(a,a)') " functional ",functional
+        write(11,'(a)') &
+        " gridsize m4", &
+        " radsize 8", &
+        "$scfconv 6", &
+        "$escfiterlimit 250", &
+        "$ricore    16000"
+        if (multi .ne. 0) then
+            write(11,'(a,I3,a,I3)') "$eht charge=",charge," unpaired=", multi
+        else
+            write(11,'(a,I3)') "$eht charge=",charge
+        end if
+        write(11,'(a)') "$end"
+        write(output_unit,'(5x,a)') "Done."
+        
+        write(output_unit,'(a)') ""
+
+
+    end subroutine prepTM
+
+    function positions(unique_element,element_array) result(short_pos)
+        !> Element Array for which the positions should be determined
+        character(len=*), allocatable, intent(in) :: element_array(:)
+        !> Unique Element in Element Array
+        character(len=*), intent(in) :: unique_element
+        !> Short Positional character string for control file (e.g. 1-4,13)
+        character(:), allocatable :: short_pos
+
+        integer, allocatable :: position(:)
+
+        integer, allocatable :: tmp_pos(:)
+        
+        character(len=3) :: tmp
+
+        integer :: i, pos_num, j
+
+        pos_num=0
+
+        do i=1,size(element_array)
+            if (unique_element .eq. element_array(i)) then
+                pos_num=pos_num+1
+                if (allocated(position)) deallocate(position)
+                allocate(position(pos_num))
+                do j=1,pos_num-1
+                    position(j)=tmp_pos(j)
+                end do
+                position(pos_num)=i
+                if (allocated(tmp_pos)) deallocate(tmp_pos)
+                allocate(tmp_pos(pos_num))
+                tmp_pos=position
+            end if
+        end do
+
+        short_pos=''
+        write(tmp,'(I0)') position(1)
+        short_pos=trim(tmp)
+        do i=2,size(position)
+            if (position(i) .eq. position(i-1)+1) then
+                if (i .eq. size(position)) then
+                    write(tmp,'(i0)') position(i)
+                    short_pos=short_pos//'-'//trim(tmp)
+                    exit
+                end if
+                if (position(i) .ne. position(i+1)-1) then
+                    write(tmp,'(i0)') position(i)
+                    short_pos=short_pos//'-'//trim(tmp)
+                end if
+            cycle
+            end if
+            short_pos=short_pos//','
+            
+            write(tmp,'(i0)') position(i)
+            short_pos=short_pos//trim(tmp)
+        end do
+    end function positions
 
 
 end module qc_calc  

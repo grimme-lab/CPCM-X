@@ -17,6 +17,9 @@
 MODULE sort
   use mctc_env, only : wp
   implicit none
+  private
+
+  public :: unique, shell_sort
  
 CONTAINS
  
@@ -46,6 +49,43 @@ SUBROUTINE Shell_Sort(a)
   END DO
  
 END SUBROUTINE Shell_Sort
+
+function unique(char_array) result(unique_array)
+   !> Input Character Array
+   character(len=*), allocatable, intent(in) :: char_array(:)
+   !> Output unique array
+   character(len=len(char_array)), allocatable:: unique_array(:)
+
+   character(len=len(char_array)), allocatable :: tmp_array(:)
+
+   character(len=len(char_array)) :: unique_element
+
+   integer :: unique_size, i, j
+
+   unique_size=1
+
+   allocate(unique_array(unique_size))
+   unique_array(1)=char_array(1)
+
+   do i=1,size(char_array)
+      unique_element=char_array(i)
+      if (any(unique_element .eq. unique_array)) cycle
+      allocate(tmp_array(unique_size))
+      tmp_array=unique_array
+      deallocate(unique_array)
+      allocate(unique_array(unique_size+1))
+      do j=1,unique_size
+         unique_array(j)=tmp_array(j)
+      end do
+      deallocate(tmp_array)
+      unique_size=unique_size+1
+      unique_array(unique_size)=unique_element
+   end do
+
+   end function unique
+
+
+
  
 END MODULE sort
   
