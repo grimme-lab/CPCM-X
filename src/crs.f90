@@ -83,7 +83,7 @@ subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav
 end subroutine calcgas
 
 
-function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
+pure function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
    real(wp), intent(in) :: c_hb, alpha, f_corr,s_hb
    real(wp), intent(in) :: sv1, svt1, sv2, svt2
    character(2), dimension(:), intent(in) :: element
@@ -102,21 +102,21 @@ function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2
 
    !! Setting up optional parameters at the beginning
 
-   if (present(id2)) then
-      allocate(ident2(size(id2)))
-      ident2(:)=id2(:)
-   else
-      allocate(ident2(size(ident)))
-      ident2(:)=ident(:)
-   end if
+   ! if (present(id2)) then
+   !    allocate(ident2(size(id2)))
+   !    ident2(:)=id2(:)
+   ! else
+   !    allocate(ident2(size(ident)))
+   !    ident2(:)=ident(:)
+   ! end if
 
-   if (present(ele2)) then
-      allocate(element2(size(ele2)))
-      element2(:)=ele2(:)
-   else
-      allocate(element2(size(element)))
-      element2=element(:)
-   end if
+   ! if (present(ele2)) then
+   !    allocate(element2(size(ele2)))
+   !    element2(:)=ele2(:)
+   ! else
+   !    allocate(element2(size(element)))
+   !    element2=element(:)
+   ! end if
 
    !! Set Acceptor and Donor
 
@@ -179,17 +179,17 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
    integer, allocatable, intent(in), dimension(:) :: ident_sol, ident_solv
    real(wp), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
    character(2), dimension(:), allocatable, intent(in) :: elem_sol, elem_solv
-   real(wp), dimension(:), allocatable :: W_v
+   !real(wp), dimension(:), allocatable :: W_v
    real(wp), intent(in) :: T
 
    real(wp) :: temppot, beta,temp2
    integer :: i, j
 
-   allocate(W_v(size(sv_sol)))
+   !allocate(W_v(size(sv_sol)))
    allocate(sol_pot(size(sv_sol)))
    write(output_unit,'(5x,a)') &
       "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
-   W_v(:)=0.0_wp
+   !W_v(:)=0.0_wp
    beta=(R*Jtokcal*T)/param(7)
    temppot=0.0_wp
    sol_pot(:)=0
@@ -202,7 +202,7 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
             j,i,ident_solv,elem_solv)&
             &/beta)+solv_pot(i)))
          !  end if
-         W_v(j)=W_v(j)+area_solv(i)
+         !W_v(j)=W_v(j)+area_solv(i)
       end do
       sol_pot(j)=-log(sum(area_solv)**(-1)*temppot)
       temppot=0.0_wp
@@ -280,15 +280,22 @@ subroutine calculate_edd(edd, sv, svt, T, ident, element)
    character(2), intent(in) :: element(:)
    real(wp), intent(in) :: T
 
+   real(wp) :: c_hb, alpha, f_corr, s_hb
+
    integer :: i, j
    real(wp) :: temppot, beta
 
    beta=(R*Jtokcal*T)/param(7)
 
+   c_hb=param(5)
+   alpha=param(3)
+   f_corr=param(4)
+   s_hb=param(6)
+
    do j=1,size(sv)
       do i=1,size(sv)
          edd(i, j) = E_dd&
-            &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
+            &(c_hb,alpha,f_corr,s_hb,sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
             &/beta
       end do
    end do

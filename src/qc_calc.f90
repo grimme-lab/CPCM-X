@@ -797,7 +797,7 @@ contains
         
         character(len=3) :: tmp
 
-        integer :: i, pos_num, j
+        integer :: i, pos_num, j, break
 
         pos_num=0
 
@@ -816,6 +816,7 @@ contains
             end if
         end do
 
+        break=1
         short_pos=''
         write(tmp,'(I0)') position(1)
         short_pos=trim(tmp)
@@ -833,7 +834,10 @@ contains
             cycle
             end if
             short_pos=short_pos//','
-            
+            if (len(short_pos)/break .gt. 50) then
+                short_pos=short_pos//'\'//new_line('a')
+                break=break+1
+            end if
             write(tmp,'(i0)') position(i)
             short_pos=short_pos//trim(tmp)
         end do
