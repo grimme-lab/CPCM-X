@@ -56,7 +56,7 @@ subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav
    dEreal=dEreal*autokcal
    id_scr=dEreal+avcorr*autokcal
    thermo=param(10)*R*jtokcal*T
-   write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
+   write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
    "E_COSMO:", E_cosmo, "Eh", &
    "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
    "E_gas:", E_gas,"Eh", &

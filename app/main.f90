@@ -25,14 +25,15 @@ program CPCMX
    use profile
    use pr
    use crs
+   use isodens, only: get_isodens_radii
    use data, only: AtomicMass, density
-   use qc_calc, only: qc_cal
+   use qc_calc, only: qc_cal, orcatocosmo
    use mctc_env, only : wp, get_argument, fatal_error, error_type
    use crs_timer, only: timer_type, format_time
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    use sdm
    implicit none
-   character(len=*), parameter :: prog_name = "csx"
+   character(len=*), parameter :: prog_name = "cpx"
    integer :: oh_sol, nh_sol, near_sol
    real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
    real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
@@ -44,44 +45,26 @@ program CPCMX
    real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
    character(20) :: solvent, solute
 
+   real(wp), allocatable :: isodens_rad(:)
+
    !> State Correction Energy
    real(wp) :: dG_state
-   !real(wp), dimension(10) :: param
+
    real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
       &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
-   logical :: gas,sig_in
    integer :: sol_nat, i
    integer, allocatable :: int_ident(:),solute_ident(:),solvent_ident(:)
    real(wp), allocatable :: surface(:), dsdr(:,:,:)
 
    type(timer_type) :: timer
 
-   type :: configuration
-      character(len=:), allocatable :: input
-      character(len=:), allocatable :: smd_solvent
-      character(len=:), allocatable :: csm_solvent
-      character(len=:), allocatable :: csm_solute
-      real(wp) :: T
-      real(wp) :: probe
-      real(wp) :: z1,z2
-      real(wp) :: qc_eps
-      character(len=:), allocatable :: sac_param_path
-      character(len=:), allocatable :: smd_param_path
-      character(len=:), allocatable :: database
-      character(len=:), allocatable :: qc_calc
-      character(len=:), allocatable :: xyz_input
-      logical :: ML, sig_in, prof, smd_default, time
-      character(len=:), allocatable :: model
-   end type configuration
-
-   type(configuration) :: config
+   type(configuration_type) :: config
    type(error_type), allocatable :: error
 
   
 
    type(DICT_STRUCT), pointer :: r_cav, disp_con
   
-   gas=.TRUE.
    !! ------------------------------------------------------------ 
    !! Read Command Line Arguments and set Parameters accordingly
    !! ------------------------------------------------------------
@@ -92,7 +75,8 @@ program CPCMX
       error stop
    end if
    Call echo_init(config)
-   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent) 
+   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent,error)
+   Call check_error(error) 
    if (config%ML) then
       Call init_pr
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
@@ -119,7 +103,7 @@ program CPCMX
          Call timer%push("qc_calc")
          select case(config%qc_calc)
             case('TM')
-               Call qc_cal(config%qc_eps,config%csm_solute, error, config%smd_solvent)
+               Call qc_cal(config%qc_eps,config%csm_solute, error, config%isodens, config%smd_solvent)
             case('ORCA')
                Call qc_cal(config%xyz_input,error)
             case('P-gTB', 'gTB', 'GTB')
@@ -257,11 +241,10 @@ program CPCMX
          ! Calculation of Gas Phase energies
          write(output_unit,'(5x,a)') "Calculating Gas Phase Energies.", &
             ""
-         ! Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)         
-         !if (gas) then
-             Call calcgas(solute_energy,id_scr,solute_area,solute_sv,solute_su,&
-                &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
-         !end if
+
+         Call calcgas(solute_energy,id_scr,solute_area,solute_sv,solute_su,&
+            &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+
          Call state_correction(density(config%smd_solvent),AtomicMass(solvent_elements),config%T,dG_state)
 
          ! Computation of CPCM-RS equations (here may be something wrong atm)
@@ -285,9 +268,6 @@ program CPCMX
          !> Additional effective ring correction
          dG_res=chem_pot_sol+param(9)*near_sol
 
-         deallocate(solute_su,solute_sv,solute_sv0,solvent_su,solvent_sv,&
-         &solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
-         &solv_pot,sol_pot)
       end select
       
       write(output_unit,'(10x,a)') &
@@ -320,6 +300,24 @@ program CPCMX
          write(output_unit,*) ""
       end if
 
+      if (config%isodens) then
+         Call get_isodens_radii(solute_xyz,solute_ident,solat_xyz,isodens_rad)
+         write(output_unit,'(10x,a)') &
+         " ------------------------------------------------- ",&
+         "|                 Isodensity Radii                 |",&
+         " ------------------------------------------------- ", &
+         ""
+         write(output_unit,'(5x,a)'), &
+         "Isodensity Flag used, calculated isodensity radii:",&
+         ""
+         write(output_unit,'(10x,a,t30,a)'), &
+            "Atom Number:", "[A]"
+         do i=1,maxval(solute_ident)
+            write(output_unit,'(10x,I0,t30,F4.2)'),&
+               i, isodens_rad(i)
+         end do
+      end if
+
       Call timer%pop()
 
       if (config%time) then
@@ -338,11 +336,6 @@ program CPCMX
          end do
       end block
       end if
-
-
-     ! deallocate(solute_su,solute_sv,solute_svt,solute_sv0,solvent_su,solvent_sv,&
-     !    &solvent_svt,solvent_sv0,solvent_area,solute_area,solvent_xyz,solute_xyz,&
-     !    &solv_pot,sol_pot)
 contains
 
 subroutine help(unit)
@@ -387,6 +380,7 @@ subroutine sample(filename,rc)
          'prog="TM"', &
          '', &
          '# Path or Filename for the parameters for Water. (Path in respective to CPXHOME)', &
+         '# Uses Databath Path, if Database is specified', &
          'smd_h2o="smd_h2o"', &
          'crs_h2o="crs.param_h2o"', &
          '', &
@@ -444,7 +438,7 @@ end subroutine print_keywords
 
 subroutine get_arguments(config, error)
    use data, only: solvent_name
-   type(configuration), intent(out) :: config
+   type(configuration_type), intent(out) :: config
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
@@ -453,6 +447,7 @@ subroutine get_arguments(config, error)
    character(len=:), allocatable :: arg
 
 
+   config%isodens=.false.
    iarg = 0
    narg = command_argument_count()
    do while(iarg < narg)
@@ -466,6 +461,8 @@ subroutine get_arguments(config, error)
          call sample("csx.input",.FALSE.)
          write(output_unit, '(a)') "[Info] Sample input file 'csx.input' created."
          stop
+      case("--isodens")
+         config%isodens=.true.
       case("--newrc")
          call sample("config.toml",.TRUE.)
          write(output_unit, '(a)') "[Info] Sample config file 'config.toml' created."
@@ -512,11 +509,18 @@ subroutine get_arguments(config, error)
        end if
     end if
 
+    if ((.not.(allocated(config%xyz_input))) .AND. (config%qc_calc .eq. "ORCA")) then
+       if (.not.allocated(error)) then
+          call help(output_unit)
+          stop
+       end if
+    end if
+
 end subroutine get_arguments 
 
    !> Subroutine to Read the CPCM-SACMD Input File
 subroutine read_input(config,error)
-   type(configuration) :: config
+   type(configuration_type) :: config
    type(error_type), allocatable :: error
 
    character(len=100) :: sac_param_path, smd_param_path, line
@@ -640,7 +644,7 @@ subroutine use_default(config, solv, error)
    !> Solvent used for default configuration
    character(:), allocatable, intent(in) :: solv
    !> Configuration Type
-   type(configuration), intent(inout) :: config
+   type(configuration_type), intent(inout) :: config
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
    !> Toml unit
@@ -706,22 +710,22 @@ subroutine use_default(config, solv, error)
          case("smd_h2o")
             if (solv .eq. "water") then
                call get_value(config_table,list(nconf),line2)
-               call move_line(home//line2,config%smd_param_path)
+               call move_line(line2,config%smd_param_path)
             end if
          case("smd_ot")
             if (solv .ne. "water") then
                call get_value(config_table,list(nconf),line2)
-               call move_line(home//line2,config%smd_param_path)
+               call move_line(line2,config%smd_param_path)
             end if
          case("crs_h2o")
             if (solv .eq. "water") then
                call get_value(config_table,list(nconf),line2)
-               call move_line(home//line2,config%sac_param_path)
+               call move_line(line2,config%sac_param_path)
             end if
          case("crs_ot")
             if (solv .ne. "water") then
                call get_value(config_table,list(nconf),line2)
-               call move_line(home//line2,config%sac_param_path)
+               call move_line(line2,config%sac_param_path)
             end if
          case("DB")
             call get_value(config_table,list(nconf),line2)
@@ -739,53 +743,7 @@ subroutine use_default(config, solv, error)
       call fatal_error(error, config_error%message)
    end if
 
-   ! do while (.TRUE.)
-   !    if (index(line,"$") .eq. 0) read(11,'(a)',iostat=stat) line
-   !    write(*,*) line
-   !    if (stat .lt. 0) exit
-   !    if (index(line,"$") .eq. 0) cycle
-   !    line=line(2:len(line))
-   !    select case(solv)
-   !    case("H2O", "Water", "water")
-   !       if (trim(line) .eq. "H2O") then
-   !          do while (.TRUE.)
-   !             read(11,'(a)',iostat=stat) line
-   !             if (index(line, "$") .ne. 0) exit
-   !             control=line(1:index(line,"=")-1)
-   !             command=trim(line(index(line,"=")+1:len(line)))
-   !             select case(trim(control))
-   !             case("smd")
-   !                call move_line(trim(command),config%smd_param_path)
-   !             case("crs")
-   !                call move_line(trim(command),config%sac_param_path)
-   !             end select
-   !          end do
-   !       end if
-   !    case default
-   !       if (trim(line) .eq. "OT") then
-   !          do while (.TRUE.)
-   !             read(11,'(a)',iostat=stat) line
-   !             if (index(line, "$") .ne. 0) exit
-   !             control=line(1:index(line,"=")-1)
-   !             command=trim(line(index(line,"=")+1:len(line)))
-   !             select case(trim(control))
-   !             case("smd")
-   !                call move_line(trim(command),config%smd_param_path)
-   !             case("crs")
-   !                call move_line(trim(command),config%sac_param_path)
-   !             end select
-   !          end do
-   !       end if
-   !    end select
-
-   !    if (trim(line) .eq. "DB") then
-   !       read(11,'(a)',iostat=stat) line
-   !       control=line(1:index(line,"=")-1)
-   !       command=trim(line(index(line,"=")+1:len(line)))
-   !       call move_line(trim(command),config%database)
-   !    end if
-
-   ! end do
+   call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
 
 
 end subroutine use_default
@@ -829,7 +787,7 @@ subroutine move_line(line,aline,hignore)
 end subroutine move_line
 
 subroutine echo_init(config)
-   type(configuration) :: config
+   type(configuration_type) :: config
 
 
    write(output_unit,'(10x,a)') &

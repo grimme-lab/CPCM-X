@@ -15,7 +15,7 @@
 ! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 module initialize_cosmo
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type, fatal_error
    use, intrinsic :: iso_fortran_env, only : output_unit
    implicit none
 
@@ -175,12 +175,11 @@ contains
 
    end subroutine read_cosmo
 
-   subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
+   subroutine initialize_param(filename,model,r_cav,disp_con, solvent, error)
       use element_dict
       use, intrinsic :: iso_fortran_env, only: output_unit
       use globals, only: param, cov_r, dG_shift
 
-      !real(wp), dimension(10) :: param
       type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
       type(DICT_DATA) :: data1, r_c, d_c
@@ -190,10 +189,13 @@ contains
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
 
+      !> Error Handling
+      type(error_type), allocatable :: error
 
       INQUIRE(file=filename, exist=g_exists)
       if (.NOT. g_exists) then
-         error stop "No Parameter File for COSMO-X found."
+         Call fatal_error(error,"No Parameter File for CPCM-X found.") 
+         return
       else
          open(1,file=filename)
 
@@ -208,19 +210,7 @@ contains
                   read(1,*) param(i)
                end do
                read(1,*) dG_shift
-         !        read(1,*)
-         !        io_error=0
 
-         !  Creating element specific Parameter Dictionaries from parameter file
-
-         !        read(1,*) symbol, r_c%param, d_c%param
-         !        Call dict_create(r_cav, trim(symbol), r_c)
-         !        Call dict_create(disp_con, trim(symbol), d_c)
-         !        do while (io_error .GE. 0)
-         !           read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
-         !           Call dict_add_key(r_cav, trim(symbol), r_c)
-         !           Call dict_add_key(disp_con,trim(symbol), d_c)
-         !        end do
             case("sac")
 
                ! Setting global COSMO-SAC Parameters from parameter file

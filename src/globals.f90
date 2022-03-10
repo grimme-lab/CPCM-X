@@ -27,10 +27,8 @@ module globals
    real(wp) :: SysTemp !System Temperature
 
    real(wp) :: dG_is, dG_cc, dG_res, dG_disp, dG_shift !contributions to free energy of solvation
-   character(7) :: model ! Chosen COSMO model
-   logical :: onlyprof ! Only creates a sigma profile
-   logical :: ML !Data Preperation for ML
 
+   logical :: ML
    ! Covalent Radii of Elements
 
    type(DICT_STRUCT), pointer :: cov_r
@@ -39,6 +37,23 @@ module globals
 
    type(DICT_STRUCT), pointer :: A_dsp, B_dsp, r_pr
 
+   type :: configuration_type
+      character(len=:), allocatable :: input
+      character(len=:), allocatable :: smd_solvent
+      character(len=:), allocatable :: csm_solvent
+      character(len=:), allocatable :: csm_solute
+      real(wp) :: T
+      real(wp) :: probe
+      real(wp) :: z1,z2
+      real(wp) :: qc_eps
+      character(len=:), allocatable :: sac_param_path
+      character(len=:), allocatable :: smd_param_path
+      character(len=:), allocatable :: database
+      character(len=:), allocatable :: qc_calc
+      character(len=:), allocatable :: xyz_input
+      logical :: ML, sig_in, prof, smd_default, time, isodens
+      character(len=:), allocatable :: model
+   end type configuration_type
 
    contains
       ! Functions that are used in several modules

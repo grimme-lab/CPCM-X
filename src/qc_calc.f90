@@ -18,13 +18,15 @@
 
 module qc_calc
     use mctc_env, only : wp, error_type, fatal_error
+    use mctc_io, only: to_number
     use data, only: minnesota_eps
-    use globals, only: rename, autokcal, to_lower
+    use numsa, only: get_vdw_rad_cosmo
+    use globals, only: rename, autokcal, to_lower, BtoA
     use, intrinsic :: iso_fortran_env, only : output_unit, file_storage_size
 
     implicit none
     private
-    public :: qc_cal
+    public :: qc_cal, orcatocosmo
     interface qc_cal
         module procedure :: turbomole
         module procedure :: orca
@@ -280,7 +282,7 @@ contains
         !> Charge and Multiplicity
         integer :: charge, multi
         !> Solute is Input without .xyz
-        character(:), allocatable :: solute
+        character(len=:), allocatable :: solute
         !> Input file existing?
         logical :: ex
         !> Reading Output
@@ -289,6 +291,11 @@ contains
         real(wp) :: E_gas, E_solv
         !> I/O error
         integer :: io_error, file_size
+
+        !> Needed for determining right radii
+        integer :: atoms, i
+        character(len=2), allocatable :: symbols(:)
+        real(wp), allocatable :: rad(:)
 
         !> Default Functional is r2scan-3c
         if (present(new_basis)) then
@@ -299,7 +306,6 @@ contains
             basis=""
         end if
 
-        allocate(character((len(input)-4)) :: solute)
         solute=input(1:len(input)-4)
 
         INQUIRE(file=input, exist=ex)
@@ -308,6 +314,18 @@ contains
             Call fatal_error(error,"Input File for Orca Driver Mode not found.")
             return
         end if
+        
+        open(11,file=input)
+        read(11,*) atoms
+        allocate(symbols(atoms))
+        read(11,*)
+        do i=1,atoms
+            read(11,*) symbols(i)
+        end do
+        close(11)
+
+        rad = get_vdw_rad_cosmo(symbols)
+        
         if (input(len(input)-3:len(input)) .ne. ".xyz") then
             Call fatal_error(error,"Orca Driver Mode chosen, but input file does not look like a .xyz file.")
             return
@@ -326,18 +344,21 @@ contains
         INQUIRE(file=".CHRG",exist=ex)
         if (ex) then
             open(11,file=".CHRG")
-            read(11) charge
+            read(11,*) charge
             close(11)
         end if
 
         INQUIRE(file=".UHF",exist=ex)
         if (ex) then
             open(11,file=".UHF")
-            read(11) multi
+            read(11,*) multi
+            !> .UHF is unpaired Electrons (not multiplicity)
+            multi=multi+1
             close(11)
         end if
 
         INQUIRE(file=solute//".inp",exist=ex)
+        
 
         if (ex) then
             write(output_unit,'(a)') ""
@@ -351,11 +372,12 @@ contains
         write(output_unit,'(5x,a,3x,a)') "Functional for Orca QC calculations:", functional
         if (basis .ne. "") write(output_unit,'(5x,a,3x,a)')&
                             "Basisset for Orca QC calculations:", basis
+        
         !> Writing an gas phase Orca File
         open(11,file=solute//".inp",status="unknown")
         write(11,'(A1,1x,A,1x,A)') "!", functional, basis
         write(11,'(a)') "!DEFGRID3"
-        write(11,'(A1,1x,A7,1x,I1,1x,I1,1x,A)') "*","xyzfile",charge,multi,input
+        write(11,'(A1,1x,A7,1x,I4,1x,I4,1x,A)') "*","xyzfile",charge,multi,input
         close(11)
 
         write(output_unit,'(5x, A)') 'Starting gas phase single point calculation.'
@@ -389,11 +411,24 @@ contains
         open(11,file=solute//".inp",status="OLD")
         write(11,'(A1,1x,A,1x,A)') "!", functional, basis
         write(11,'(a)') "!DEFGRID3"
-        write(11,'(A6)') "! CPCM"
-        write(11,'(A1,1x,A7,1x,I1,1x,I1,1x,A)') "*","xyzfile",charge,multi,input
+        if (charge .ne. 0) then
+            write(11,'(A6)') "! CPCM"
+        else
+            write(11,'(A7)') "! CPCMC"
+        end if
+        write(11,'(a)') "%cpcm"
+        do i=1,size(symbols)
+            write(11,'(3x,a,i0,a,F4.2,a)') "AtomRadii(",i-1,",",rad(i)*BtoA,")"
+        end do
+        write(11,'(3x,a)') "end"
+        write(11,'(A1,1x,A7,1x,I4,1x,I4,1x,A)') "*","xyzfile",charge,multi,input
         close(11)
 
-        write(output_unit,'(5x, A)') 'Starting CPCM calculation with epsilon=infinity.'
+        if (charge .ne. 0) then
+            write(output_unit,'(5x, A)') 'Starting CPCM calculation with epsilon=infinity.'
+        else
+            write(output_unit,'(5x, A)') 'Starting CPCMC calculation with epsilon=infinity.'
+        end if
         Call execute_command_line("orca "//solute//".inp > solvent.out 2>error.out",WAIT=.true.)
         INQUIRE(file="error.out",size=file_size)
         if (file_size .gt. 0) then
@@ -419,7 +454,7 @@ contains
         
 
     !> turbomole subroutine - needs control file for gas phase calculation and coord file in
-    subroutine turbomole(epsilon, cosmo_out, error, solvent)
+    subroutine turbomole(epsilon, cosmo_out, error, isodens, solvent)
         !> Dielectric Constant for COSMO Calculation
         real(wp), intent(inout) :: epsilon
         !> Output File for COSMO Calculation
@@ -428,11 +463,13 @@ contains
         type(error_type), intent(out), allocatable :: error
         !> SMD Solvent for default Epsilon (optional)
         character(len=*), intent(in), optional :: solvent
+        !> Isodens Cavity?
+        logical, intent(in) :: isodens
 
         !> Control File exists?
         logical :: ex
         !> Reading the control file
-        character(len=100) :: line
+        character(len=100) :: line, line2
         !> Charge and multiplicity of molecule (from control file)
         integer :: charge, multi
         !> Is Molecule charged?
@@ -540,11 +577,17 @@ contains
         else 
             write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
         end if
-        write(11,'(a)') &
-            " cavity closed", &
-            " use_contcav", &
-            " nspa=272", &
-            " nsph=162"
+        if (isodens) then
+            write(11,'(a)') &
+            " $cosmo_isodens", &
+            "   dx=0.1"
+        else 
+            write(11,'(a)') &
+                " cavity closed", &
+                " use_contcav", &
+                " nspa=272", &
+                " nsph=162"
+        end if
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
         if (epsilon .ne. 0) then
@@ -557,8 +600,50 @@ contains
         read(11,'(a)',iostat=io_error) line
         do while (io_error .eq. 0)
             if (index(line,"abnormal") .ne. 0) then
-                Call fatal_error(error,"Solvent phase calculation stopped abnormally.") 
-                return
+                if (isodens) then
+                    open(12,file="solv.out")
+                    read(12,'(a)',iostat=io_error) line
+                    do while (io_error .eq. 0) 
+                        if (index(line,"min. dist. between &
+                        &inner and outer cavity smaller than 0.5*rsolv") .ne. 0) then
+                            write(output_unit,'(5x,a, t20, a)') &
+                            "","",&
+                            "[WARNING]", "Failure in outer charge correction while using isodens cavity.", &
+                            "","Trying again with larger routf value (routf = 1.1).", &
+                            "","Carefully check your results.", &
+                            "",""
+                            Call execute_command_line("kdg end")
+                            Call execute_command_line("kdg cosmo")
+                            open(13,file="control", access="append")
+                            write(13,'(a)'), &
+                            "$cosmo", &
+                            "   epsilon=infinity", &
+                            "   routf=1.1", &
+                            "$cosmo_isodens", &
+                            "   dx=0.1", &
+                            "$cosmo_out file=solute.cosmo",&
+                            "$end"
+                            close(13)
+                            Call execute_command_line('ridft > solv.out 2>error', WAIT=.true.)
+                            open(13, file="error")
+                            read(13,'(a)',iostat=io_error) line2
+                            do while (io_error .eq. 0)
+                                if (index(line2,"abnormal") .ne. 0) then
+                                    Call fatal_error(error,"Failure in outer charge corrections while using isodens cavity.")
+                                    return
+                                end if
+                                read(13,'(a)',iostat=io_error) line2
+                            end do
+                            exit
+                        end if
+                        read(12,'(a)',iostat=io_error) line
+                    end do
+                    close(12)
+                else
+                    Call fatal_error(error,"Solvent phase calculation stopped abnormally.") 
+                    return
+                end if
+                exit
             end if
             read(11,'(a)',iostat=io_error) line
         end do
@@ -623,7 +708,7 @@ contains
         write(11,*) "volume=",volume
         write(11,'(a)') "#atom"
         do i=1,atoms
-            write(11,*) i, xyz(i,1), xyz(i,2), xyz(i,3), symbols(i)
+            write(11,'(3x,I0,3x,F17.10,3x,F17.10,3x,F17.10,3x,a)') i, xyz(i,1), xyz(i,2), xyz(i,3), symbols(i)
         end do
         write(11,'(a)') "$cosmo_energy"
         write(11,'(a)') "#CPCM Singlepoint Energy taken from Orca"
@@ -632,7 +717,7 @@ contains
         write(11,'(a)') "$segment_information"
         write(11,'(a)') "#Reordered segment information from "//oc_inp//".cpcm"
         do i=1,segments
-            write(11,('(I5,3x,I3,3x,F15.9,3x,F15.9,3x,&
+            write(11,('(3x,I0,3x,I3,3x,F15.9,3x,F15.9,3x,&
             &F15.9,3x,F15.9,3x,F15.9,3x,F15.9,3x,F15.9)'))&
             & int(segment_info(i,1)), int(segment_info(i,2)), segment_info(i,3),&
             & segment_info(i,4), segment_info(i,5), segment_info(i,6), segment_info(i,7),&
@@ -660,7 +745,7 @@ contains
         logical :: ex
         
         !> Charge and Multiplicity of the System
-        real(wp) :: charge, multi
+        integer :: charge, multi
 
         !> Dummy Variables and Loop Variable
         integer :: i, j
@@ -771,15 +856,14 @@ contains
         "$escfiterlimit 250", &
         "$ricore    16000"
         if (multi .ne. 0) then
-            write(11,'(a,I3,a,I3)') "$eht charge=",charge," unpaired=", multi
+            write(11,'(a,I0,a,I0)') "$eht charge=",charge," unpaired=", multi
         else
-            write(11,'(a,I3)') "$eht charge=",charge
+            write(11,'(a,I0)') "$eht charge=",charge
         end if
         write(11,'(a)') "$end"
         write(output_unit,'(5x,a)') "Done."
         
         write(output_unit,'(a)') ""
-
 
     end subroutine prepTM
 

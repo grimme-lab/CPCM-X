@@ -31,4 +31,5 @@ srcs += files(
   'sort.f90',
   'timer.f90',
   'data.f90',
+  'isodens.f90',
 )
