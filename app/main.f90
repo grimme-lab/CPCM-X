@@ -744,6 +744,7 @@ subroutine use_default(config, solv, error)
    end if
 
    call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
+   call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
 
 
 end subroutine use_default

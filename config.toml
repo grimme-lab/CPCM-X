@@ -16,7 +16,7 @@ crs_ot="crs.param_ot"
 
 # Path to the Solvent Database
 # Note, that the .cosmo files in the database need to be named according to SMD solvent names.
-DB="DATABASE-COSMO"
+DB="DATABASE-TM"
 
 # Temperature in Kelvin
 Temperature=298.15

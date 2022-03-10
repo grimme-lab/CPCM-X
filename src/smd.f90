@@ -60,7 +60,6 @@ module sdm
       allocate(coord_rev(3,size(species)))
 
 
-
       if (.NOT. default) then
          select case (solvent)
             case ('h2o','water')
