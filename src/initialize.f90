@@ -15,7 +15,7 @@
 ! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 module initialize_cosmo
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type, fatal_error
    use, intrinsic :: iso_fortran_env, only : output_unit
    implicit none
 
@@ -24,7 +24,8 @@ contains
       use globals
       character(*), intent(in) :: compound
       character(*), intent(in) :: database
-      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home,filen
+      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home
+      character(:), allocatable :: filen
       real(wp), dimension(:), allocatable,intent(out) :: charges,&
          &area,pot
       real(wp), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
@@ -37,7 +38,7 @@ contains
 
       logical :: exists
 
-      filen=compound
+      filen=trim(compound)
 
       INQUIRE(file=trim(filen),EXIST=exists)
 
@@ -45,7 +46,8 @@ contains
          if (database .ne. "NONE") then
             filen=trim(database)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)
-            write(*,*) "Database specified, reading .cosmo file from", filen
+            write(output_unit,'(5x,a)') "Database specified, reading .cosmo file from", &
+               filen
          end if
       end if
       if (.NOT. exists) then
@@ -116,8 +118,8 @@ contains
 
       ele_num=0
       do while (.TRUE.)
-         read(1,'(A1)',advance='no',iostat=io_error) line
-         if (line .NE. "$") then
+         read(1,'(A1)',iostat=io_error) line
+         if (index(line,"$") .eq. 0) then
            ele_num=ele_num+1
          else
             exit
@@ -153,24 +155,31 @@ contains
 
       read(1,*) line, volume
 
-      rewind(1)
-      do while (line .NE. "$cosmo_energy")
-         read(1,*) line
-      end do
-      read (1,*)
-      read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
-
+      INQUIRE(file=filen(:len(filen)-6)//".energy",exist=exists)
+      if (exists) then
+         write(output_unit,'(5x,a)') "Reading energy for compound "//trim(compound)&
+            &//" from "//filen(:len(filen)-6)//".energy"
+         open(11,file=filen(:len(filen)-6)//".energy")
+         read(11,*) c_energy
+         close(11)
+      else
+         rewind(1)
+         do while (line .NE. "$cosmo_energy")
+            read(1,*) line
+         end do
+         read (1,*)
+         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
+      end if
 
       close(1)
 
    end subroutine read_cosmo
 
-   subroutine initialize_param(filename,model,r_cav,disp_con, solvent)
+   subroutine initialize_param(filename,model,r_cav,disp_con, solvent, error)
       use element_dict
       use, intrinsic :: iso_fortran_env, only: output_unit
       use globals, only: param, cov_r, dG_shift
 
-      !real(wp), dimension(10) :: param
       type(DICT_STRUCT), pointer, intent(inout) :: r_cav, disp_con
 
       type(DICT_DATA) :: data1, r_c, d_c
@@ -180,10 +189,13 @@ contains
       integer :: i, io_error,dummy1
       character(len=100) :: home,param_path
 
+      !> Error Handling
+      type(error_type), allocatable :: error
 
       INQUIRE(file=filename, exist=g_exists)
       if (.NOT. g_exists) then
-         error stop "No Parameter File for COSMO-X found."
+         Call fatal_error(error,"No Parameter File for CPCM-X found.") 
+         return
       else
          open(1,file=filename)
 
@@ -198,19 +210,7 @@ contains
                   read(1,*) param(i)
                end do
                read(1,*) dG_shift
-               ! read(1,*)
-               ! io_error=0
 
-         ! Creating element specific Parameter Dictionaries from parameter file
-
-            !    read(1,*) symbol, r_c%param, d_c%param
-            !    Call dict_create(r_cav, trim(symbol), r_c)
-            !    Call dict_create(disp_con, trim(symbol), d_c)
-            !    do while (io_error .GE. 0)
-            !       read(1,*,iostat=io_error) symbol, r_c%param, d_c%param
-            !       Call dict_add_key(r_cav, trim(symbol), r_c)
-            !       Call dict_add_key(disp_con,trim(symbol), d_c)
-            !    end do
             case("sac")
 
                ! Setting global COSMO-SAC Parameters from parameter file

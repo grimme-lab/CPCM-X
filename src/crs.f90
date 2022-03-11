@@ -23,10 +23,10 @@ module crs
 contains
 
 
-subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con, T,r_cav)
+subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav)
    use globals
    use element_dict
-   real(wp), intent(out) :: id_scr, gas_chem
+   real(wp), intent(out) :: id_scr
    real(wp), intent(in) :: T, E_cosmo
    real(wp),dimension(:),allocatable, intent(in) :: area, sv, su, pot
    integer, allocatable, intent(in) :: ident(:)
@@ -53,34 +53,37 @@ subroutine calcgas(E_cosmo,id_scr,gas_chem,area,sv,su,pot,element,ident,disp_con
       edielprime=edielprime+(area(i)*pot(i)*sv(i))
    end do
    avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
-   write(*,*) "E_COSMO+dE: ", (E_cosmo+avcorr)*autokcal
-   write(*,*) "E_gas: ", E_gas*autokcal
    dEreal=dEreal*autokcal
    id_scr=dEreal+avcorr*autokcal
-   write(*,*) "E_COSMO-E_gas+dE: ", (E_cosmo-E_gas+avcorr)*autokcal
-   write(*,*) "Ediel: ", ediel/2*autokcal
-   write(*,*) "Averaging corr dE: ", avcorr*autokcal
-
-   vdW_gain=0
-   do i=1,size(area)
-      disp=dict_get_key(disp_con, element(int(ident(i))))
-      vdW_gain=vdW_gain+(area(i)*disp%param)
-   end do
-   write(*,*) "EvdW: ", vdW_gain
-   write(*,*) "Area: ", sum(area)
-
    thermo=param(10)*R*jtokcal*T
-   write(*,*) "thermostatic correction: ", thermo
+   write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
+   "E_COSMO:", E_cosmo, "Eh", &
+   "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
+   "E_gas:", E_gas,"Eh", &
+   "E_COSMO-E_gas", (E_cosmo-E_gas),"Eh", &
+   "E_COSMO-E_gas+dE:", (E_cosmo-E_gas+avcorr),"Eh", &
+   "Ediel:", ediel/2,"Eh", &
+   "Averaging corr dE:", avcorr,"Eh", &
+   "thermostatic correction: ", thermo/autokcal, "Eh", &
+   "Area:", sum(area), "Å"
 
-   !!! RING CORRECTION IS MISSING ATM
-   gas_chem=-id_scr+thermo-vdW_gain!-ring_corr
-   !write(*,*) gas_chem
+   ! vdW Correction is replaced by the SMD Model.
+   ! vdW_gain=0
+   ! do i=1,size(area)
+   !    disp=dict_get_key(disp_con, element(int(ident(i))))
+   !    vdW_gain=vdW_gain+(area(i)*disp%param)
+   ! end do
+   ! write(*,*) "EvdW: ", vdW_gain
+   ! write(*,*) "Area: ", sum(area)
+   
+   dG_is=dEreal-thermo
+   dG_cc=avcorr*autokcal
 
 
 end subroutine calcgas
 
 
-function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
+pure function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
    real(wp), intent(in) :: c_hb, alpha, f_corr,s_hb
    real(wp), intent(in) :: sv1, svt1, sv2, svt2
    character(2), dimension(:), intent(in) :: element
@@ -99,21 +102,21 @@ function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2
 
    !! Setting up optional parameters at the beginning
 
-   if (present(id2)) then
-      allocate(ident2(size(id2)))
-      ident2(:)=id2(:)
-   else
-      allocate(ident2(size(ident)))
-      ident2(:)=ident(:)
-   end if
+   ! if (present(id2)) then
+   !    allocate(ident2(size(id2)))
+   !    ident2(:)=id2(:)
+   ! else
+   !    allocate(ident2(size(ident)))
+   !    ident2(:)=ident(:)
+   ! end if
 
-   if (present(ele2)) then
-      allocate(element2(size(ele2)))
-      element2(:)=ele2(:)
-   else
-      allocate(element2(size(element)))
-      element2=element(:)
-   end if
+   ! if (present(ele2)) then
+   !    allocate(element2(size(ele2)))
+   !    element2(:)=ele2(:)
+   ! else
+   !    allocate(element2(size(element)))
+   !    element2=element(:)
+   ! end if
 
    !! Set Acceptor and Donor
 
@@ -176,17 +179,17 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
    integer, allocatable, intent(in), dimension(:) :: ident_sol, ident_solv
    real(wp), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
    character(2), dimension(:), allocatable, intent(in) :: elem_sol, elem_solv
-   real(wp), dimension(:), allocatable :: W_v
+   !real(wp), dimension(:), allocatable :: W_v
    real(wp), intent(in) :: T
 
    real(wp) :: temppot, beta,temp2
    integer :: i, j
 
-   allocate(W_v(size(sv_sol)))
+   !allocate(W_v(size(sv_sol)))
    allocate(sol_pot(size(sv_sol)))
    write(output_unit,'(5x,a)') &
       "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
-   W_v(:)=0.0_wp
+   !W_v(:)=0.0_wp
    beta=(R*Jtokcal*T)/param(7)
    temppot=0.0_wp
    sol_pot(:)=0
@@ -199,7 +202,7 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
             j,i,ident_solv,elem_solv)&
             &/beta)+solv_pot(i)))
          !  end if
-         W_v(j)=W_v(j)+area_solv(i)
+         !W_v(j)=W_v(j)+area_solv(i)
       end do
       sol_pot(j)=-log(sum(area_solv)**(-1)*temppot)
       temppot=0.0_wp
@@ -277,18 +280,52 @@ subroutine calculate_edd(edd, sv, svt, T, ident, element)
    character(2), intent(in) :: element(:)
    real(wp), intent(in) :: T
 
+   real(wp) :: c_hb, alpha, f_corr, s_hb
+
    integer :: i, j
    real(wp) :: temppot, beta
 
    beta=(R*Jtokcal*T)/param(7)
 
+   c_hb=param(5)
+   alpha=param(3)
+   f_corr=param(4)
+   s_hb=param(6)
+
    do j=1,size(sv)
       do i=1,size(sv)
          edd(i, j) = E_dd&
-            &(param(5),param(3),param(4),param(6),sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
+            &(c_hb,alpha,f_corr,s_hb,sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
             &/beta
       end do
    end do
 end subroutine calculate_edd
+
+subroutine state_correction(density,mass,T,dG_state)
+   use globals, only: R, autokcal, jtokcal
+   !> Density of the Solvent (kg/m^3)
+   real(wp), intent(in) :: density
+   !> Atomic Mass of the Solvent (a.u.)
+   real(wp), intent(in) :: mass
+   !> Temperature of the Sytem
+   real(wp), intent(in) :: T
+
+   !> Correction energy bar-mol/mol -> mol/L-mol/L
+   real(wp), intent(out) :: dG_state
+
+   !> Molar Volume of the Gas in L/mol
+   real(wp) :: V_m
+
+   V_m=(R*T)/100
+
+   dG_state=-R*(Jtokcal)*T*log((density*V_m)/mass)
+
+   write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
+   "Solvent density:", density, "g/l", &
+   "Solvent atomic mass:", mass, "a.u.", &
+   "State correction", dG_state/autokcal, "Eh"
+
+end subroutine state_correction
+
 
 end module crs
