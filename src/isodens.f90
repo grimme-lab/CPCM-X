@@ -52,7 +52,11 @@ contains
                     divider=divider+1
                 end if
             end do
-            isodens_radii(i)=isodens_radii(i)/divider
+            if (divider == 0) then
+                isodens_radii(i)=0
+            else
+                isodens_radii(i)=isodens_radii(i)/divider
+            end if
             divider=0
         end do
 

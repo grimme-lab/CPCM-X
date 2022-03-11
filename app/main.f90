@@ -70,10 +70,7 @@ program CPCMX
    !! ------------------------------------------------------------
    Call timer%push("total")
    Call get_arguments(config,error)
-   if (allocated(error)) then
-      write(error_unit,'(a)') error%message
-      error stop
-   end if
+   Call check_error(error)
    Call echo_init(config)
    Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent,error)
    Call check_error(error) 
@@ -261,8 +258,29 @@ program CPCMX
          end do
          
          Call timer%push("cds")
-         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
-         &config%smd_solvent,config%smd_param_path,config%smd_default)
+         if (config%isodens) then
+            Call get_isodens_radii(solute_xyz,solute_ident,solat_xyz,isodens_rad)
+            write(output_unit,'(10x,a)') &
+            " ------------------------------------------------- ",&
+            "|                 Isodensity Radii                 |",&
+            " ------------------------------------------------- ", &
+            ""
+            write(output_unit,'(5x,a)'), &
+            "Isodensity Flag used, calculated isodensity radii:",&
+            ""
+            write(output_unit,'(10x,a,t30,a)'), &
+               "Atom Number:", "[A]"
+            do i=1,maxval(solute_ident)
+               write(output_unit,'(10x,I0,t30,F4.2)'),&
+                  i, isodens_rad(i)
+            end do
+            write(output_unit,'(a)') ""
+            Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+            &config%smd_solvent,config%smd_param_path,isodens_rad)
+         else
+            Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+            &config%smd_solvent,config%smd_param_path,config%smd_default)
+         end if
          Call timer%pop()
 
          !> Additional effective ring correction
@@ -300,23 +318,6 @@ program CPCMX
          write(output_unit,*) ""
       end if
 
-      if (config%isodens) then
-         Call get_isodens_radii(solute_xyz,solute_ident,solat_xyz,isodens_rad)
-         write(output_unit,'(10x,a)') &
-         " ------------------------------------------------- ",&
-         "|                 Isodensity Radii                 |",&
-         " ------------------------------------------------- ", &
-         ""
-         write(output_unit,'(5x,a)'), &
-         "Isodensity Flag used, calculated isodensity radii:",&
-         ""
-         write(output_unit,'(10x,a,t30,a)'), &
-            "Atom Number:", "[A]"
-         do i=1,maxval(solute_ident)
-            write(output_unit,'(10x,I0,t30,F4.2)'),&
-               i, isodens_rad(i)
-         end do
-      end if
 
       Call timer%pop()
 
@@ -743,8 +744,30 @@ subroutine use_default(config, solv, error)
       call fatal_error(error, config_error%message)
    end if
 
-   call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
-   call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
+   inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
+   if (ex) then
+      call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
+   else
+      inquire(file=home//config%sac_param_path, exist=ex)
+      if (ex) then
+         call move_line(home//config%sac_param_path, config%sac_param_path)
+      else
+         Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
+      end if
+   end if
+
+   inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
+   if ((ex) .and. (.not. config%smd_default)) then
+      call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
+   else
+      inquire(file=home//config%smd_param_path, exist=ex)
+      if (ex) then
+         call move_line(home//config%smd_param_path, config%smd_param_path)
+      else
+         Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
+         &You can skip this check and use default parameters with the default flag.")
+      end if
+   end if
 
 
 end subroutine use_default
