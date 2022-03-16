@@ -313,7 +313,7 @@ program CPCMX
          "Systematic empirical shift (dG_shift)", dG_shift/autokcal, dG_shift
          write(output_unit,'(4x,a)') repeat('-',73)
          write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
-         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift)&
+         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift+dG_state)&
          &/autokcal, dG_is+dG_cc+dG_res+dG_disp+dG_shift+dG_state
          write(output_unit,*) ""
       end if
@@ -661,6 +661,8 @@ subroutine use_default(config, solv, error)
    logical :: ex
    character(len=10) :: control, command
    integer :: nconf
+
+   character(len=:), allocatable :: user
   
    if (solv .eq. '') then
       Call fatal_error(error,'The Solvent you specified is not available.')
@@ -689,15 +691,27 @@ subroutine use_default(config, solv, error)
    ex=.false.
   
    if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
-  
-   INQUIRE(file=home//"config.toml",exist=ex)
 
-   if (.not. ex) then 
-      call fatal_error(error, "No config.toml found in "//home)
-      return
+   Call get_variable("USER",user)
+   inquire(file="/home/"//user//"/cpcmx.toml", exist=ex)
+
+   if (ex) then
+      config%config_path="/home/"//user//"/cpcmx.toml"
+   else
+  
+      inquire(file=home//"config.toml",exist=ex)
+
+      if (.not. ex) then 
+         call fatal_error(error, "No configuration found in "//home)
+         return
+      else
+         config%config_path=home//"config.toml"
+      end if
+
    end if
 
-   open(input_unit,file=home//"config.toml")
+   open(input_unit,file=config%config_path)
+
    call toml_parse(config_table,input_unit,config_error)
    close(input_unit)
    if (allocated(config_table)) then
@@ -820,6 +834,8 @@ subroutine echo_init(config)
       " ------------------------------------------------- ", &
       ""
 
+   if (allocated(config%config_path)) write(output_unit,'(5x,a,t35,a)') &
+      "Configuration File used:", config%config_path
    write(output_unit,'(5x,a,t35,a)') &
       "SMD Parameter Path:", config%smd_param_path, &
       "CRS Parameter Path:", config%sac_param_path, &
@@ -827,7 +843,7 @@ subroutine echo_init(config)
       "Corresponding COSMO File:", config%csm_solvent
 
    if (.NOT. allocated(config%qc_calc)) write(output_unit,'(5x,a,t35,a)') &
-                           "Solute COSMO File:", config%csm_solute
+      "Solute COSMO File:", config%csm_solute
       
 end subroutine echo_init
 

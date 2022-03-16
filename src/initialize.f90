@@ -51,7 +51,7 @@ contains
          end if
       end if
       if (.NOT. exists) then
-         Call get_environment_variable("CSMHOME", home,dummy1,io_error,.TRUE.)
+         Call get_environment_variable("CPXHOME", home,dummy1,io_error,.TRUE.)
          if (io_error .EQ. 0) then
             filen=trim(home)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)

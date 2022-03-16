@@ -53,6 +53,7 @@ module globals
       character(len=:), allocatable :: xyz_input
       logical :: ML, sig_in, prof, smd_default, time, isodens
       character(len=:), allocatable :: model
+      character(len=:), allocatable :: config_path
    end type configuration_type
 
    contains
