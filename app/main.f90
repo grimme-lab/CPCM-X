@@ -99,11 +99,11 @@ program CPCMX
       if (allocated(config%qc_calc)) then
          Call timer%push("qc_calc")
          select case(config%qc_calc)
-            case('TM')
+            case('tm')
                Call qc_cal(config%qc_eps,config%csm_solute, error, config%isodens, config%smd_solvent)
-            case('ORCA')
+            case('orca')
                Call qc_cal(config%xyz_input,error)
-            case('P-gTB', 'gTB', 'GTB')
+            case('P-gTB', 'gtb')
                Call qc_cal(0.6_wp,0.20_wp,error)
             case default
                write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
@@ -350,9 +350,10 @@ subroutine help(unit)
       ""
 
    write(unit, '(2x, a, t25, a)') &
-      "    --solvent", "Specify a solvent and uses configuration given in config.toml.", &
+      "    --solvent", "Specify a solvent and uses configuration given in cpcmx.toml.", &
       "","For Orca this needs an .xyz file as input (e.g. csx inp.xyz --solvent water)",&
-      "    --newrc", "Creates a sample configuration file (config.toml).", &
+      "    --prog", "Overwrites the qc program chosen in the configuration file.", &
+      "    --newrc", "Creates a sample configuration file (cpcmx.toml).", &
       "    --newinput", "Creates a sample input file csx.input in the currect working directory.", &
       "    --keyword", "Shows a list of possible Keywords for the csx.input file.", &
       "    --inp", "Allows to specify an input file for advanced configuration.", &
@@ -374,14 +375,14 @@ subroutine sample(filename,rc)
       write(unit,'(a)') &
          '# This is a Sample CPX Configuration File', &
          '# To work with this file, an environmental variable CPXHOME has to be set.', &
-         '# This File has to be placed in the CPXHOME path.', &
-         '# All Parameters and the Database need to be placed in CPXHOME.', &
+         '# This File has to be placed in the CPXHOME or in your home path.', &
+         '# Database need to be placed in CPXHOME.', &
          '', &
          '# Default QC Program for the Single Point Calculations', &
          'prog="TM"', &
          '', &
-         '# Path or Filename for the parameters for Water. (Path in respective to CPXHOME)', &
-         '# Uses Databath Path, if Database is specified', &
+         '# Path or Filename for the parameters for Water. (Path in respective to DB)', &
+         '# Uses CPXHOME, if Database is not specified', &
          'smd_h2o="smd_h2o"', &
          'crs_h2o="crs.param_h2o"', &
          '', &
@@ -389,9 +390,10 @@ subroutine sample(filename,rc)
          'smd_ot="smd_ot"', &
          'crs_ot="crs.param_ot"', &
          '', &
-         '# Path to the Solvent Database', &
+         '# Path to the Solvent Database in respective to CPXHOME', &
          '# Note, that the .cosmo files in the database need to be named according to SMD solvent names.', &
-         'DB="DATABASE-COSMO"', &
+         '# DB path needs to contain subfolders for the QC programs, if used with qc mode.', &
+         'DB="DB"', &
          '', &
          '# Temperature in Kelvin', &
          'Temperature=298.15', &
@@ -438,6 +440,7 @@ end subroutine print_keywords
 
 
 subroutine get_arguments(config, error)
+   use mctc_env_system, only : get_variable
    use data, only: solvent_name
    type(configuration_type), intent(out) :: config
    !> Error handling
@@ -445,8 +448,20 @@ subroutine get_arguments(config, error)
 
    integer :: iarg, narg
    real(wp) :: val
-   character(len=:), allocatable :: arg
+   character(len=:), allocatable :: arg, home
+   logical :: ex
 
+
+   Call get_variable("CPXHOME",home)
+   
+   if (.not.allocated(home)) then
+      call fatal_error(error, "CPXHOME Variable ist not set.")
+      RETURN
+   end if
+
+   ex=.false.
+  
+   if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
 
    config%isodens=.false.
    iarg = 0
@@ -465,8 +480,8 @@ subroutine get_arguments(config, error)
       case("--isodens")
          config%isodens=.true.
       case("--newrc")
-         call sample("config.toml",.TRUE.)
-         write(output_unit, '(a)') "[Info] Sample config file 'config.toml' created."
+         call sample("cpcmx.toml",.TRUE.)
+         write(output_unit, '(a)') "[Info] Sample config file 'cpcmx.toml' created."
          stop
       case ("--keyword", "--keywords")
          call print_keywords(output_unit)
@@ -475,11 +490,15 @@ subroutine get_arguments(config, error)
          iarg=iarg+1
          call get_argument(iarg,arg)
          if ((.not.allocated(config%smd_solvent)) .AND. (.not.allocated(config%input))) then
-            call use_default(config,solvent_name(arg),error)
+            call use_default(config,solvent_name(arg),home,error)
             cycle
          end if
          call fatal_error(error, "Too many positional arguments present")
          exit
+      case ("--prog") 
+         iarg=iarg+1
+         call get_argument(iarg,arg)
+         call move_alloc(arg, config%qc_calc)
       ! case("--version")
       !    call version(output_unit)
       !   stop
@@ -503,6 +522,52 @@ subroutine get_arguments(config, error)
       end select
    end do
 
+   if (config%isodens) then
+      config%qc_calc="tm"
+      inquire(file=config%database//"/isodens/"//config%sac_param_path, exist=ex) 
+      if (ex) then
+         config%database=config%database//"/isodens"
+      else
+         call fatal_error(error,"Database for isodens mode does not seem to be set up properly.")
+         return
+      end if
+   end if
+
+   if ((allocated(config%qc_calc)) .AND. (.NOT. config%isodens)) then
+      inquire(file=config%database//"/"//config%qc_calc//"/"//config%sac_param_path, exist=ex)
+      if (ex) then
+         config%database=config%database//"/"//config%qc_calc
+      else
+         call fatal_error(error,"Database for "//config%qc_calc//" does not seem to be set up properly.")
+         return
+      end if
+   end if
+
+   inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
+   if (ex) then
+      call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
+   else
+      inquire(file=home//config%sac_param_path, exist=ex)
+      if (ex) then
+         call move_line(home//config%sac_param_path, config%sac_param_path)
+      else
+         Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
+      end if
+   end if
+
+   inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
+   if ((ex) .and. (.not. config%smd_default)) then
+      call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
+   else
+      inquire(file=home//config%smd_param_path, exist=ex)
+      if (ex) then
+         call move_line(home//config%smd_param_path, config%smd_param_path)
+      else
+         Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
+         &You can skip this check and use default parameters with the default flag.")
+      end if
+   end if
+   
     if ((.not.(allocated(config%input))) .AND. (.not. (allocated(config%smd_solvent)))) then
        if (.not.allocated(error)) then
           call help(output_unit)
@@ -510,7 +575,7 @@ subroutine get_arguments(config, error)
        end if
     end if
 
-    if ((.not.(allocated(config%xyz_input))) .AND. (config%qc_calc .eq. "ORCA")) then
+    if ((.not.(allocated(config%xyz_input))) .AND. (config%qc_calc .eq. "orca")) then
        if (.not.allocated(error)) then
           call help(output_unit)
           stop
@@ -639,7 +704,7 @@ subroutine read_input(config,error)
 255 if (io_error .NE. 0) error stop "Check Input File."
 end subroutine read_input
 
-subroutine use_default(config, solv, error)
+subroutine use_default(config, solv, home, error)
    use mctc_env_system, only : get_variable
    use tomlf, only : toml_table, toml_parse, toml_error, toml_key, get_value
    !> Solvent used for default configuration
@@ -652,12 +717,14 @@ subroutine use_default(config, solv, error)
    type(toml_table), allocatable :: config_table
    !> Toml error handling
    type(toml_error), allocatable :: config_error
+
+   character(len=:), allocatable, intent(in) :: home
    
    
    type(toml_key), allocatable, dimension(:) :: list
    integer :: stat
    character(len=255) :: line
-   character(:), allocatable :: home, line2
+   character(:), allocatable :: line2
    logical :: ex
    character(len=10) :: control, command
    integer :: nconf
@@ -681,16 +748,9 @@ subroutine use_default(config, solv, error)
    call move_line(solv//".cosmo",config%csm_solvent)
    call move_line("solute.cosmo",config%csm_solute)
    call move_line("crs",config%model)
-   Call get_variable("CPXHOME",home)
-   
-   if (.not.allocated(home)) then
-      call fatal_error(error, "CPXHOME Variable ist not set.")
-      RETURN
-   end if
 
    ex=.false.
-  
-   if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
+
 
    Call get_variable("USER",user)
    inquire(file="/home/"//user//"/cpcmx.toml", exist=ex)
@@ -699,13 +759,13 @@ subroutine use_default(config, solv, error)
       config%config_path="/home/"//user//"/cpcmx.toml"
    else
   
-      inquire(file=home//"config.toml",exist=ex)
+      inquire(file=home//"cpcmx.toml",exist=ex)
 
       if (.not. ex) then 
          call fatal_error(error, "No configuration found in "//home)
          return
       else
-         config%config_path=home//"config.toml"
+         config%config_path=home//"cpcmx.toml"
       end if
 
    end if
@@ -719,9 +779,10 @@ subroutine use_default(config, solv, error)
       do nconf=1,size(list)
          select case(list(nconf)%key)
          case("prog") 
+               if (allocated(config%qc_calc)) cycle
                call get_value(config_table,list(nconf),line2)
                if (line2 .eq. "NONE") cycle
-               call move_line(line2,config%qc_calc)
+               call move_line(to_lower(line2),config%qc_calc)
          case("smd_h2o")
             if (solv .eq. "water") then
                call get_value(config_table,list(nconf),line2)
@@ -758,30 +819,6 @@ subroutine use_default(config, solv, error)
       call fatal_error(error, config_error%message)
    end if
 
-   inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
-   if (ex) then
-      call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
-   else
-      inquire(file=home//config%sac_param_path, exist=ex)
-      if (ex) then
-         call move_line(home//config%sac_param_path, config%sac_param_path)
-      else
-         Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
-      end if
-   end if
-
-   inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
-   if ((ex) .and. (.not. config%smd_default)) then
-      call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
-   else
-      inquire(file=home//config%smd_param_path, exist=ex)
-      if (ex) then
-         call move_line(home//config%smd_param_path, config%smd_param_path)
-      else
-         Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
-         &You can skip this check and use default parameters with the default flag.")
-      end if
-   end if
 
 
 end subroutine use_default
@@ -842,8 +879,13 @@ subroutine echo_init(config)
       "Solvent:", config%smd_solvent, &
       "Corresponding COSMO File:", config%csm_solvent
 
-   if (.NOT. allocated(config%qc_calc)) write(output_unit,'(5x,a,t35,a)') &
+   if (allocated(config%qc_calc)) then 
+      write(output_unit,'(5x,a,t35,a)') &
+      "QC Program:", config%qc_calc
+   else
+      write(output_unit,'(5x,a,t35,a)') &
       "Solute COSMO File:", config%csm_solute
+   end if
       
 end subroutine echo_init
 
