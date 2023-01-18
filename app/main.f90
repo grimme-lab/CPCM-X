@@ -105,6 +105,8 @@ program CPCMX
                Call qc_cal(config%xyz_input,error)
             case('P-gTB', 'gtb')
                Call qc_cal(0.6_wp,0.20_wp,error)
+            case('xtb')
+               Call qc_cal('inf','2',error)
             case default
                write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
                error stop
@@ -243,7 +245,7 @@ program CPCMX
             &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
 
          Call state_correction(density(config%smd_solvent),AtomicMass(solvent_elements),config%T,dG_state)
-
+         
          ! Computation of CPCM-RS equations (here may be something wrong atm)
          Call timer%push("solv")
          Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
@@ -285,6 +287,8 @@ program CPCMX
 
          !> Additional effective ring correction
          dG_res=chem_pot_sol+param(9)*near_sol
+         dG_shift=dG_shift*sum(solute_su(:)*solute_area(:))
+
 
       end select
       
@@ -543,31 +547,37 @@ subroutine get_arguments(config, error)
       end if
    end if
 
-   inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
-   if (ex) then
-      call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
-   else
-      inquire(file=home//config%sac_param_path, exist=ex)
+   inquire(file=config%sac_param_path, exist=ex)
+   if (.not. ex) then
+      inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
       if (ex) then
-         call move_line(home//config%sac_param_path, config%sac_param_path)
+         call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
       else
-         Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
-      end if
-   end if
-
-   inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
-   if ((ex) .and. (.not. config%smd_default)) then
-      call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
-   else
-      inquire(file=home//config%smd_param_path, exist=ex)
-      if (ex) then
-         call move_line(home//config%smd_param_path, config%smd_param_path)
-      else
-         Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
-         &You can skip this check and use default parameters with the default flag.")
+         inquire(file=home//config%sac_param_path, exist=ex)
+         if (ex) then
+            call move_line(home//config%sac_param_path, config%sac_param_path)
+         else
+            Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
+         end if
       end if
    end if
    
+   inquire(file=config%smd_param_path, exist=ex)
+   if (.not. ex) then
+      inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
+      if ((ex) .and. (.not. config%smd_default)) then
+         call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
+      else
+         inquire(file=home//config%smd_param_path, exist=ex)
+         if (ex) then
+            call move_line(home//config%smd_param_path, config%smd_param_path)
+         else
+            Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
+            &You can skip this check and use default parameters with the default flag.")
+         end if
+      end if
+   end if
+ 
     if ((.not.(allocated(config%input))) .AND. (.not. (allocated(config%smd_solvent)))) then
        if (.not.allocated(error)) then
           call help(output_unit)

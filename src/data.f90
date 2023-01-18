@@ -17,6 +17,8 @@
 module data
     use mctc_env, only: wp
     use mctc_io, only: to_number
+    use ieee_arithmetic, only: ieee_value, ieee_positive_inf
+    use mctc_env, only: error_type, fatal_error
     private
     public :: AtomicMass,solvent_name,minnesota_eps,density
 
@@ -460,11 +462,14 @@ contains
     end function density
 
     !> Get default dielectric constant from Minnesota Solvation Database
-    function minnesota_eps(solvent) result(epsilon)
+    function minnesota_eps(solvent,error) result(epsilon)
         character(len=*), intent(in) :: solvent
+        type(error_type), allocatable :: error
         real(wp):: epsilon
 
         select case(solvent)
+        case('infinity','inf')
+            epsilon=ieee_value(epsilon,ieee_positive_inf)
         case('2methylpyridine')
             epsilon=9.9533_wp
         case('4methyl2pentanone')
@@ -677,6 +682,8 @@ contains
             epsilon=9.8629
         case('methanol')
             epsilon=32.613
+        case default
+            Call fatal_error(error,'epsilon_water: unknown solvent '//solvent)
         end select
     end function minnesota_eps
     

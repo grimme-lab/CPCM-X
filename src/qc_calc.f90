@@ -31,9 +31,92 @@ module qc_calc
         module procedure :: turbomole
         module procedure :: orca
         module procedure :: gtb
+        module procedure :: xtb
     end interface qc_cal
 
 contains
+
+    !> turbomole subroutine - needs control file for gas phase calculation and coord file in
+    subroutine xtb(solvent, level, error)
+        !> Dielectric Constant for COSMO Calculation
+        character(len=*), intent(in) :: solvent
+        !> Error Handling
+        type(error_type), intent(out), allocatable :: error
+        !> xtb level used
+        character(len=*), intent(in) :: level
+
+        !> File handling
+        logical :: ex
+        integer :: io_error
+        
+        !> Charge and multiplicity of molecule (from control file)
+        integer :: charge, multi
+        !> Necessary for reading gas phase energy.
+        character(len=200) :: line
+        character(len=:), allocatable :: xtb_bin
+        integer :: lines, i
+        real(wp) :: E_gas
+
+        charge=0
+        multi=0
+
+        xtb_bin='xtb_dev'
+
+        write(output_unit,'(a)') ""
+        write(output_unit,'(10x,a)') &
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+            " ------------------------------------------------- ",&
+            "|                   XTB Driver                    |",&
+            " ------------------------------------------------- "
+            !< < < < < < < < < < < < < > > > > > > > > > > > > >!
+        write(output_unit,'(a)') ""
+        io_error=0
+
+        INQUIRE(file='coord', exist=ex)
+        if (.not. ex) then
+            Call fatal_error(error,'There is no coord file in the working directory.')
+            write(output_unit,'(a)') ""
+            return
+        end if
+
+        Call execute_command_line(xtb_bin//" coord --gfn "//level//" --norestart > gas.out 2>error", WAIT=.true.)
+
+        write(output_unit,'(5x, A)') &
+            "Done! Gas phase calculation terminated normally.", &
+            ""
+
+        io_error=0
+        open(11, file="gas.out", status="OLD")
+        if (io_error .ne. 0) then
+            Call fatal_error(error,'Error while reading the gas phase energy.')
+            return
+        end if
+        io_error=0
+        do while (.TRUE.)
+            read(11,'(a)',iostat=io_error) line
+            if (io_error .ne. 0) then
+                Call fatal_error(error,'Could not find gas phase energy in gas.out.')
+                return
+            end if
+            if (index(line,'TOTAL ENERGY') .ne. 0) exit
+        end do
+
+        read(line(index(line,'TOTAL ENERGY',back=.true.)+13:),*) E_gas
+        close(11)
+        open(11,file="gas.energy")
+        write(11,*) E_gas
+        close(11)
+
+        Call execute_command_line(xtb_bin//" coord --gfn "//level//" --cosmo "//solvent//" --norestart &
+        &> solv.out 2>error", WAIT=.true.)
+
+        write(output_unit,'(5x, A)') &
+            "Done! Solvent phase calculation terminated normally.", &
+            ""
+
+        call rename('xtb.cosmo','solute.cosmo',io_error)
+
+    end subroutine xtb    
 
     subroutine gtb(damp,scale,error)
 
@@ -482,7 +565,7 @@ contains
 
         charge=0
         multi=0
-        if (epsilon .lt. 0) epsilon=minnesota_eps(solvent)
+        if (epsilon .lt. 0) epsilon=minnesota_eps(solvent,error)
 
         write(output_unit,'(a)') ""
         write(output_unit,'(10x,a)') &

@@ -149,11 +149,17 @@ contains
       end do
 !      write(*,*) elements
       rewind(1)
-      do while (line .NE. "area=")
+      do while (index(line,"area=") .EQ. 0)
          read(1,*) line
       end do
 
-      read(1,*) line, volume
+      read(1,*,iostat=io_error) line, volume
+
+      if ((io_error .ne. 0) .and. (index(database,'xtb') .eq. 0)) then
+         write(output_unit,'(5x,a, t20, a)') &
+            "[WARNING]", "Could not read volume from "//compound//"."
+         volume=100.0_wp
+      end if
 
       INQUIRE(file=filen(:len(filen)-6)//".energy",exist=exists)
       if (exists) then
