@@ -54,6 +54,8 @@ module globals
       logical :: ML, sig_in, prof, smd_default, time, isodens
       character(len=:), allocatable :: model
       character(len=:), allocatable :: config_path
+      !> Use internal parameters
+      logical :: internal = .false.
    end type configuration_type
 
    contains

@@ -36,40 +36,22 @@ program CPCMX
    use sdm
    implicit none
    character(len=*), parameter :: prog_name = "cpx"
-   integer :: oh_sol, nh_sol, near_sol
-   type(calculation_type) :: calc
-   real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
-   real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
-   real(wp), dimension(:), allocatable :: sol_pot, solv_pot
-   real(wp), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
-   character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
-   logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
-   logical, dimension(:), allocatable :: solute_rings
-   real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
-   character(20) :: solvent, solute
    logical :: ex
    integer :: ioerror
 
    real(wp), allocatable :: isodens_rad(:)
+   integer :: i
 
-   !> State Correction Energy
-   real(wp) :: dG_state
-
-   real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
-      &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
-   integer :: sol_nat, i
-   integer, allocatable :: int_ident(:),solute_ident(:),solvent_ident(:)
-   real(wp), allocatable :: surface(:), dsdr(:,:,:)
 
    type(timer_type) :: timer
 
+   type(calculation_type) :: calc
    type(configuration_type) :: config
    type(parameter_type) :: parameter
    type(error_type), allocatable :: error
 
   
 
-   type(DICT_STRUCT), pointer :: r_cav, disp_con
   
    !! ------------------------------------------------------------ 
    !! Read Command Line Arguments and set Parameters accordingly
@@ -78,7 +60,11 @@ program CPCMX
    Call get_arguments(config,error)
    Call check_error(error)
    Call echo_init(config)
-   Call initialize_param(config%sac_param_path,calc%param,error)
+   if (config%internal) then
+      Call initialize_param(config%qc_calc,config%smd_solvent,calc,error)
+   else
+      Call initialize_param(config%sac_param_path,calc%param,error)
+   end if
    Call check_error(error) 
    if (config%ML) then
       Call init_pr
@@ -88,17 +74,16 @@ program CPCMX
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
    !! ----------------------------------------------------------------------------------
-   T=config%T
-   SysTemp=T
-   if (config%sig_in) then
-
-      write(*,*) "Reading Sigma Profile"
-      Call read_singlesig(solvent_sigma,config%csm_solvent,solvent_volume)
-      Call read_singlesig(solute_sigma,config%csm_solute,solute_volume)
-      
-      Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
-      Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
-   else   
+   SysTemp=config%T
+   !if (config%sig_in) then
+   !
+   !   write(*,*) "Reading Sigma Profile"
+   !   Call read_singlesig(solvent_sigma,config%csm_solvent,solvent_volume)
+   !   Call read_singlesig(solute_sigma,config%csm_solute,solute_volume)
+   !   
+   !   Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
+   !   Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
+   !else   
    !! ----------------------------------------------------------------------------------
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
@@ -162,20 +147,20 @@ program CPCMX
    !! Creation of a splitted Sigma Profile, necessary for sac2010/sac2013
    !! ------------------------------------------------------------------------------------
 
-      if (.NOT. (config%model .EQ. "sac")) then
-         Call timer%push("sigma_split")
-         Call calc%split_sigma(.true.)
-         Call timer%pop()
-      end if
+   if (.NOT. (config%model .EQ. "sac")) then
+      Call timer%push("sigma_split")
+      Call calc%split_sigma(.true.)
+      Call timer%pop()
+   end if
 
    !! ------------------------------------------------------------------------------------
    !! Exit here if you only want Sigma Profiles to be created 
    !! ------------------------------------------------------------------------------------
-      if (config%prof) then;
-         write(*,*) "Only Profile mode choosen, exiting."
-         stop
-      end if
+   if (config%prof) then;
+      write(*,*) "Only Profile mode choosen, exiting."
+      stop
    end if
+   !end if
    
 
    !! ------------------------------------------------------------------------------------
@@ -256,7 +241,7 @@ program CPCMX
          "E_COSMO-E_gas", (calc%id_scr-calc%solute%energy),"Eh", &
          "E_COSMO-E_gas+dE:", (calc%id_scr-calc%solute%energy+calc%dG_cc),"Eh", &
          "Averaging corr dE:", calc%dG_cc,"Eh", &
-         "thermostatic correction: ", calc%param%eta*R*jtokcal*T, "Eh", &
+         "thermostatic correction: ", calc%param%eta*R*jtokcal*config%T, "Eh", &
          "Area:", sum(calc%solute%area), "Å"
          write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
          "Solvent density:", density(config%smd_solvent), "g/l", &
@@ -277,7 +262,7 @@ program CPCMX
             ""
             write(output_unit,'(10x,a,t30,a)'), &
                "Atom Number:", "[A]"
-            do i=1,maxval(solute_ident)
+            do i=1,maxval(calc%solute%id)
                write(output_unit,'(10x,I0,t30,F4.2)'),&
                   i, isodens_rad(i)
             end do
@@ -285,8 +270,12 @@ program CPCMX
             Call calc%cds(config%probe,&
             &config%smd_solvent,config%smd_param_path,isodens_rad)
          else
-            Call calc%cds(config%probe,&
-            &config%smd_solvent,config%smd_param_path,config%smd_default)
+            if (allocated(calc%smd_param)) then
+               Call calc%cds(config%probe,config%smd_solvent)
+            else
+               Call calc%cds(config%probe,&
+               &config%smd_solvent,config%smd_param_path,config%smd_default)
+            end if
          end if
          Call timer%pop()
 
@@ -506,6 +495,8 @@ subroutine get_arguments(config, error)
       ! case("--version")
       !    call version(output_unit)
       !   stop
+      case ("--internal")
+         config%internal=.true.
       case ("--inp", "--input")
          iarg=iarg+1
          call get_argument(iarg,arg)
@@ -874,6 +865,12 @@ end subroutine move_line
 subroutine echo_init(config)
    type(configuration_type) :: config
 
+   if (config%internal) then
+      config%smd_param_path="internal SMD parameter"
+      config%sac_param_path="internal CPCM-X parameter"
+      !config%csm_solvent="internal COSMO Database File"
+   end if
+
 
    write(output_unit,'(10x,a)') &
       " ------------------------------------------------- ",&
@@ -885,7 +882,7 @@ subroutine echo_init(config)
       "Configuration File used:", config%config_path
    write(output_unit,'(5x,a,t35,a)') &
       "SMD Parameter Path:", config%smd_param_path, &
-      "CRS Parameter Path:", config%sac_param_path, &
+      "CPCM-X Parameter Path:", config%sac_param_path, &
       "Solvent:", config%smd_solvent, &
       "Corresponding COSMO File:", config%csm_solvent
 

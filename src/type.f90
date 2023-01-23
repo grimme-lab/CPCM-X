@@ -20,7 +20,6 @@ module type
     end type parameter_type
 
 
-
     !> Molecule data type
     type molecule_data
         !> COSMO sigma shieldings

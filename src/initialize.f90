@@ -26,6 +26,7 @@ module initialize_cosmo
    interface initialize_param
       module procedure initialize_param_crs
       module procedure initialize_param_def
+      module procedure load_param
    end interface initialize_param
 
 contains
@@ -285,6 +286,36 @@ contains
 
    end subroutine setup_cov
 
+   subroutine load_param(method,solvent,self,error)
+      use mctc_env, only: error_type, fatal_error, wp
+      use cpxcalc, only: calculation_type
+      use defaultparameter
+
+      character(len=*), intent(in) :: method
+      character(len=*), intent(in) :: solvent
+      type(calculation_type), intent(out) :: self
+      type(error_type), allocatable :: error
+
+      select case (method)
+      case ("xtb","xTB","XTB")
+         select case (solvent)
+         case default
+            self%param=xtb_other
+            allocate(self%smd_param(size(xtb_other_smd)))
+            self%smd_param=xtb_other_smd
+         case ("water","h2o")
+            self%param=xtb_water
+            allocate(self%smd_param(size(xtb_water_smd)))
+            self%smd_param=xtb_water_smd
+         end select
+      case default
+         Call fatal_error(error,"No internal parameter files for "//method//".") 
+         return
+      end select
+    
+      Call setup_cov
+
+   end subroutine load_param
 
    subroutine initialize_param_def(filename,model,r_cav,disp_con, solvent, error)
       use element_dict

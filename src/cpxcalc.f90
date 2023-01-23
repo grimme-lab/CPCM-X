@@ -14,6 +14,8 @@ module cpxcalc
         type(molecule_data) :: solvent
         !> Parameters
         type(parameter_type) :: param 
+        !> SMD Parameter file as string array
+        character(len=200), dimension(:), allocatable :: smd_param
         !> Temperature of the calculation
         real(wp) :: T
         !> Ideal Screening Energy
@@ -54,8 +56,9 @@ module cpxcalc
         procedure :: solv => calculate_solvation
         procedure :: cds_normal
         procedure :: cds_isodens
+        procedure :: cds_default
         !> Calculate CDS part of the energy (SMD)
-        generic :: cds => cds_normal, cds_isodens
+        generic :: cds => cds_normal, cds_isodens, cds_default
         !> Calculate the state correction
         procedure :: state_correction => calculate_state_correction
         
@@ -85,6 +88,20 @@ module cpxcalc
         dG=self%dG_res+self%dG_cc+self%dG_is+self%dG_smd+self%dG_ss+self%dG_shift
 
     end function dG
+
+    subroutine cds_default(self,probe,smd_solvent)
+        use sdm, only: calculate_cds
+        use sort, only: unique
+        class(calculation_type), intent(inout) :: self
+        !> Probe radius
+        real(wp), intent(in) :: probe
+        !> SMD solvent
+        character(len=*), intent(in) :: smd_solvent
+
+
+        Call calculate_cds(unique(self%solute%id),self%solute%element,self%solute%atom_xyz,probe,smd_solvent,&
+        &self%dG_smd,self%smd_param)
+    end subroutine cds_default
 
     subroutine cds_normal(self,probe,smd_solvent,smd_param_path,smd_default)
         use sdm, only: calculate_cds
