@@ -23,28 +23,22 @@ module crs
 contains
 
 
-subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav)
+subroutine calcgas(E_cosmo,E_gas,id_scr,area,sv,su,pot,element,ident, T,eta,dE_is,dE_cc)
    use globals
    use element_dict
    real(wp), intent(out) :: id_scr
-   real(wp), intent(in) :: T, E_cosmo
+   real(wp), intent(in) :: T, E_cosmo, eta, E_gas
    real(wp),dimension(:),allocatable, intent(in) :: area, sv, su, pot
+   real(wp), intent(out) :: dE_is, dE_cc
    integer, allocatable, intent(in) :: ident(:)
    character(2), dimension(:), allocatable, intent(in) :: element
-   type(DICT_STRUCT), pointer, intent(in) :: disp_con, r_cav
-   !real(wp), dimension(10) :: param
-   type(DICT_DATA) :: disp!, r_c
-   real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
+
+   real(wp) :: dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
    integer :: dummy1, ioerror, i
 
    !> Check if gas phase energy exists.
    logical :: ex
 
-   INQUIRE(file="gas.energy", exist=ex)
-   if (.not. ex) error stop "No gas.energy file found. Use TM keyword or manually set up the gas phase energy."
-   open(1,file="gas.energy")
-   read(1,*,iostat=ioerror) E_gas
-   if (ioerror .NE. 0) error stop "Problem while reading energies (check gas.energy file)."
    dEreal=(E_cosmo-E_gas)
    ediel=0
    edielprime=0
@@ -55,17 +49,7 @@ subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav
    avcorr=(edielprime-ediel)/2.0_wp*0.8_wp
    dEreal=dEreal*autokcal
    id_scr=dEreal+avcorr*autokcal
-   thermo=param(10)*R*jtokcal*T
-   write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
-   "E_COSMO:", E_cosmo, "Eh", &
-   "E_COSMO+dE:", (E_cosmo+avcorr),"Eh",   &
-   "E_gas:", E_gas,"Eh", &
-   "E_COSMO-E_gas", (E_cosmo-E_gas),"Eh", &
-   "E_COSMO-E_gas+dE:", (E_cosmo-E_gas+avcorr),"Eh", &
-   "Ediel:", ediel/2,"Eh", &
-   "Averaging corr dE:", avcorr,"Eh", &
-   "thermostatic correction: ", thermo/autokcal, "Eh", &
-   "Area:", sum(area), "Å"
+   thermo=eta*R*jtokcal*T
 
    ! vdW Correction is replaced by the SMD Model.
    ! vdW_gain=0
@@ -78,45 +62,25 @@ subroutine calcgas(E_cosmo,id_scr,area,sv,su,pot,element,ident,disp_con, T,r_cav
    
    dG_is=dEreal-thermo
    dG_cc=avcorr*autokcal
+   dE_is=(dEreal-thermo)/autokcal
+   dE_cc=avcorr
 
 
 end subroutine calcgas
 
 
-pure function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,atom2,id2,ele2)
-   real(wp), intent(in) :: c_hb, alpha, f_corr,s_hb
+pure function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2)
+   real(wp), intent(in) :: c_hb
+   real(wp), intent(in) :: alpha
+   real(wp), intent(in) :: f_corr
+   real(wp), intent(in) :: s_hb
+
    real(wp), intent(in) :: sv1, svt1, sv2, svt2
-   character(2), dimension(:), intent(in) :: element
-   integer, dimension(:), intent(in) :: ident
-   character(2), dimension(:), intent(in),optional :: ele2
-   integer, dimension(:), intent(in),optional :: id2
 
-   ! LOCAL
 
-   character(2), dimension(:), allocatable :: element2
-   real(wp), dimension(:), allocatable :: ident2
-   integer, intent(in) :: atom1, atom2
    real(wp) :: E_dd
    real(wp) :: svdo, svac
    real(wp) :: E_misfit, E_hb
-
-   !! Setting up optional parameters at the beginning
-
-   ! if (present(id2)) then
-   !    allocate(ident2(size(id2)))
-   !    ident2(:)=id2(:)
-   ! else
-   !    allocate(ident2(size(ident)))
-   !    ident2(:)=ident(:)
-   ! end if
-
-   ! if (present(ele2)) then
-   !    allocate(element2(size(ele2)))
-   !    element2(:)=ele2(:)
-   ! else
-   !    allocate(element2(size(element)))
-   !    element2=element(:)
-   ! end if
 
    !! Set Acceptor and Donor
 
@@ -143,12 +107,11 @@ pure function E_dd(c_hb,alpha,f_corr,s_hb,sv1,svt1,sv2,svt2,ident,element,atom1,
 
 end function E_dd
 
-subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
-   use globals
-   !real(wp), dimension(10), intent(in) :: param
+subroutine iterate_solvent(param,pot_di,sv,svt,area,T,edd)
+   use type, only: parameter_type
+
+   type(parameter_type), intent(in) :: param
    real(wp), dimension(:), allocatable, intent(in) :: sv, svt, area
-   integer, allocatable, intent(in) :: ident(:)
-   character(2), dimension(:), allocatable, intent(in) :: element
    real(wp), dimension(:), allocatable, intent(inout) :: pot_di
    real(wp), intent(in) :: edd(:, :)
    real(wp), intent(in) :: T
@@ -170,15 +133,14 @@ subroutine iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
 end subroutine iterate_solvent
 
 
-subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol,&
-      &ident_sol,ident_solv,elem_sol,elem_solv)
-   use globals
-   !real(wp), dimension(10), intent(in) :: param
+subroutine compute_solute(param,sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_sol,area_solv,T,chem_pot_sol)
+   use globals, only: Jtokcal, R
+   use type, only: parameter_type
+
+   type(parameter_type) :: param
    real(wp), intent(out) :: chem_pot_sol
    real(wp), dimension(:), allocatable, intent(in) :: sv_sol, svt_sol,sv_solv,svt_solv,area_solv,area_sol
-   integer, allocatable, intent(in), dimension(:) :: ident_sol, ident_solv
    real(wp), dimension(:), allocatable, intent(inout) :: solv_pot,sol_pot
-   character(2), dimension(:), allocatable, intent(in) :: elem_sol, elem_solv
    !real(wp), dimension(:), allocatable :: W_v
    real(wp), intent(in) :: T
 
@@ -190,7 +152,7 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
    write(output_unit,'(5x,a)') &
       "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
    !W_v(:)=0.0_wp
-   beta=(R*Jtokcal*T)/param(7)
+   beta=(R*Jtokcal*T)/param%aeff
    temppot=0.0_wp
    sol_pot(:)=0
    !! For mixed solvent, mole fraction needs to be introduced in the following loop
@@ -198,8 +160,7 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
       do i=1,size(solv_pot)
          !  if (i .NE. j) then
          temppot=temppot+(area_solv(i)*exp((-E_dd&
-            &(param(5),param(3),param(4),param(6),sv_sol(j),svt_sol(j),sv_solv(i),svt_solv(i),ident_sol,elem_sol,&
-            j,i,ident_solv,elem_solv)&
+            &(param%chb,param%aprime,param%fcorr,param%shb,sv_sol(j),svt_sol(j),sv_solv(i),svt_solv(i))&
             &/beta)+solv_pot(i)))
          !  end if
          !W_v(j)=W_v(j)+area_solv(i)
@@ -214,7 +175,7 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
       !    write(*,*) area_sol(i), sol_pot(i), area_sol(i)*sol_pot(i)
    end do
 
-   chem_pot_sol=temppot*beta-(param(wp)*R*Jtokcal*T*log(sum(area_solv)))
+   chem_pot_sol=temppot*beta-(param%lambda*R*Jtokcal*T*log(sum(area_solv)))
    !write(*,*) chem_pot_sol
    temppot=0
    do i=1,size(solv_pot)
@@ -225,15 +186,15 @@ subroutine compute_solute(sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv,area_
    ""
 end subroutine compute_solute
 
-subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,element)
-   use globals, only : param, autokcal
-   !real(wp), dimension(10), intent(in) :: param
+subroutine compute_solvent(param,pot_di,sv,svt,area,T,max_cycle,conv_crit)
+   use globals, only : autokcal
+   use type, only : parameter_type
+
+   type(parameter_type), intent(in) :: param
    real(wp), dimension(:), allocatable :: sv, svt, area
-   integer, allocatable :: ident(:)
    real(wp), dimension(:), allocatable, intent(inout) :: pot_di
-   character(2), dimension(:), allocatable, intent(in) :: element
    real(wp), intent(in) :: T
-   real(4), intent(in) :: conv_crit
+   real(wp), intent(in) :: conv_crit
    integer, intent(in) :: max_cycle
 
    integer :: iter
@@ -250,7 +211,7 @@ subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,elemen
    allocate(edd(size(pot_di),size(pot_di)))
    pot_di(:) = 0.0_wp
    iter = 0
-   call calculate_edd(edd,sv,svt,T,ident,element)
+   call calculate_edd(param,edd,sv,svt,T)
    call new_broyden(mixer,max_cycle,size(pot_di),mixer_damping)
    do while (.not.converged)
       if (iter > 0) then
@@ -259,7 +220,7 @@ subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,elemen
       end if
       iter=iter+1
       call mixer%set(pot_di)
-      Call iterate_solvent(pot_di,sv,svt,area,T,ident,element,edd)
+      Call iterate_solvent(param,pot_di,sv,svt,area,T,edd)
       call mixer%diff(pot_di)
       converged = mixer%get_error() < conv_crit/autokcal
       if (iter >= max_cycle) exit
@@ -272,30 +233,23 @@ subroutine compute_solvent(pot_di,sv,svt,area,T,max_cycle,conv_crit,ident,elemen
 
 end subroutine compute_solvent
 
-subroutine calculate_edd(edd, sv, svt, T, ident, element)
-   use globals, only : R, Jtokcal, param
+subroutine calculate_edd(param,edd, sv, svt, T)
+   use globals, only : R, Jtokcal
+   use type, only: parameter_type
+   type(parameter_type), intent(in) :: param
    real(wp), intent(inout) :: edd(:, :)
    real(wp), intent(in) :: sv(:), svt(:)
-   integer, intent(in) :: ident(:)
-   character(2), intent(in) :: element(:)
    real(wp), intent(in) :: T
-
-   real(wp) :: c_hb, alpha, f_corr, s_hb
 
    integer :: i, j
    real(wp) :: temppot, beta
 
-   beta=(R*Jtokcal*T)/param(7)
-
-   c_hb=param(5)
-   alpha=param(3)
-   f_corr=param(4)
-   s_hb=param(6)
+   beta=(R*Jtokcal*T)/param%aeff
 
    do j=1,size(sv)
       do i=1,size(sv)
          edd(i, j) = E_dd&
-            &(c_hb,alpha,f_corr,s_hb,sv(j),svt(j),sv(i),svt(i),ident,element,j,i)&
+            &(param%chb,param%aprime,param%fcorr,param%shb,sv(j),svt(j),sv(i),svt(i))&
             &/beta
       end do
    end do
@@ -318,12 +272,7 @@ subroutine state_correction(density,mass,T,dG_state)
 
    V_m=(R*T)/100
 
-   dG_state=-R*(Jtokcal)*T*log((density*V_m)/mass)
-
-   write(output_unit,'(5x,a,t30,F13.8,2x,a)') &
-   "Solvent density:", density, "g/l", &
-   "Solvent atomic mass:", mass, "a.u.", &
-   "State correction", dG_state/autokcal, "Eh"
+   dG_state=(-R*(Jtokcal)*T*log((density*V_m)/mass))/autokcal
 
 end subroutine state_correction
 

@@ -38,7 +38,7 @@ module sigma_av
 
    contains
 
-      subroutine average_charge (r_av, xyz, charges, area,av_charge)
+      subroutine average_one_charge (r_av, xyz, charges, area,av_charge)
          use globals
          implicit none
          real(wp), dimension(:), intent(in) :: charges, area
@@ -70,7 +70,7 @@ module sigma_av
             av_charge(i)=tmpcharge
             !write(*,*) av_charge(i)
          end do
-      end subroutine average_charge
+      end subroutine average_one_charge
 
 
       subroutine ortho_charge (v,v0,vt)

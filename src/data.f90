@@ -457,6 +457,8 @@ contains
             density=880.0_wp
         case('methanol')
             density=792.0_wp
+        case default
+            density=998.0_wp
         end select
 
     end function density

@@ -19,18 +19,29 @@ module initialize_cosmo
    use, intrinsic :: iso_fortran_env, only : output_unit
    implicit none
 
+   private
+
+   public :: read_cosmo, initialize_param, init_pr
+
+   interface initialize_param
+      module procedure initialize_param_crs
+      module procedure initialize_param_def
+   end interface initialize_param
+
 contains
-   subroutine read_cosmo(compound,elements,ident,xyz,charges,area,pot,volume,c_energy,atom_xyz,database)
+
+   subroutine read_cosmo(compound,mol,database,error)
       use globals
+      use mctc_env, only : wp, error_type, fatal_error
+      use type, only: molecule_data
+
+      type(molecule_data), intent(inout) :: mol
+      type(error_type), intent(out), allocatable :: error
+
       character(*), intent(in) :: compound
       character(*), intent(in) :: database
       character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home
       character(:), allocatable :: filen
-      real(wp), dimension(:), allocatable,intent(out) :: charges,&
-         &area,pot
-      real(wp), dimension(:,:), allocatable, intent(out) :: xyz, atom_xyz
-      character(2), allocatable, dimension(:),intent(out) :: elements
-      real(wp), intent(out) :: volume, c_energy
       integer :: io_error, dummy1, num, ele_num
       real(wp) :: dummy3, dummy4, dummy5
       integer, allocatable :: ident(:)
@@ -58,21 +69,21 @@ contains
                if (exists) then
                   write(*,*) "No COSMO file in working directory, reading COSMO file from ", filen
                else
-                  write(*,*) "No COSMO file in working directory or HOME directory for ", compound
-                  stop
+                  Call fatal_error(error,"No COSMO file in working directory or HOME directory for "// compound)
+                  return
                end if
          else
-            write(*,*) "No COSMO file in working directory for", compound,"No Home directory to check."
-            stop
+            Call fatal_error(error,"No COSMO file in working directory for"// compound//". No Home directory to check.")
+            return
          end if
       end if
 
       open(1,file=trim(filen),iostat=io_error)
 
       if (io_error .NE. 0) then
-         write(*,*) "Problem while reading COSMO input. &
-            &Check your data."
-         stop
+         Call fatal_error(error,"Problem while reading COSMO input. &
+            &Check your data.")
+         return
       end if
 
       io_error=0
@@ -80,13 +91,13 @@ contains
          read(1,*,iostat=io_error) line
       end do
       read(line,*) num
-      allocate(charges(num))
-      allocate(ident(num))
-      allocate(area(num))
-      allocate(xyz(num,3))
-      allocate(pot(num))
+      allocate(mol%su(num))
+      allocate(mol%id(num))
+      allocate(mol%area(num))
+      allocate(mol%xyz(num,3))
+      allocate(mol%pot(num))
       rewind(1)
-      ident(:)=0
+      mol%id(:)=0
       do while (line .NE. "$segment_information")
          read(1,*) line
       end do
@@ -101,13 +112,13 @@ contains
          else if (io_error .LT. 0) then
             exit
          else
-            read(1,*) dummy1,ident(num),xyz(num,1),xyz(num,2),&
-               &xyz(num,3),dummy3,area(num),charges(num),pot(num)
+            read(1,*) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&
+               &mol%xyz(num,3),dummy3,mol%area(num),mol%su(num),mol%pot(num)
          !   charges(num)=anint(charges(num)*1000)/1000
-            pot(num)=pot(num)*BtoA
-            xyz(num,1)=xyz(num,1)*btoa
-            xyz(num,2)=xyz(num,2)*btoa
-            xyz(num,3)=xyz(num,3)*btoa
+            mol%pot(num)=mol%pot(num)*BtoA
+            mol%xyz(num,1)=mol%xyz(num,1)*btoa
+            mol%xyz(num,2)=mol%xyz(num,2)*btoa
+            mol%xyz(num,3)=mol%xyz(num,3)*btoa
             num=num+1
          end if
       end do
@@ -126,8 +137,8 @@ contains
          end if
       end do
 
-      allocate(elements(ele_num))
-      allocate(atom_xyz(ele_num,3))
+      allocate(mol%element(ele_num))
+      allocate(mol%atom_xyz(ele_num,3))
 
       rewind(1)
       do while (line .NE. "#atom")
@@ -138,11 +149,11 @@ contains
          read(1,'(A1)',advance='no',iostat=io_error) line
          if (line .NE. "$") then
             read(1,*) dummy1, dummy3, dummy4, dummy5, element
-            elements(dummy1)=to_lower(element)
+            mol%element(dummy1)=to_lower(element)
             !write(*,*) elements(dummy1)
-            atom_xyz(dummy1,1)=dummy3*btoa
-            atom_xyz(dummy1,2)=dummy4*btoa
-            atom_xyz(dummy1,3)=dummy5*btoa
+            mol%atom_xyz(dummy1,1)=dummy3*btoa
+            mol%atom_xyz(dummy1,2)=dummy4*btoa
+            mol%atom_xyz(dummy1,3)=dummy5*btoa
          else
             exit
          end if
@@ -153,12 +164,12 @@ contains
          read(1,*) line
       end do
 
-      read(1,*,iostat=io_error) line, volume
+      read(1,*,iostat=io_error) line, mol%volume
 
       if ((io_error .ne. 0) .and. (index(database,'xtb') .eq. 0)) then
          write(output_unit,'(5x,a, t20, a)') &
             "[WARNING]", "Could not read volume from "//compound//"."
-         volume=100.0_wp
+         mol%volume=100.0_wp
       end if
 
       INQUIRE(file=filen(:len(filen)-6)//".energy",exist=exists)
@@ -166,7 +177,7 @@ contains
          write(output_unit,'(5x,a)') "Reading energy for compound "//trim(compound)&
             &//" from "//filen(:len(filen)-6)//".energy"
          open(11,file=filen(:len(filen)-6)//".energy")
-         read(11,*) c_energy
+         read(11,*) mol%energy
          close(11)
       else
          rewind(1)
@@ -174,14 +185,108 @@ contains
             read(1,*) line
          end do
          read (1,*)
-         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,c_energy
+         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,mol%energy
       end if
 
       close(1)
 
    end subroutine read_cosmo
 
-   subroutine initialize_param(filename,model,r_cav,disp_con, solvent, error)
+   subroutine initialize_param_crs(filename,param, error)
+      use, intrinsic :: iso_fortran_env, only: output_unit, input_unit
+      use globals, only : configuration_type
+      use type, only: parameter_type
+
+
+      character(len=*), intent(in) :: filename
+      type(parameter_type), intent(out) :: param
+      logical :: g_exists
+      integer :: io_error
+
+      !> Error Handling
+      type(error_type), allocatable :: error
+
+      INQUIRE(file=filename, exist=g_exists)
+      if (.NOT. g_exists) then
+         Call fatal_error(error,"No Parameter File for CPCM-X found.") 
+         return
+      else
+         open(input_unit,file=filename)
+               ! Setting global COSMO-RS Parameters from parameter file
+
+               read(input_unit,*) param%rav
+               read(input_unit,*) param%aprime
+               read(input_unit,*) param%fcorr
+               read(input_unit,*) param%chb
+               read(input_unit,*) param%shb
+               read(input_unit,*) param%aeff
+               read(input_unit,*) param%lambda
+               read(input_unit,*) param%omega
+               read(input_unit,*) param%eta
+               read(input_unit,*) param%shift
+      end if
+
+      Call setup_cov
+
+   end subroutine initialize_param_crs
+
+   subroutine setup_cov
+      use element_dict
+      use globals, only: cov_r
+
+      type(DICT_DATA) :: data1
+
+      !Hard Coded Covalent Radii
+
+      data1%param=0.31_wp
+      call dict_create(cov_r, 'h', data1)
+      data1%param=0.28_wp
+      call dict_add_key(cov_r, 'he', data1)
+      data1%param=1.28_wp
+      call dict_add_key(cov_r, 'li', data1)
+      data1%param=0.96_wp
+      call dict_add_key(cov_r, 'be', data1)
+      data1%param=0.84_wp
+      call dict_add_key(cov_r, 'b', data1)
+      data1%param=0.76_wp
+      call dict_add_key(cov_r, 'c', data1)
+      data1%param=0.71_wp
+      call dict_add_key(cov_r, 'n', data1)
+      data1%param=0.66_wp
+      call dict_add_key(cov_r, 'o', data1)
+      data1%param=0.57_wp
+      call dict_add_key(cov_r, 'f', data1)
+      data1%param=0.58_wp
+      call dict_add_key(cov_r, 'ne', data1)
+      data1%param=1.66_wp
+      call dict_add_key(cov_r, 'na', data1)
+      data1%param=1.41_wp
+      call dict_add_key(cov_r, 'mg', data1)
+      data1%param=1.21_wp
+      call dict_add_key(cov_r, 'al', data1)
+      data1%param=1.11_wp
+      call dict_add_key(cov_r, 'si', data1)
+      data1%param=1.07_wp
+      call dict_add_key(cov_r, 'p', data1)
+      data1%param=1.05_wp
+      call dict_add_key(cov_r, 's', data1)
+      data1%param=1.02_wp
+      call dict_add_key(cov_r, 'cl', data1)
+      data1%param=1.06_wp
+      call dict_add_key(cov_r, 'ar', data1)
+      data1%param=2.03_wp
+      call dict_add_key(cov_r, 'k', data1)
+      data1%param=1.76_wp
+      call dict_add_key(cov_r, 'ca', data1)
+      data1%param=1.70_wp
+      call dict_add_key(cov_r, 'sc', data1)
+      data1%param=1.60_wp
+      call dict_add_key(cov_r, 'ti', data1)
+
+   end subroutine setup_cov
+
+
+   subroutine initialize_param_def(filename,model,r_cav,disp_con, solvent, error)
       use element_dict
       use, intrinsic :: iso_fortran_env, only: output_unit
       use globals, only: param, cov_r, dG_shift
@@ -307,7 +412,7 @@ contains
          data1%param=1.60_wp
          call dict_add_key(cov_r, 'ti', data1)
 
-   end subroutine initialize_param
+   end subroutine initialize_param_def
 
    subroutine init_pr
       use globals

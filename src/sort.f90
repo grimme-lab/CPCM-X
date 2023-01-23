@@ -20,6 +20,11 @@ MODULE sort
   private
 
   public :: unique, shell_sort
+
+  interface unique
+      module procedure unique_char
+      module procedure unique_int
+   end interface unique
  
 CONTAINS
  
@@ -50,7 +55,7 @@ SUBROUTINE Shell_Sort(a)
  
 END SUBROUTINE Shell_Sort
 
-function unique(char_array) result(unique_array)
+function unique_char(char_array) result(unique_array)
    !> Input Character Array
    character(len=*), allocatable, intent(in) :: char_array(:)
    !> Output unique array
@@ -82,9 +87,42 @@ function unique(char_array) result(unique_array)
       unique_array(unique_size)=unique_element
    end do
 
-   end function unique
+end function unique_char
 
 
+function unique_int(int_array) result(unique_array)
+   !> Input Character Array
+   integer, allocatable, intent(in) :: int_array(:)
+   !> Output unique array
+   integer, allocatable:: unique_array(:)
+
+   integer, allocatable :: tmp_array(:)
+
+   integer :: unique_element
+
+   integer :: unique_size, i, j
+
+   unique_size=1
+
+   allocate(unique_array(unique_size))
+   unique_array(1)=int_array(1)
+
+   do i=1,size(int_array)
+      unique_element=int_array(i)
+      if (any(unique_element .eq. unique_array)) cycle
+      allocate(tmp_array(unique_size))
+      tmp_array=unique_array
+      deallocate(unique_array)
+      allocate(unique_array(unique_size+1))
+      do j=1,unique_size
+         unique_array(j)=tmp_array(j)
+      end do
+      deallocate(tmp_array)
+      unique_size=unique_size+1
+      unique_array(unique_size)=unique_element
+   end do
+
+end function unique_int
 
  
 END MODULE sort

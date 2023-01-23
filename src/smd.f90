@@ -28,12 +28,12 @@ module sdm
    contains
 
       !> Example implementation to calculate surface area for a molecule input
-      subroutine calculate_cds_normal(species, symbols, coord, probe, solvent, path, default)
+      subroutine calculate_cds_normal(species, symbols, coord, probe, solvent, path, dG_cds,default)
       use mctc_env, only : wp
       use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size &
          & , get_vdw_rad_cosmo
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds, ascii_cds
-      use globals, only: dG_disp, BtoA
+      use globals, only: dG_disp, BtoA, autokcal
       !> Unique chemical species in the input structure, shape: [nat]
       integer, intent(in) :: species(:)
       !> Element symbol for each chemical species, shape: [nsp]
@@ -43,6 +43,8 @@ module sdm
       real(wp), allocatable :: coord_rev(:,:)
       !> Probe radius for surface area integration in Bohr
       real(wp), intent(in) :: probe
+      !> CDS Energy
+      real(wp), intent(out) :: dG_cds
       !> Accessible surface area in Bohr², shape: [nat]
       real(wp),allocatable :: surface(:)
       !> Derivative of surface area w.r.t. atomic displacements, shape: [3, nat, nat]
@@ -107,14 +109,15 @@ module sdm
       Call calc_surft(coord_rev,species,symbols,param,surft)
       Call calc_cds(surft,surface,cds,cds_sm)
       dG_disp= (sum(cds)+cds_sm)/1000
+      dG_cds=dG_disp/autokcal
 end subroutine calculate_cds_normal
 
-subroutine calculate_cds_isodens(species,symbols,coord,probe,solvent,path,rad)
+subroutine calculate_cds_isodens(species,symbols,coord,probe,solvent,path,dG_cds,rad)
   ! subroutine calculate_cds_normal(species, symbols, coord, probe, solvent, path, default)
       use mctc_env, only : wp
       use numsa, only : surface_integrator, new_surface_integrator, grid_size 
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds
-      use globals, only: dG_disp, BtoA
+      use globals, only: dG_disp, BtoA,autokcal
       !> Unique chemical species in the input structure, shape: [nat]
       integer, intent(in) :: species(:)
       !> Isodens Radii calculated by CPCM-X for by species, shape: [nat]
@@ -126,6 +129,8 @@ subroutine calculate_cds_isodens(species,symbols,coord,probe,solvent,path,rad)
       real(wp), allocatable :: coord_rev(:,:)
       !> Probe radius for surface area integration in Bohr
       real(wp), intent(in) :: probe
+      !> CDS energy
+      real(wp), intent(out) :: dG_cds
       !> Accessible surface area in Bohr², shape: [nat]
       real(wp),allocatable :: surface(:)
       !> Derivative of surface area w.r.t. atomic displacements, shape: [3, nat, nat]
@@ -182,6 +187,7 @@ subroutine calculate_cds_isodens(species,symbols,coord,probe,solvent,path,rad)
       Call calc_surft(coord_rev,species,symbols,param,surft)
       Call calc_cds(surft,surface,cds,cds_sm)
       dG_disp= (sum(cds)+cds_sm)/1000
+      dG_cds=dG_disp/autokcal
 end subroutine calculate_cds_isodens
 
 
