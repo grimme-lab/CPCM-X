@@ -204,7 +204,8 @@ module cpxcalc
         Call calcgas(self%solute%energy,self%solute%energy_gas,self%id_scr,self%solute%area,self%solute%sv,&
         &self%solute%su,self%solute%pot,self%solute%element,self%solute%id,self%T,self%param%eta,self%dG_is,self%dG_cc)
         Call compute_solvent(self%param,self%solvent%poti,self%solvent%sv,self%solvent%svt,&
-        &self%solvent%area,self%T,self%max_cycle,self%conv_crit)
+        &self%solvent%area,self%T,self%max_cycle,self%conv_crit,error)
+        if (allocated(error)) return
         Call compute_solute(self%param,self%solute%poti,self%solvent%poti,self%solute%sv,self%solute%svt,&
         &self%solvent%sv,self%solvent%svt,self%solute%area,self%solvent%area,self%T,self%chem_pot_sol)
 

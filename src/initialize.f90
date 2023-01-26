@@ -16,12 +16,12 @@
 
 module initialize_cosmo
    use mctc_env, only : wp, error_type, fatal_error
-   use, intrinsic :: iso_fortran_env, only : output_unit
+   use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    implicit none
 
    private
 
-   public :: read_cosmo, initialize_param, init_pr
+   public :: read_cosmo, initialize_param, init_pr, load_solvent
 
    interface initialize_param
       module procedure initialize_param_crs
@@ -41,7 +41,7 @@ contains
 
       character(*), intent(in) :: compound
       character(*), intent(in) :: database
-      character(100) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home
+      character(200) :: line, ld1,ld2, ld3, ld4, ld5, ld6,home
       character(:), allocatable :: filen
       integer :: io_error, dummy1, num, ele_num
       real(wp) :: dummy3, dummy4, dummy5
@@ -58,8 +58,8 @@ contains
          if (database .ne. "NONE") then
             filen=trim(database)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)
-            write(output_unit,'(5x,a)') "Database specified, reading .cosmo file from", &
-               filen
+            !write(output_unit,'(5x,a)') "Database specified, reading .cosmo file from", &
+            !   filen
          end if
       end if
       if (.NOT. exists) then
@@ -67,9 +67,7 @@ contains
          if (io_error .EQ. 0) then
             filen=trim(home)//"/"//compound
             INQUIRE(file=trim(filen), EXIST=exists)
-               if (exists) then
-                  write(*,*) "No COSMO file in working directory, reading COSMO file from ", filen
-               else
+               if (.NOT. exists) then
                   Call fatal_error(error,"No COSMO file in working directory or HOME directory for "// compound)
                   return
                end if
@@ -79,7 +77,7 @@ contains
          end if
       end if
 
-      open(1,file=trim(filen),iostat=io_error)
+      open(input_unit,file=trim(filen),iostat=io_error)
 
       if (io_error .NE. 0) then
          Call fatal_error(error,"Problem while reading COSMO input. &
@@ -89,7 +87,7 @@ contains
 
       io_error=0
       do while (io_error .GE. 0)
-         read(1,*,iostat=io_error) line
+         read(input_unit,*,iostat=io_error) line
       end do
       read(line,*) num
       allocate(mol%su(num))
@@ -97,23 +95,22 @@ contains
       allocate(mol%area(num))
       allocate(mol%xyz(num,3))
       allocate(mol%pot(num))
-      rewind(1)
+      rewind(input_unit)
       mol%id(:)=0
       do while (line .NE. "$segment_information")
-         read(1,*) line
+         read(input_unit,*) line
       end do
 
       num=1
       dummy4=0
       do while (.TRUE.)
-         read(1,'(A1)',advance='no',iostat=io_error) line
-         if (line=="#") then
-            read(1,*)
+         read(input_unit,'(a)',iostat=io_error) line
+         if (line(:1)=="#") then
             cycle
-         else if (io_error .LT. 0) then
+         else if (io_error .lt. 0) then
             exit
          else
-            read(1,*) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&
+            read(line,*) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&
                &mol%xyz(num,3),dummy3,mol%area(num),mol%su(num),mol%pot(num)
          !   charges(num)=anint(charges(num)*1000)/1000
             mol%pot(num)=mol%pot(num)*BtoA
@@ -123,14 +120,14 @@ contains
             num=num+1
          end if
       end do
-      rewind(1)
+      rewind(input_unit)
       do while (line .NE. "#atom")
-         read(1,*) line
+         read(input_unit,*) line
       end do
 
       ele_num=0
       do while (.TRUE.)
-         read(1,'(A1)',iostat=io_error) line
+         read(input_unit,'(A1)',iostat=io_error) line
          if (index(line,"$") .eq. 0) then
            ele_num=ele_num+1
          else
@@ -141,15 +138,15 @@ contains
       allocate(mol%element(ele_num))
       allocate(mol%atom_xyz(ele_num,3))
 
-      rewind(1)
+      rewind(input_unit)
       do while (line .NE. "#atom")
-         read(1,*) line
+         read(input_unit,*) line
       end do
 
       do while (.TRUE.)
-         read(1,'(A1)',advance='no',iostat=io_error) line
-         if (line .NE. "$") then
-            read(1,*) dummy1, dummy3, dummy4, dummy5, element
+         read(input_unit,'(a)',iostat=io_error) line
+         if (line(:1) .NE. "$") then
+            read(line,*) dummy1, dummy3, dummy4, dummy5, element
             mol%element(dummy1)=to_lower(element)
             !write(*,*) elements(dummy1)
             mol%atom_xyz(dummy1,1)=dummy3*btoa
@@ -160,12 +157,12 @@ contains
          end if
       end do
 !      write(*,*) elements
-      rewind(1)
+      rewind(input_unit)
       do while (index(line,"area=") .EQ. 0)
-         read(1,*) line
+         read(input_unit,*) line
       end do
 
-      read(1,*,iostat=io_error) line, mol%volume
+      read(input_unit,*,iostat=io_error) line, mol%volume
 
       if ((io_error .ne. 0) .and. (index(database,'xtb') .eq. 0)) then
          write(output_unit,'(5x,a, t20, a)') &
@@ -175,23 +172,47 @@ contains
 
       INQUIRE(file=filen(:len(filen)-6)//".energy",exist=exists)
       if (exists) then
-         write(output_unit,'(5x,a)') "Reading energy for compound "//trim(compound)&
-            &//" from "//filen(:len(filen)-6)//".energy"
+         !write(output_unit,'(5x,a)') "Reading energy for compound "//trim(compound)&
+         !  &//" from "//filen(:len(filen)-6)//".energy"
          open(11,file=filen(:len(filen)-6)//".energy")
          read(11,*) mol%energy
          close(11)
       else
-         rewind(1)
+         rewind(input_unit)
          do while (line .NE. "$cosmo_energy")
-            read(1,*) line
+            read(input_unit,*) line
          end do
-         read (1,*)
-         read (1,*) line,ld1,ld2,ld3,ld4,ld5,ld6,mol%energy
+         read (input_unit,*)
+         read (input_unit,*) line,ld1,ld2,ld3,ld4,ld5,ld6,mol%energy
       end if
 
-      close(1)
+      close(input_unit)
 
    end subroutine read_cosmo
+
+   subroutine load_solvent(solvent,mol,error)
+      use type, only : molecule_data
+      use mctc_env, only : fatal_error, error_type
+      use data, only: solvent_name
+      use globals, only: to_lower
+      use internaldb
+
+      type(molecule_data), intent(out) :: mol
+      character(len=*), intent(in) :: solvent
+      type(error_type), allocatable :: error
+
+      character(len=200), allocatable :: cosmo_file(:)
+      character(:), allocatable :: norm_solv
+      integer :: un, k
+
+      norm_solv=to_lower(solvent_name(solvent))
+      if (norm_solv .eq. "") then
+         call fatal_error(error,trim(solvent)//" is not a valid solvent.")
+      else
+         Call internalcosmo(solvent, mol,error)
+      end if
+
+   end subroutine load_solvent
 
    subroutine initialize_param_crs(filename,param, error)
       use, intrinsic :: iso_fortran_env, only: output_unit, input_unit
@@ -289,7 +310,7 @@ contains
    subroutine load_param(method,solvent,self,error)
       use mctc_env, only: error_type, fatal_error, wp
       use cpxcalc, only: calculation_type
-      use defaultparameter
+      use internaldb
 
       character(len=*), intent(in) :: method
       character(len=*), intent(in) :: solvent

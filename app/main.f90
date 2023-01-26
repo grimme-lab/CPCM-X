@@ -119,7 +119,11 @@ program CPCMX
          " ------------------------------------------------- ", &
          ""
       write(output_unit,'(5x,a)') "Reading COSMO data."
-      Call read_cosmo(config%csm_solvent,calc%solvent,config%database,error)
+      if (config%internal) then
+         Call load_solvent(config%smd_solvent,calc%solvent,error)
+      else
+         Call read_cosmo(config%csm_solvent,calc%solvent,config%database,error)
+      end if
       call check_error(error)
       Call read_cosmo(config%csm_solute,calc%solute,config%database,error)
       call check_error(error)
@@ -517,6 +521,8 @@ subroutine get_arguments(config, error)
       end select
    end do
 
+   if (config%internal) return
+
    if (config%isodens) then
       config%qc_calc="tm"
       inquire(file=config%database//"/isodens/"//config%sac_param_path, exist=ex) 
@@ -868,7 +874,7 @@ subroutine echo_init(config)
    if (config%internal) then
       config%smd_param_path="internal SMD parameter"
       config%sac_param_path="internal CPCM-X parameter"
-      !config%csm_solvent="internal COSMO Database File"
+      config%csm_solvent="internal COSMO Database File"
    end if
 
 

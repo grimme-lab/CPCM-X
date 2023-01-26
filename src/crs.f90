@@ -149,8 +149,8 @@ subroutine compute_solute(param,sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv
 
    !allocate(W_v(size(sv_sol)))
    allocate(sol_pot(size(sv_sol)))
-   write(output_unit,'(5x,a)') &
-      "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
+   !write(output_unit,'(5x,a)') &
+   !   "Calculate Solvent-Solute Interaction based on the converged Solvent Profile."
    !W_v(:)=0.0_wp
    beta=(R*Jtokcal*T)/param%aeff
    temppot=0.0_wp
@@ -182,12 +182,13 @@ subroutine compute_solute(param,sol_pot,solv_pot,sv_sol,svt_sol,sv_solv,svt_solv
       temppot=temppot+(area_solv(i)*solv_pot(i))
    end do
    !write(*,*) beta*temppot
-   write(output_unit,'(5x,a)') "Done!", &
-   ""
+   !write(output_unit,'(5x,a)') "Done!", &
+   !""
 end subroutine compute_solute
 
-subroutine compute_solvent(param,pot_di,sv,svt,area,T,max_cycle,conv_crit)
-   use globals, only : autokcal
+subroutine compute_solvent(param,pot_di,sv,svt,area,T,max_cycle,conv_crit,error)
+   use mctc_env, only: error_type, fatal_error
+   use globals, only : autokcal, to_string
    use type, only : parameter_type
 
    type(parameter_type), intent(in) :: param
@@ -197,14 +198,17 @@ subroutine compute_solvent(param,pot_di,sv,svt,area,T,max_cycle,conv_crit)
    real(wp), intent(in) :: conv_crit
    integer, intent(in) :: max_cycle
 
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
    integer :: iter
    logical :: converged
    real(wp), allocatable :: edd(:, :)
    type(broyden_mixer) :: mixer
    real(wp), parameter :: mixer_damping = 0.4_wp
 
-   write(output_unit,'(5x,a)') "", & 
-      "Converging Solvent Sigma Profile."
+   !write(output_unit,'(5x,a)') "", & 
+   !   "Converging Solvent Sigma Profile."
 
    converged = .false.
    allocate(pot_di(size(sv)))
@@ -225,11 +229,13 @@ subroutine compute_solvent(param,pot_di,sv,svt,area,T,max_cycle,conv_crit)
       converged = mixer%get_error() < conv_crit/autokcal
       if (iter >= max_cycle) exit
    end do
+
    if (.not.converged) then
-      write(*,*) "Error, chemical potential could not be converged"
-      error stop
+      Call fatal_error(error,"Solvent Sigma Profile did not converge after "&
+         &//to_string(max_cycle)//" cycles.")
+         return
    end if
-   write(output_unit,'(5x,a,i3)') "Done! Chemical potential converged after Cycle ",iter
+   !write(output_unit,'(5x,a,i3)') "Done! Chemical potential converged after Cycle ",iter
 
 end subroutine compute_solvent
 

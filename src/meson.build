@@ -18,7 +18,7 @@ srcs += files(
   'ElementParameters.f90',
   'type.f90',
   'cpxcalc.f90',
-  'defaultparameter.f90',
+  'internaldb.f90',
   'bonding.f90',
   'broyden.f90',
   'crs.f90',

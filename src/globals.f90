@@ -58,6 +58,11 @@ module globals
       logical :: internal = .false.
    end type configuration_type
 
+   interface to_string
+      module procedure to_string_real
+      module procedure to_string_int
+   end interface to_string
+
    contains
       ! Functions that are used in several modules
       function distance(xyz1,xyz2)
@@ -136,5 +141,19 @@ module globals
  
     stat = sys_rename(src//c_null_char, tgt//c_null_char, len(src), len(tgt))
  end subroutine rename
+
+ pure function to_string_real(x) result(str)
+   implicit none
+   real(wp), intent(in) :: x
+   character(len=20) :: str
+   write(str,*) x
+ end function to_string_real
+
+pure function to_string_int(x) result(str)
+   implicit none
+   integer, intent(in) :: x
+   character(len=20) :: str
+   write(str,*) x
+end function to_string_int
 
 end module globals

@@ -198,7 +198,6 @@ module profile
          nh_count=0
 
          ! Choose to which profile (OH,OT,NH) each Segment belongs.
-
          do i=1,size(sv)
             select case (elements(int(ident(i))))
                case ("o", "n", "f")
