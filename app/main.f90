@@ -15,25 +15,14 @@
 ! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 program CPCMX
-   use element_dict
+   use cpx, only: calculation_type, parameter_type, initialize_param, load_solvent, read_cosmo, init_pr,&
+      &AtomicMass, Density
    use globals
-   use sort
-   use initialize_cosmo
-   use sigma_av
-   use sac_mod
-   use bonding
-   use profile
-   use pr
-   use crs
    use isodens, only: get_isodens_radii
-   use data, only: AtomicMass, density
    use qc_calc, only: qc_cal, orcatocosmo
    use mctc_env, only : wp, get_argument, fatal_error, error_type
    use crs_timer, only: timer_type, format_time
-   use type, only: parameter_type
-   use cpxcalc, only: calculation_type
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use sdm
    implicit none
    character(len=*), parameter :: prog_name = "cpx"
    logical :: ex

@@ -8,8 +8,8 @@ real(wp), parameter, dimension(10,3) :: axyz_dimethylsulfoxide_xtb = reshape(bto
 &, -2.02838469892206, 2.38070522548148], [-2.30834800336327, 0.86505545391354, 2.51369655543175], [-2.30834800336327, 0.8&
 &6505545391354, -2.51369655543175], [-0.51118343667275, -2.02838469892206, -2.38070522548148], [0.52088842166096, 0.54574&
 &335117596, -4.3476869950057] /), shape(axyz_dimethylsulfoxide_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(10) :: aelement_dimethylsulfoxide_xtb = (/ 's', 'o', 'c', 'c', 'h', 'h', 'h', 'h'&
-&, 'h', 'h' /)
+character(len=2), parameter, dimension(10) :: aelement_dimethylsulfoxide_xtb = (/ 's ', 'o ', 'c ', 'c ', 'h ', 'h ', 'h&
+& ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(527) :: sid_dimethylsulfoxide_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

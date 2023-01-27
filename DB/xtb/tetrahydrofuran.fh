@@ -10,8 +10,8 @@ real(wp), parameter, dimension(13,3) :: axyz_tetrahydrofuran_xtb = reshape(btoa*
 &833794643, 1.31735984832421], [-3.75759930822755, -0.74863007094421, 1.99462287858714], [2.73915129133781, -2.3951783379&
 &4643, 1.31735984832421], [3.75759930822755, 0.74863007094421, 1.99462287858714] /), shape(axyz_tetrahydrofuran_xtb),orde&
 &r=(/2,1/))
-character(len=2), parameter, dimension(13) :: aelement_tetrahydrofuran_xtb = (/ 'o', 'c', 'c', 'c', 'c', 'h', 'h', 'h', &
-&'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(13) :: aelement_tetrahydrofuran_xtb = (/ 'o ', 'c ', 'c ', 'c ', 'c ', 'h ', 'h '&
+&, 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(639) :: sid_tetrahydrofuran_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&
 & 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

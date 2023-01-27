@@ -10,8 +10,8 @@ real(wp), parameter, dimension(15,3) :: axyz_dimethylacetamide_xtb = reshape(bto
 &538, 0.0], [-3.61122789286297, 2.62012776364681, 1.68108129565341], [5.51609691184409, -0.74385585359536, 0.0], [3.24853&
 &746125105, -2.57263354402191, 1.67301144849703], [3.24853746125105, -2.57263354402191, -1.67301144849703] /), shape(axyz&
 &_dimethylacetamide_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(15) :: aelement_dimethylacetamide_xtb = (/ 'o', 'n', 'c', 'c', 'c', 'c', 'h', 'h'&
-&, 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(15) :: aelement_dimethylacetamide_xtb = (/ 'o ', 'n ', 'c ', 'c ', 'c ', 'c ', 'h&
+& ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(716) :: sid_dimethylacetamide_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

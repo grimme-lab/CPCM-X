@@ -6,7 +6,7 @@ real(wp), parameter, dimension(6,3) :: axyz_acetonitrile_xtb = reshape(btoa*(/ [
 &-0.92686606274022], [0.0, 0.0, 1.80448434033335], [-0.97268220251189, 1.6847349943686, -1.62236733020083], [-0.972682202&
 &51189, -1.6847349943686, -1.62236733020083], [1.94536440502379, 0.0, -1.62236733020083] /), shape(axyz_acetonitrile_xtb)&
 &,order=(/2,1/))
-character(len=2), parameter, dimension(6) :: aelement_acetonitrile_xtb = (/ 'n', 'c', 'c', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(6) :: aelement_acetonitrile_xtb = (/ 'n ', 'c ', 'c ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(369) :: sid_acetonitrile_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

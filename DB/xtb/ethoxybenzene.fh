@@ -14,8 +14,8 @@ real(wp), parameter, dimension(19,3) :: axyz_ethoxybenzene_xtb = reshape(btoa*(/
 &50431636012, -1.92862622679282], [-4.80276434230891, 4.23707203999571, 0.21513302259841], [-6.17954921840536, -3.7616467&
 &4409676, 0.16830512263491], [-7.82857667432654, 0.64686261768795, 0.27580661523852] /), shape(axyz_ethoxybenzene_xtb),or&
 &der=(/2,1/))
-character(len=2), parameter, dimension(19) :: aelement_ethoxybenzene_xtb = (/ 'o', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c&
-&', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(19) :: aelement_ethoxybenzene_xtb = (/ 'o ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', &
+&'c ', 'c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(902) :: sid_ethoxybenzene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2&
 &, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3&

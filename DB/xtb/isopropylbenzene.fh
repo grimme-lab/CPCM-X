@@ -15,8 +15,8 @@ real(wp), parameter, dimension(21,3) :: axyz_isopropylbenzene_xtb = reshape(btoa
 &591098, -1.78891054830217], [-5.84058984661394, 3.26220982567497, 1.8564528666586], [-4.70722505941214, -3.7370579010551&
 &, -2.09445234593978], [-7.61625561592157, -0.52855997170181, -0.27584962673166] /), shape(axyz_isopropylbenzene_xtb),ord&
 &er=(/2,1/))
-character(len=2), parameter, dimension(21) :: aelement_isopropylbenzene_xtb = (/ 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',&
-& 'c', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(21) :: aelement_isopropylbenzene_xtb = (/ 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c &
+&', 'c ', 'c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(945) :: sid_isopropylbenzene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3&
 &, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3&

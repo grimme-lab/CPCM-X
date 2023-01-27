@@ -6,7 +6,7 @@ real(wp), parameter, dimension(6,3) :: axyz_tetrachloroethene_xtb = reshape(btoa
 &7, 0.0], [-3.00955509417375, 2.75750195012087, 0.0], [3.00955509417375, 2.75750195012087, 0.0], [3.00955509417375, -2.75&
 &750195012087, 0.0], [-1.26912597265749, 0.0, 0.0], [1.26912597265749, 0.0, 0.0] /), shape(axyz_tetrachloroethene_xtb),or&
 &der=(/2,1/))
-character(len=2), parameter, dimension(6) :: aelement_tetrachloroethene_xtb = (/ 'cl', 'cl', 'cl', 'cl', 'c', 'c' /)
+character(len=2), parameter, dimension(6) :: aelement_tetrachloroethene_xtb = (/ 'cl', 'cl', 'cl', 'cl', 'c ', 'c ' /)
 integer, parameter, dimension(372) :: sid_tetrachloroethene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

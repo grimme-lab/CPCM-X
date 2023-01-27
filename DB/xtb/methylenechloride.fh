@@ -5,7 +5,7 @@ integer, parameter, dimension(5) :: aid_methylenechloride_xtb = (/ 1, 2, 3, 4, 5
 real(wp), parameter, dimension(5,3) :: axyz_methylenechloride_xtb = reshape(btoa*(/ [0.0, -2.81347629314172, -1.60380349&
 &772417], [0.0, 2.81347629314172, -1.60380349772417], [0.0, 0.0, 0.31181592831395], [1.71481427425979, 0.0, 1.44789553356&
 &72], [-1.71481427425979, 0.0, 1.4478955335672] /), shape(axyz_methylenechloride_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(5) :: aelement_methylenechloride_xtb = (/ 'cl', 'cl', 'c', 'h', 'h' /)
+character(len=2), parameter, dimension(5) :: aelement_methylenechloride_xtb = (/ 'cl', 'cl', 'c ', 'h ', 'h ' /)
 integer, parameter, dimension(311) :: sid_methylenechloride_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

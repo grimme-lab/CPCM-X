@@ -3,7 +3,7 @@ real(wp), parameter :: area_water_xtb = 60.22952478468087, volume_water_xtb = 0,
 integer, parameter, dimension(3) :: aid_water_xtb = (/ 1, 2, 3 /)
 real(wp), parameter, dimension(3,3) :: axyz_water_xtb = reshape(btoa*(/ [0.0, 0.0, -0.75257185889884], [-1.4475703104483&
 &8, 0.0, 0.37628592944942], [1.44757031044838, 0.0, 0.37628592944942] /), shape(axyz_water_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(3) :: aelement_water_xtb = (/ 'o', 'h', 'h' /)
+character(len=2), parameter, dimension(3) :: aelement_water_xtb = (/ 'o ', 'h ', 'h ' /)
 integer, parameter, dimension(228) :: sid_water_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &

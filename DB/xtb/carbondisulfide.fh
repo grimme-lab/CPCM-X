@@ -4,7 +4,7 @@ real(wp), parameter :: area_carbondisulfide_xtb = 160.4345463815451, volume_carb
 integer, parameter, dimension(3) :: aid_carbondisulfide_xtb = (/ 1, 2, 3 /)
 real(wp), parameter, dimension(3,3) :: axyz_carbondisulfide_xtb = reshape(btoa*(/ [0.0, 0.0, -2.95024088341573], [0.0, 0&
 &.0, 2.95024088341573], [0.0, 0.0, 0.0] /), shape(axyz_carbondisulfide_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(3) :: aelement_carbondisulfide_xtb = (/ 's', 's', 'c' /)
+character(len=2), parameter, dimension(3) :: aelement_carbondisulfide_xtb = (/ 's ', 's ', 'c ' /)
 integer, parameter, dimension(230) :: sid_carbondisulfide_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

@@ -4,7 +4,7 @@ integer, parameter, dimension(5) :: aid_bromoform_xtb = (/ 1, 2, 3, 4, 5 /)
 real(wp), parameter, dimension(5,3) :: axyz_bromoform_xtb = reshape(btoa*(/ [1.75728267187329, 3.04370287094494, 0.85264&
 &645135177], [1.75728267187329, -3.04370287094494, 0.85264645135177], [-3.5145653437466, 0.0, 0.85264645135177], [0.0, 0.&
 &0, -0.25341301287372], [0.0, 0.0, -2.30376841107906] /), shape(axyz_bromoform_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(5) :: aelement_bromoform_xtb = (/ 'br', 'br', 'br', 'c', 'h' /)
+character(len=2), parameter, dimension(5) :: aelement_bromoform_xtb = (/ 'br', 'br', 'br', 'c ', 'h ' /)
 integer, parameter, dimension(341) :: sid_bromoform_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

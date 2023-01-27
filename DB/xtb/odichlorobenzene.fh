@@ -8,8 +8,8 @@ real(wp), parameter, dimension(12,3) :: axyz_odichlorobenzene_xtb = reshape(btoa
 &, 0.0, -2.45392005825277], [-1.31535029698707, 0.0, -2.45392005825277], [4.68608783829225, 0.0, -0.16213589712564], [-4.&
 &68608783829225, 0.0, -0.16213589712564], [2.35501241066192, 0.0, -4.2219799235029], [-2.35501241066192, 0.0, -4.22197992&
 &35029] /), shape(axyz_odichlorobenzene_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(12) :: aelement_odichlorobenzene_xtb = (/ 'cl', 'cl', 'c', 'c', 'c', 'c', 'c', 'c&
-&', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(12) :: aelement_odichlorobenzene_xtb = (/ 'cl', 'cl', 'c ', 'c ', 'c ', 'c ', 'c &
+&', 'c ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(606) :: sid_odichlorobenzene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2&

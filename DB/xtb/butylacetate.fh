@@ -14,8 +14,8 @@ real(wp), parameter, dimension(19,3) :: axyz_butylacetate_xtb = reshape(btoa*(/ 
 &, 3.15848487793696, -1.20646743384788], [6.27686602458126, 1.21012012337052, -1.68967953524551], [6.41258756055784, 0.94&
 &465001568843, 1.64285123184706], [7.39395362069941, -1.61350187097793, -0.28045702313665] /), shape(axyz_butylacetate_xt&
 &b),order=(/2,1/))
-character(len=2), parameter, dimension(19) :: aelement_butylacetate_xtb = (/ 'o', 'o', 'c', 'c', 'c', 'c', 'c', 'c', 'h'&
-&, 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(19) :: aelement_butylacetate_xtb = (/ 'o ', 'o ', 'c ', 'c ', 'c ', 'c ', 'c ', '&
+&c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(963) :: sid_butylacetate_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

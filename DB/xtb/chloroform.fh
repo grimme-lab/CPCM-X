@@ -4,7 +4,7 @@ integer, parameter, dimension(5) :: aid_chloroform_xtb = (/ 1, 2, 3, 4, 5 /)
 real(wp), parameter, dimension(5,3) :: axyz_chloroform_xtb = reshape(btoa*(/ [-1.60524426618689, -2.7803646275943, 0.837&
 &24280965367], [-1.60524426618689, 2.7803646275943, 0.83724280965367], [3.21048853237376, 0.0, 0.83724280965367], [0.0, 0&
 &.0, -0.2269502312566], [0.0, 0.0, -2.28511996813968] /), shape(axyz_chloroform_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(5) :: aelement_chloroform_xtb = (/ 'cl', 'cl', 'cl', 'c', 'h' /)
+character(len=2), parameter, dimension(5) :: aelement_chloroform_xtb = (/ 'cl', 'cl', 'cl', 'c ', 'h ' /)
 integer, parameter, dimension(314) :: sid_chloroform_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2&

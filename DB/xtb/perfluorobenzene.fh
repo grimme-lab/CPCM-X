@@ -8,8 +8,8 @@ real(wp), parameter, dimension(12,3) :: axyz_perfluorobenzene_xtb = reshape(btoa
 &0.0], [-2.26926533736785, 1.31016095339202, 0.0], [0.0, -2.62032190678404, 0.0], [0.0, 2.62032190678404, 0.0], [2.269265&
 &33736785, -1.31016095339202, 0.0], [2.26926533736785, 1.31016095339202, 0.0] /), shape(axyz_perfluorobenzene_xtb),order=&
 &(/2,1/))
-character(len=2), parameter, dimension(12) :: aelement_perfluorobenzene_xtb = (/ 'f', 'f', 'f', 'f', 'f', 'f', 'c', 'c',&
-& 'c', 'c', 'c', 'c' /)
+character(len=2), parameter, dimension(12) :: aelement_perfluorobenzene_xtb = (/ 'f ', 'f ', 'f ', 'f ', 'f ', 'f ', 'c &
+&', 'c ', 'c ', 'c ', 'c ', 'c ' /)
 integer, parameter, dimension(686) :: sid_perfluorobenzene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2&

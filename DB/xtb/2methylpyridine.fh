@@ -9,8 +9,8 @@ real(wp), parameter, dimension(14,3) :: axyz_2methylpyridine_xtb = reshape(btoa*
 &02212205], [4.95055588081321, -2.13285636713874, 0.0], [4.92240628978996, 0.78901197636067, -1.6651602212205], [-3.71968&
 &382970866, 3.67800834920779, 0.0], [-5.8691397224244, -0.56015818933913, 0.0], [-3.19478124812561, -4.42263853292751, 0.&
 &0] /), shape(axyz_2methylpyridine_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(14) :: aelement_2methylpyridine_xtb = (/ 'n', 'c', 'c', 'c', 'c', 'c', 'c', 'h', &
-&'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(14) :: aelement_2methylpyridine_xtb = (/ 'n ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c '&
+&, 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(685) :: sid_2methylpyridine_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,&
 & 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3,&

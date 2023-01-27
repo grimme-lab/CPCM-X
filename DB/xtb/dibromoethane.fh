@@ -7,7 +7,7 @@ real(wp), parameter, dimension(8,3) :: axyz_dibromoethane_xtb = reshape(btoa*(/ 
 & [1.53547805342454, -0.47199481457266, 0.0], [-1.11000840616804, 2.70984532628096, 0.0], [2.55241743619996, 0.1755807752&
 &5094, -1.68082737320241], [2.55241743619996, 0.17558077525094, 1.68082737320241], [1.46893414842492, -2.53492935349154, &
 &0.0] /), shape(axyz_dibromoethane_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(8) :: aelement_dibromoethane_xtb = (/ 'br', 'br', 'c', 'c', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(8) :: aelement_dibromoethane_xtb = (/ 'br', 'br', 'c ', 'c ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(454) :: sid_dibromoethane_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2&

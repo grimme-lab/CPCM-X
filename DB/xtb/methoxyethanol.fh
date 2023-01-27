@@ -10,8 +10,8 @@ real(wp), parameter, dimension(13,3) :: axyz_methoxyethanol_xtb = reshape(btoa*(
 &4.1923980161248, -1.39719076251354, -1.83144259304669], [-5.57805071718874, 1.14279493588778, -0.08591622469798], [-4.18&
 &108735943562, -1.46313039201106, 1.54951742765163], [5.14133362769277, -1.14178679375172, 1.49069383564855] /), shape(ax&
 &yz_methoxyethanol_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(13) :: aelement_methoxyethanol_xtb = (/ 'o', 'o', 'c', 'c', 'c', 'h', 'h', 'h', '&
-&h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(13) :: aelement_methoxyethanol_xtb = (/ 'o ', 'o ', 'c ', 'c ', 'c ', 'h ', 'h ',&
+& 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(665) :: sid_methoxyethanol_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &
 &2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

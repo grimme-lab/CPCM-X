@@ -14,8 +14,8 @@ real(wp), parameter, dimension(21,3) :: axyz_trimethylbenzene_xtb = reshape(btoa
 &596, -5.09539874775429], [2.67921802970918, 0.4255931381044, -4.90180370934288], [0.94802546235973, -2.41080881119596, 5&
 &.09539874775429], [2.67921802970918, 0.4255931381044, 4.90180370934288], [-0.33746821224558, 0.40608928190081, 6.3579169&
 &0730418] /), shape(axyz_trimethylbenzene_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(21) :: aelement_trimethylbenzene_xtb = (/ 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c',&
-& 'c', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(21) :: aelement_trimethylbenzene_xtb = (/ 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c &
+&', 'c ', 'c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(935) :: sid_trimethylbenzene_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1&
 &, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3&
 &, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4&

@@ -26,9 +26,9 @@ real(wp), parameter, dimension(44,3) :: axyz_tributylphosphate_xtb = reshape(bto
 &7179632, -1.48131665221931], [1.77722729145571, -10.39367266967469, 1.52849260350543], [-1.56942989133538, -10.425755849&
 &97493, 1.52631830003722], [0.11554479886628, -11.43568614563527, -1.18492658131545] /), shape(axyz_tributylphosphate_xtb&
 &),order=(/2,1/))
-character(len=2), parameter, dimension(44) :: aelement_tributylphosphate_xtb = (/ 'p', 'o', 'o', 'o', 'o', 'c', 'c', 'c'&
-&, 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h'&
-&, 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(44) :: aelement_tributylphosphate_xtb = (/ 'p ', 'o ', 'o ', 'o ', 'o ', 'c ', 'c&
+& ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h&
+& ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(1997) :: sid_tributylphosphate_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&
 & 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4,&

@@ -11,8 +11,8 @@ real(wp), parameter, dimension(15,3) :: axyz_tetrahydrothiophenedioxide_xtb = re
 &44879244, -2.14375029032447], [0.9616599439842, 2.26376849674423, -3.60442481598], [-2.90594757411105, 0.03644044879244,&
 & -2.14375029032447], [-0.9616599439842, -2.26376849674423, -3.60442481598] /), shape(axyz_tetrahydrothiophenedioxide_xtb&
 &),order=(/2,1/))
-character(len=2), parameter, dimension(15) :: aelement_tetrahydrothiophenedioxide_xtb = (/ 's', 'o', 'o', 'c', 'c', 'c',&
-& 'c', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(15) :: aelement_tetrahydrothiophenedioxide_xtb = (/ 's ', 'o ', 'o ', 'c ', 'c ',&
+& 'c ', 'c ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(731) :: sid_tetrahydrothiophenedioxide_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, &

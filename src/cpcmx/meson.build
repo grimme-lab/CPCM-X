@@ -15,7 +15,24 @@
 # along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 srcs += files(
-  'cpx.f90',
+  'ElementParameters.f90',
+  'type.f90',
+  'cpxcalc.f90',
+  'internaldb.f90',
+  'bonding.f90',
+  'broyden.f90',
+  'crs.f90',
+  'globals.f90',
+  'initialize.f90',
+  'lapack.f90',
+  'pr.f90',
+  'profile.f90',
+  'qc_calc.f90',
+  'sac.f90',
+  'sigma_av.f90',
+  'smd.f90',
+  'sort.f90',
+  'timer.f90',
+  'data.f90',
+  'isodens.f90',
 )
-
-subdir('cpcmx')

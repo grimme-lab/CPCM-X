@@ -7,7 +7,8 @@ real(wp), parameter, dimension(9,3) :: axyz_methylformamide_xtb = reshape(btoa*(
 &3538206428, 0.0], [-3.0268249248586, 1.0568510830806, 1.68286324923987], [-3.0268249248586, 1.0568510830806, -1.68286324&
 &923987], [-0.73184859381618, 2.85520283699921, 0.0], [-0.80256143535298, -2.79094566433175, 0.0], [3.41139371677913, -2.&
 &65681581225369, 0.0] /), shape(axyz_methylformamide_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(9) :: aelement_methylformamide_xtb = (/ 'o', 'n', 'c', 'c', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(9) :: aelement_methylformamide_xtb = (/ 'o ', 'n ', 'c ', 'c ', 'h ', 'h ', 'h ',&
+& 'h ', 'h ' /)
 integer, parameter, dimension(483) :: sid_methylformamide_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&

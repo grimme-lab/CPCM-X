@@ -14,8 +14,8 @@ real(wp), parameter, dimension(19,3) :: axyz_4methyl2pentanone_xtb = reshape(bto
 & 2.50243663892934, -2.54190410383553], [-5.21739669893371, 3.05617020713755, 0.31325765161923], [-7.05233367716351, 0.22&
 &312214749948, -0.09063532253217], [-5.19593540392471, 0.71724813101727, 2.67809316744321] /), shape(axyz_4methyl2pentano&
 &ne_xtb),order=(/2,1/))
-character(len=2), parameter, dimension(19) :: aelement_4methyl2pentanone_xtb = (/ 'o', 'c', 'c', 'c', 'c', 'c', 'c', 'h'&
-&, 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h', 'h' /)
+character(len=2), parameter, dimension(19) :: aelement_4methyl2pentanone_xtb = (/ 'o ', 'c ', 'c ', 'c ', 'c ', 'c ', 'c&
+& ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ', 'h ' /)
 integer, parameter, dimension(890) :: sid_4methyl2pentanone_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, &
 &1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, &

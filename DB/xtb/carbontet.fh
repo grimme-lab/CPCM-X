@@ -5,7 +5,7 @@ real(wp), parameter, dimension(5,3) :: axyz_carbontet_xtb = reshape(btoa*(/ [1.9
 &3865649722], [-1.95063865649722, 1.95063865649722, 1.95063865649722], [-1.95063865649722, -1.95063865649722, -1.95063865&
 &649722], [1.95063865649722, 1.95063865649722, -1.95063865649722], [0.0, 0.0, 0.0] /), shape(axyz_carbontet_xtb),order=(/&
 &2,1/))
-character(len=2), parameter, dimension(5) :: aelement_carbontet_xtb = (/ 'cl', 'cl', 'cl', 'cl', 'c' /)
+character(len=2), parameter, dimension(5) :: aelement_carbontet_xtb = (/ 'cl', 'cl', 'cl', 'cl', 'c ' /)
 integer, parameter, dimension(296) :: sid_carbontet_xtb = (/ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,&
 & 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,&
