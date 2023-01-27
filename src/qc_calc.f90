@@ -60,7 +60,15 @@ contains
         charge=0
         multi=0
 
-        xtb_bin='xtb_dev'
+        xtb_bin="xtb"
+
+        Call execute_command_line(xtb_bin//" --version 2>/dev/null", WAIT=.true.,cmdstat=io_error)
+
+        if (io_error .ne. 0) then
+            Call fatal_error(error,'Could not run xTB.Please check if xTB is installed and your path is setup correctly.')
+            write(output_unit,'(a)') ""
+            return
+        end if
 
         write(output_unit,'(a)') ""
         write(output_unit,'(10x,a)') &
@@ -79,7 +87,13 @@ contains
             return
         end if
 
-        Call execute_command_line(xtb_bin//" coord --gfn "//level//" --norestart > gas.out 2>error", WAIT=.true.)
+        Call execute_command_line(xtb_bin//" coord --gfn "//level//" --norestart > gas.out 2>error", WAIT=.true.,exitstat=io_error)
+
+        if (io_error .ne. 0) then
+            Call fatal_error(error,'Error while running gas phase calculation.')
+            write(output_unit,'(a)') ""
+            return
+        end if
 
         write(output_unit,'(5x, A)') &
             "Done! Gas phase calculation terminated normally.", &

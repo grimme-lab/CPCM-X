@@ -452,13 +452,12 @@ subroutine get_arguments(config, error)
    Call get_variable("CPXHOME",home)
    
    if (.not.allocated(home)) then
-      call fatal_error(error, "CPXHOME Variable ist not set.")
-      RETURN
+      Call move_line("/",home)
+   else
+      if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
    end if
-
    ex=.false.
   
-   if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
 
    config%isodens=.false.
    iarg = 0
@@ -521,7 +520,15 @@ subroutine get_arguments(config, error)
       end select
    end do
 
-   if (config%internal) return
+   if (config%internal) then
+      select case (config%qc_calc)
+      case default
+         Call fatal_error(error,"Internal mode only available for xTB")
+         return
+      case ('xtb','xTB')
+         return
+      end select
+   end if
 
    if (config%isodens) then
       config%qc_calc="tm"
@@ -769,7 +776,7 @@ subroutine use_default(config, solv, home, error)
       inquire(file=home//"cpcmx.toml",exist=ex)
 
       if (.not. ex) then 
-         call fatal_error(error, "No configuration found in "//home)
+         !call fatal_error(error, "No configuration found in "//home)
          return
       else
          config%config_path=home//"cpcmx.toml"
