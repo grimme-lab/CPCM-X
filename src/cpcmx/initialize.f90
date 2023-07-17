@@ -165,8 +165,8 @@ contains
       read(input_unit,*,iostat=io_error) line, mol%volume
 
       if ((io_error .ne. 0) .and. (index(database,'xtb') .eq. 0)) then
-         write(output_unit,'(5x,a, t20, a)') &
-            "[WARNING]", "Could not read volume from "//compound//"."
+        ! write(output_unit,'(5x,a, t20, a)') &
+        !    "[WARNING]", "Could not read volume from "//compound//"."
          mol%volume=100.0_wp
       end if
 
@@ -314,7 +314,7 @@ contains
 
       character(len=*), intent(in) :: method
       character(len=*), intent(in) :: solvent
-      type(calculation_type), intent(out) :: self
+      class(calculation_type), intent(out) :: self
       type(error_type), allocatable :: error
 
       select case (method)
