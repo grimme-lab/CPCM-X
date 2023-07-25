@@ -1,0 +1,57 @@
+name: CI
+on: [push, pull_request]
+
+env:
+  BUILD_DIR: _build
+
+jobs:
+  gcc-meson-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        fc: [gfortran-11]
+        cc: [gcc-11]
+        include:
+          - os: ubuntu-latest
+            fc: gfortran-9
+            cc: gcc-9
+          - os: ubuntu-latest
+            fc: gfortran-10
+            cc: gcc-10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.x
+
+    - name: Install OpenBLAS (OSX)
+      if: ${{ contains(matrix.os, 'macos') }}
+      run: |
+        brew install openblas
+        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
+        
+    - name: Install meson
+      run: pip3 install meson==0.62.0 ninja cmake
+
+    - name: Configure build
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --buildtype=release
+        ${{ env.MESON_ARGS }}
+      env:
+        FC: ${{ matrix.fc }}
+        CC: ${{ matrix.cc }}
+        MESON_ARGS: ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '-Dlapack=netlib' }}
+
+    - name: Build project
+      run: meson compile -C ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild -t 120 --suite cpx
+
