@@ -85,6 +85,7 @@ module sdm
       do i=1,size(internal_smd)
          write(output_unit,'(a)') trim(internal_smd(i))
       end do
+      close(output_unit)
 
       do i=1,3
          do j=1,size(species)
@@ -105,7 +106,6 @@ module sdm
       Call calc_cds(surft,surface,cds,cds_sm)
       dG_disp= (sum(cds)+cds_sm)/1000
       dG_cds=dG_disp/autokcal
-      close(output_unit)
 
    end subroutine calculate_cds_internal
 

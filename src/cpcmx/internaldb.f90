@@ -44,7 +44,7 @@ type(parameter_type), parameter :: xtb_other = parameter_type (&
 &0.0_wp)
 
 character(len=200),dimension(41), parameter :: xtb_water_smd = [character(len=200) ::& 
-&"#Zk - This are the default Parmeters for SMD/H2O", & 
+&"#Zk", & 
 &"H 	-77.70436564", & 
 &"C 	-44.32921125", & 
 &"N 	-25.97069034", & 
