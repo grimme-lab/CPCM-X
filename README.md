@@ -3,7 +3,7 @@
 ## Introduction
 
 <div align="center">
-<img src="./toc.png" alt="Table of contents graphic for the CPCM-X solvation model" width="600">
+<img src="./toc.webp" alt="Table of contents graphic for the CPCM-X solvation model" width="600">
 </div>
 
 This is an fully open source solvation model, based on the original 
@@ -146,8 +146,8 @@ ninja -C build
 ```
 You afterwards have to manually install the created binary in the path of your choice.
 
-### Building with Fortran Package Manager (deprected)
-At the moment, building with Fortran Package Manager is sadly not supported anymore.
+### Building with Fortran Package Manager (deprecated)
+At the moment, building with Fortran Package Manager is not supported anymore.
 
 ## Usage of the standalone
 You can either use a commandline version of ``CPCM-X`` or create a detailed input for your calculation.
