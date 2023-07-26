@@ -8,6 +8,7 @@ link = ["lapack", "blas"]
 
 [library]
 source-dir="src"
+include-dir = [""]
 
 [[executable]]
 name="cpx"

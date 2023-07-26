@@ -146,8 +146,17 @@ ninja -C build
 ```
 You afterwards have to manually install the created binary in the path of your choice.
 
-### Building with Fortran Package Manager (deprecated)
-At the moment, building with Fortran Package Manager is not supported anymore.
+### Building with Fortran Package Manager
+You can also use the [Fortran Package Manager](https://github.com/fortran-lang/fpm) to build this project. Building should be as simple as using
+```
+fpm build
+```
+
+You can also include this project as dependency in your package manifest ``fpm.toml`` as
+```
+[dependencies]
+cpx.git = "https://github.com/grimme-lab/CPCM-X"
+```
 
 ## Usage of the standalone
 You can either use a commandline version of ``CPCM-X`` or create a detailed input for your calculation.
