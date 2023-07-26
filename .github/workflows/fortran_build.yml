@@ -55,3 +55,67 @@ jobs:
     - name: Run unit tests
       run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild -t 120 --suite cpx
 
+  intel-meson-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        fc: [ifort]
+        cc: [icc]
+    env:
+      FC: ${{ matrix.fc }}
+      CC: ${{ matrix.cc }}
+      APT_PACKAGES: >-
+        intel-oneapi-compiler-fortran
+        intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+        intel-oneapi-mkl
+        intel-oneapi-mkl-devel
+        asciidoctor
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.x
+
+    - run: pip3 install meson ninja --user
+
+    - name: Add Intel repository
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
+        echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+        sudo apt-get update
+
+    - name: Install Intel oneAPI compiler
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get install ${APT_PACKAGES}
+        source /opt/intel/oneapi/setvars.sh
+        printenv >> $GITHUB_ENV
+
+    - name: Configure meson build
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --prefix=/ --libdir=lib
+        -Dfortran_link_args="-lifcoremt -static"
+        -Ddefault_library=static
+        -Dlapack=mkl
+
+    - name: Build project
+      run: ninja -C ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: >-
+        meson test -C ${{ env.BUILD_DIR }}
+        --print-errorlogs
+        --num-processes 1
+        --no-rebuild
+        --suite cpx
+        -t 12
