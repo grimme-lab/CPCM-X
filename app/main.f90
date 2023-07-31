@@ -15,55 +15,32 @@
 ! along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 program CPCMX
-   use element_dict
+   use cpx, only: calculation_type, parameter_type, initialize_param, load_solvent, read_cosmo, init_pr,&
+      &AtomicMass, Density
    use globals
-   use sort
-   use initialize_cosmo
-   use sigma_av
-   use sac_mod
-   use bonding
-   use profile
-   use pr
-   use crs
    use isodens, only: get_isodens_radii
-   use data, only: AtomicMass, density
    use qc_calc, only: qc_cal, orcatocosmo
    use mctc_env, only : wp, get_argument, fatal_error, error_type
    use crs_timer, only: timer_type, format_time
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use sdm
    implicit none
    character(len=*), parameter :: prog_name = "cpx"
-   integer :: oh_sol, nh_sol, near_sol
-   real(wp), dimension(:), allocatable :: solute_su, solute_area, solute_sv, solute_sv0,solvent_pot,solute_pot
-   real(wp), dimension(:), allocatable :: solvent_su, solvent_area, solvent_sv, solvent_sv0, solute_svt, solvent_svt
-   real(wp), dimension(:), allocatable :: sol_pot, solv_pot
-   real(wp), dimension(:,:), allocatable :: solvent_xyz, solute_xyz, solvat_xyz, solat_xyz, solat2
-   character(2), dimension(:), allocatable :: solute_elements, solvent_elements, solute_hb, solvent_hb
-   logical, dimension(:,:), allocatable :: solute_bonds, solvent_bonds
-   logical, dimension(:), allocatable :: solute_rings
-   real(wp), dimension(3,0:50) :: solvent_sigma3, solute_sigma3
-   character(20) :: solvent, solute
+   logical :: ex
+   integer :: ioerror
 
    real(wp), allocatable :: isodens_rad(:)
+   integer :: i
 
-   !> State Correction Energy
-   real(wp) :: dG_state
-
-   real(wp) :: id_scr,gas_chem,chem_pot_sol, T, solute_volume, solvent_volume,&
-      &solute_energy, solvent_energy, solvent_sigma(0:50), solute_sigma(0:50),sac_disp(2)
-   integer :: sol_nat, i
-   integer, allocatable :: int_ident(:),solute_ident(:),solvent_ident(:)
-   real(wp), allocatable :: surface(:), dsdr(:,:,:)
 
    type(timer_type) :: timer
 
+   type(calculation_type) :: calc
    type(configuration_type) :: config
+   type(parameter_type) :: parameter
    type(error_type), allocatable :: error
 
   
 
-   type(DICT_STRUCT), pointer :: r_cav, disp_con
   
    !! ------------------------------------------------------------ 
    !! Read Command Line Arguments and set Parameters accordingly
@@ -72,7 +49,11 @@ program CPCMX
    Call get_arguments(config,error)
    Call check_error(error)
    Call echo_init(config)
-   Call initialize_param(config%sac_param_path,config%model,r_cav,disp_con,config%csm_solvent,error)
+   if (config%internal) then
+      Call initialize_param(config%qc_calc,config%smd_solvent,calc,error)
+   else
+      Call initialize_param(config%sac_param_path,calc%param,error)
+   end if
    Call check_error(error) 
    if (config%ML) then
       Call init_pr
@@ -82,17 +63,16 @@ program CPCMX
    !! ----------------------------------------------------------------------------------
    !! Read Sigma Profiles (--sigma) - Not the default case
    !! ----------------------------------------------------------------------------------
-   T=config%T
-   SysTemp=T
-   if (config%sig_in) then
-
-      write(*,*) "Reading Sigma Profile"
-      Call read_singlesig(solvent_sigma,config%csm_solvent,solvent_volume)
-      Call read_singlesig(solute_sigma,config%csm_solute,solute_volume)
-      
-      Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
-      Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
-   else   
+   SysTemp=config%T
+   !if (config%sig_in) then
+   !
+   !   write(*,*) "Reading Sigma Profile"
+   !   Call read_singlesig(solvent_sigma,config%csm_solvent,solvent_volume)
+   !   Call read_singlesig(solute_sigma,config%csm_solute,solute_volume)
+   !   
+   !   Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
+   !   Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
+   !else   
    !! ----------------------------------------------------------------------------------
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
@@ -105,6 +85,8 @@ program CPCMX
                Call qc_cal(config%xyz_input,error)
             case('P-gTB', 'gtb')
                Call qc_cal(0.6_wp,0.20_wp,error)
+            case('xtb')
+               Call qc_cal('inf','2',error)
             case default
                write(error_unit,'(a,a,a)') "Chosen program "//config%qc_calc//" not supported"
                error stop
@@ -126,19 +108,22 @@ program CPCMX
          " ------------------------------------------------- ", &
          ""
       write(output_unit,'(5x,a)') "Reading COSMO data."
-      Call read_cosmo(config%csm_solvent,solvent_elements,solvent_ident,solvent_xyz,solvent_su,&
-          &solvent_area,solvent_pot,solvent_volume,solvent_energy,solvat_xyz,config%database)
-      Call read_cosmo(config%csm_solute,solute_elements,solute_ident, solute_xyz, solute_su,&
-         &solute_area,solute_pot,solute_volume,solute_energy,solat_xyz,config%database)
+      if (config%internal) then
+         Call load_solvent(config%smd_solvent,calc%solvent,error)
+      else
+         Call read_cosmo(config%csm_solvent,calc%solvent,config%database,error)
+      end if
+      call check_error(error)
+      Call read_cosmo(config%csm_solute,calc%solute,config%database,error)
+      call check_error(error)
  
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
    !! ------------------------------------------------------------------------------------
       write(output_unit,'(5x,a)') "Creating Sigma Profile from COSMO data."
-      Call average_charge(param(1), solvent_xyz,solvent_su,solvent_area,solvent_sv)
-      Call average_charge(param(1), solute_xyz, solute_su, solute_area, solute_sv)
-      Call single_sigma(solvent_sv,solvent_area,solvent_sigma,"solvent")
-      Call single_sigma(solute_sv,solute_area,solute_sigma,"solute")
+      Call calc%average_charge(error)
+      call check_error(error)
+      Call calc%sigma(.true.)
       Call timer%pop()
    !! ------------------------------------------------------------------------------------
    !! Determination of HB Grouping and marking of Atom that are able to form HBs.
@@ -147,12 +132,7 @@ program CPCMX
    if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
       Call timer%push("bondings") 
       write(output_unit,'(5x,a)') "Determine Ring atoms and HB groups."
-      Call det_bonds(solute_ident,solat_xyz,solute_elements,solute_bonds,oh_sol,nh_sol)
-      Call hb_grouping(solute_ident,solute_elements,solute_bonds,solute_hb)
-      Call det_bonds(solvent_ident,solvat_xyz,solvent_elements,solvent_bonds)
-      Call hb_grouping(solvent_ident,solvent_elements,solvent_bonds,solvent_hb)
-      
-      Call det_rings(solute_ident,solute_bonds,solute_rings,near_sol)
+      Call calc%init_bonding()
       Call timer%pop()
    end if
 
@@ -160,106 +140,111 @@ program CPCMX
    !! Creation of a splitted Sigma Profile, necessary for sac2010/sac2013
    !! ------------------------------------------------------------------------------------
 
-      if (.NOT. (config%model .EQ. "sac")) then
-         Call timer%push("sigma_split")
-         Call split_sigma(solvent_sv,solvent_area,solvent_hb,solvent_ident,solvent_elements,&
-            &solvent_sigma3,"solvent")
-         Call split_sigma(solute_sv,solute_area,solute_hb,solute_ident,solute_elements,&
-            &solute_sigma3,"solute")
-         Call timer%pop()
-      end if
+   if (.NOT. (config%model .EQ. "sac")) then
+      Call timer%push("sigma_split")
+      Call calc%split_sigma(.true.)
+      Call timer%pop()
+   end if
 
    !! ------------------------------------------------------------------------------------
    !! Exit here if you only want Sigma Profiles to be created 
    !! ------------------------------------------------------------------------------------
-      if (config%prof) then;
-         write(*,*) "Only Profile mode choosen, exiting."
-         stop
-      end if
+   if (config%prof) then;
+      write(*,*) "Only Profile mode choosen, exiting."
+      stop
    end if
+   !end if
    
 
    !! ------------------------------------------------------------------------------------
-   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-RS)
-   !! CPCM-RS is currently the only recommended Model.
+   !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-X)
+   !! CPCM-X is currently the only recommended Model (and since the refactor the only working one).
    !! ------------------------------------------------------------------------------------
 
-   select case (trim(config%model))
-      case ("sac")
-         !Calculation of the Gas Phase (ideal gas --> ideal conductor)
-         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
-         !Calculation of the Solvent Phase (ideal conductor --> real solution)
-         Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume,config%z1,config%z2)
-         !Calculation of NES contributions (real gas --> ideal gas?)
-         if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
-
-         allocate (int_ident(maxval(solute_ident)))
-         do i=1,maxval(solute_ident)
-            int_ident(i)=i
-         end do
-   
-         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
-         &config%smd_solvent,config%smd_param_path,config%smd_default)
-
-      case("sac2010")
-         
-         Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
-         Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
-         if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
-
-         allocate (int_ident(maxval(solute_ident)))
-         do i=1,maxval(solute_ident)
-            int_ident(i)=i
-         end do
-   
-         Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
-         &config%smd_solvent,config%smd_param_path,config%smd_default)
+   !select case (trim(config%model))
+   !   case ("sac")
+   !      !Calculation of the Gas Phase (ideal gas --> ideal conductor)
+   !      Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
+   !      !Calculation of the Solvent Phase (ideal conductor --> real solution)
+   !      Call sac_2005(solvent_sigma,solute_sigma,solvent_volume,solute_volume,config%z1,config%z2)
+   !      !Calculation of NES contributions (real gas --> ideal gas?)
+   !      if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+   !
+   !      allocate (int_ident(maxval(solute_ident)))
+   !      do i=1,maxval(solute_ident)
+   !         int_ident(i)=i
+   !      end do
+   !
+   !      Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+   !      &config%smd_solvent,config%smd_param_path,config%smd_default)
+   !
+   !   case("sac2010")
+   !      
+   !      Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
+   !      Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
+   !      if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+   !
+   !      allocate (int_ident(maxval(solute_ident)))
+   !      do i=1,maxval(solute_ident)
+   !         int_ident(i)=i
+   !      end do
+   !
+   !      Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+   !      &config%smd_solvent,config%smd_param_path,config%smd_default)
    !! ------------------------------------------------------------------------------------
    !! The SAC 2013 Routine is not fully implemented and not supported anymore
    !! ------------------------------------------------------------------------------------
-    !  case("sac2013")
-
-     !    Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
-     !    Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
-     !    Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
-     !    Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
-     !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
-      case ("crs")
+   !  case("sac2013")
+   !
+   !    Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
+   !    Call sac2013_disp(trim(solvent),solvent_bonds,solvent_ident,solvent_elements,disp_con,sac_disp(1))
+   !    Call sac2013_disp(trim(solute),solute_bonds,solute_ident,solute_elements,disp_con,sac_disp(2))
+   !    Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
+   !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
+   !  case ("crs")
    
          !! CPCM-RS calculation starts here !!
 
-         ! Calculate sv0,svt for CPCM-RS
-         
-         Call average_charge(param(1)*2.0_wp, solvent_xyz,solvent_su,solvent_area,solvent_sv0)
-         Call ortho_charge(solvent_sv,solvent_sv0,solvent_svt)
-         Call average_charge(param(1)*2.0_wp, solute_xyz, solute_su, solute_area, solute_sv0)
-         Call ortho_charge(solute_sv,solute_sv0,solute_svt)
-
-         ! Calculation of Gas Phase energies
-         write(output_unit,'(5x,a)') "Calculating Gas Phase Energies.", &
+         ! Calculation of Solvent Phase energies
+         write(output_unit,'(5x,a)') "Calculating Solvent Phase Energies.", &
             ""
 
-         Call calcgas(solute_energy,id_scr,solute_area,solute_sv,solute_su,&
-            &solute_pot,solute_elements,solute_ident,disp_con, T,r_cav)
+         !> Read in gas phase energy
+         open(1,file="gas.energy",iostat=ioerror)
+         read(1,*,iostat=ioerror) calc%solute%energy_gas
+         if (ioerror .NE. 0) Call fatal_error(error,"Problem while reading energies (check gas.energy file).")
+         Call check_error(error)
 
-         Call state_correction(density(config%smd_solvent),AtomicMass(solvent_elements),config%T,dG_state)
+         Call timer%push("calc")
+         Call calc%solv("crs",error,T=298.15_wp,max_cycle=500,conv_crit=0.0001_wp)
+         Call check_error(error)
+         call calc%state_correction(density(config%smd_solvent),AtomicMass(calc%solvent%element),config%T)
+         Call timer%pop()
 
-         ! Computation of CPCM-RS equations (here may be something wrong atm)
-         Call timer%push("solv")
-         Call compute_solvent(solv_pot,solvent_sv,solvent_svt,solvent_area,T,500,0.0001,solvent_ident,solvent_hb)
-         Call timer%pop()
-         Call timer%push("solu")
-         Call compute_solute(sol_pot,solv_pot,solute_sv,solute_svt,solvent_sv,&
-         &solvent_svt,solute_area,solvent_area,T,chem_pot_sol,solute_ident,solvent_ident,solute_elements,solvent_hb)
-         Call timer%pop()
-         allocate (int_ident(maxval(solute_ident)))
-         do i=1,maxval(solute_ident)
-            int_ident(i)=i
-         end do
+         write(output_unit,'(10x,a)') &
+         " ------------------------------------------------- ",&
+         "|                Gas Phase Results                |",&
+         " ------------------------------------------------- ", &
+         ""
+         
+         write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
+         "E_COSMO:", calc%solute%energy, "Eh", &
+         "E_COSMO+dE:", (calc%solute%energy+calc%dG_cc),"Eh",   &
+         "E_gas:", calc%solute%energy,"Eh", &
+         "E_COSMO-E_gas", (calc%id_scr-calc%solute%energy),"Eh", &
+         "E_COSMO-E_gas+dE:", (calc%id_scr-calc%solute%energy+calc%dG_cc),"Eh", &
+         "Averaging corr dE:", calc%dG_cc,"Eh", &
+         "thermostatic correction: ", calc%param%eta*R*jtokcal*config%T, "Eh", &
+         "Area:", sum(calc%solute%area), "Å"
+         write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
+         "Solvent density:", density(config%smd_solvent), "g/l", &
+         "Solvent atomic mass:", AtomicMass(calc%solvent%element), "a.u.", &
+         "State correction", calc%dG_ss, "Eh", &
+         ""
          
          Call timer%push("cds")
          if (config%isodens) then
-            Call get_isodens_radii(solute_xyz,solute_ident,solat_xyz,isodens_rad)
+            Call get_isodens_radii(calc%solute%xyz,calc%solute%id,calc%solute%atom_xyz,isodens_rad)
             write(output_unit,'(10x,a)') &
             " ------------------------------------------------- ",&
             "|                 Isodensity Radii                 |",&
@@ -270,23 +255,24 @@ program CPCMX
             ""
             write(output_unit,'(10x,a,t30,a)'), &
                "Atom Number:", "[A]"
-            do i=1,maxval(solute_ident)
+            do i=1,maxval(calc%solute%id)
                write(output_unit,'(10x,I0,t30,F4.2)'),&
                   i, isodens_rad(i)
             end do
             write(output_unit,'(a)') ""
-            Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
+            Call calc%cds(config%probe,&
             &config%smd_solvent,config%smd_param_path,isodens_rad)
          else
-            Call calculate_cds(int_ident,solute_elements,solat_xyz,config%probe,&
-            &config%smd_solvent,config%smd_param_path,config%smd_default)
+            if (allocated(calc%smd_param)) then
+               Call calc%cds(config%probe,config%smd_solvent)
+            else
+               Call calc%cds(config%probe,&
+               &config%smd_solvent,config%smd_param_path,config%smd_default)
+            end if
          end if
          Call timer%pop()
 
-         !> Additional effective ring correction
-         dG_res=chem_pot_sol+param(9)*near_sol
-
-      end select
+      !end select
       
       write(output_unit,'(10x,a)') &
          " ------------------------------------------------- ",&
@@ -303,18 +289,18 @@ program CPCMX
          write(output_unit,'(5x,a,t55,a,t66,a)') &
             "Free Energy contributions:", "[Eh]", " [kcal/mol]"
          write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
-         "Ideal State (dG_is):", dG_is/autokcal, dG_is, &
-         "Averaging correction (dG_cc):", dG_cc/autokcal, dG_cc, &
-         "restoring free energy (dG_res):", dG_res/autokcal, dG_res, &
-         "Resulting chemical potential in mixture:", (dG_is+dG_cc+dG_res)/autokcal,&
-         & dG_is+dG_cc+dG_res, &
-         "SMD Contribution (dG_CDS):", dG_disp/autokcal, dG_disp, &
-         "Standard state correction:", dG_state/autokcal, dG_state, &
-         "Systematic empirical shift (dG_shift)", dG_shift/autokcal, dG_shift
+         "Ideal State (dG_is):", calc%dG_is, calc%dG_is*autokcal, &
+         "Averaging correction (dG_cc):", calc%dG_cc, calc%dG_cc*autokcal, &
+         "restoring free energy (dG_res):", calc%dG_res, calc%dG_res*autokcal, &
+         "Resulting chemical potential in mixture:", &
+         &calc%dG_is+calc%dG_cc+calc%dG_res, &
+         &(calc%dG_is+calc%dG_cc+calc%dG_res)*autokcal, &
+         "SMD Contribution (dG_CDS):", calc%dG_smd, calc%dG_smd*autokcal, &
+         "Standard state correction:", calc%dG_ss, calc%dG_ss*autokcal, &
+         "Systematic empirical shift (dG_shift)", calc%dG_shift, calc%dG_shift*autokcal
          write(output_unit,'(4x,a)') repeat('-',73)
          write(output_unit,'(5x,a,t50,E13.5,t65,F10.5)') &
-         "solvation free energy: ", (dG_is+dG_cc+dG_res+dG_disp+dG_shift+dG_state)&
-         &/autokcal, dG_is+dG_cc+dG_res+dG_disp+dG_shift+dG_state
+         "solvation free energy: ", calc%dG(), calc%dG()*autokcal
          write(output_unit,*) ""
       end if
 
@@ -455,13 +441,12 @@ subroutine get_arguments(config, error)
    Call get_variable("CPXHOME",home)
    
    if (.not.allocated(home)) then
-      call fatal_error(error, "CPXHOME Variable ist not set.")
-      RETURN
+      Call move_line("/",home)
+   else
+      if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
    end if
-
    ex=.false.
   
-   if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
 
    config%isodens=.false.
    iarg = 0
@@ -502,6 +487,8 @@ subroutine get_arguments(config, error)
       ! case("--version")
       !    call version(output_unit)
       !   stop
+      case ("--internal")
+         config%internal=.true.
       case ("--inp", "--input")
          iarg=iarg+1
          call get_argument(iarg,arg)
@@ -521,6 +508,16 @@ subroutine get_arguments(config, error)
          exit
       end select
    end do
+
+   if (config%internal) then
+      select case (config%qc_calc)
+      case default
+         Call fatal_error(error,"Internal mode only available for xTB")
+         return
+      case ('xtb','xTB')
+         return
+      end select
+   end if
 
    if (config%isodens) then
       config%qc_calc="tm"
@@ -543,31 +540,37 @@ subroutine get_arguments(config, error)
       end if
    end if
 
-   inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
-   if (ex) then
-      call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
-   else
-      inquire(file=home//config%sac_param_path, exist=ex)
+   inquire(file=config%sac_param_path, exist=ex)
+   if (.not. ex) then
+      inquire(file=config%database//"/"//config%sac_param_path, exist=ex)
       if (ex) then
-         call move_line(home//config%sac_param_path, config%sac_param_path)
+         call move_line(config%database//"/"//config%sac_param_path, config%sac_param_path)
       else
-         Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
+         inquire(file=home//config%sac_param_path, exist=ex)
+         if (ex) then
+            call move_line(home//config%sac_param_path, config%sac_param_path)
+         else
+            Call fatal_error(error, "No crs Parameter File for CPCM-X found.")
+         end if
       end if
    end if
 
-   inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
-   if ((ex) .and. (.not. config%smd_default)) then
-      call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
-   else
-      inquire(file=home//config%smd_param_path, exist=ex)
-      if (ex) then
-         call move_line(home//config%smd_param_path, config%smd_param_path)
+   inquire(file=config%smd_param_path, exist=ex)
+   if (.not. ex) then
+      inquire(file=config%database//"/"//config%smd_param_path, exist=ex)
+      if ((ex) .and. (.not. config%smd_default)) then
+         call move_line(config%database//"/"//config%smd_param_path, config%smd_param_path)
       else
-         Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
-         &You can skip this check and use default parameters with the default flag.")
+         inquire(file=home//config%smd_param_path, exist=ex)
+         if (ex) then
+            call move_line(home//config%smd_param_path, config%smd_param_path)
+         else
+            Call fatal_error(error, "No smd Parameter File for CPCM-X found.&
+            &You can skip this check and use default parameters with the default flag.")
+         end if
       end if
    end if
-   
+ 
     if ((.not.(allocated(config%input))) .AND. (.not. (allocated(config%smd_solvent)))) then
        if (.not.allocated(error)) then
           call help(output_unit)
@@ -762,7 +765,7 @@ subroutine use_default(config, solv, home, error)
       inquire(file=home//"cpcmx.toml",exist=ex)
 
       if (.not. ex) then 
-         call fatal_error(error, "No configuration found in "//home)
+         !call fatal_error(error, "No configuration found in "//home)
          return
       else
          config%config_path=home//"cpcmx.toml"
@@ -864,6 +867,12 @@ end subroutine move_line
 subroutine echo_init(config)
    type(configuration_type) :: config
 
+   if (config%internal) then
+      config%smd_param_path="internal SMD parameter"
+      config%sac_param_path="internal CPCM-X parameter"
+      config%csm_solvent="internal COSMO Database File"
+   end if
+
 
    write(output_unit,'(10x,a)') &
       " ------------------------------------------------- ",&
@@ -875,7 +884,7 @@ subroutine echo_init(config)
       "Configuration File used:", config%config_path
    write(output_unit,'(5x,a,t35,a)') &
       "SMD Parameter Path:", config%smd_param_path, &
-      "CRS Parameter Path:", config%sac_param_path, &
+      "CPCM-X Parameter Path:", config%sac_param_path, &
       "Solvent:", config%smd_solvent, &
       "Corresponding COSMO File:", config%csm_solvent
 

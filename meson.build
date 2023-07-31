@@ -56,3 +56,8 @@ pkg.generate(
   cpx_lib,
   subdirs: ['', module_id],
 )
+
+cpxenv = environment()
+cpxenv.set('CPXHOME', meson.current_source_dir())
+
+subdir('test')
