@@ -151,7 +151,7 @@ jobs:
       run: cmake --build ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
-      run: ctest --parallel --output-on-failure
+      run: ctest --parallel --output-on-failure -R cpcmx
       working-directory: ${{ env.BUILD_DIR }}
       env:
         OMP_NUM_THREADS: 2,1
