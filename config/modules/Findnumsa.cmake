@@ -67,7 +67,7 @@ The following cache variables may be set to influence the library detection:
 
 set(_lib "numsa")
 set(_pkg "NUMSA")
-set(_url "https://github.com/MtoLStoN/numsa")
+set(_url "https://github.com/grimme-lab/numsa")
 
 if(NOT DEFINED "${_pkg}_FIND_METHOD")
   if(DEFINED "${PROJECT_NAME}-dependency-method")

@@ -119,3 +119,39 @@ jobs:
         --no-rebuild
         --suite cpx
         -t 12
+
+  gcc-cmake-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        fc: [gfortran-10]
+        cc: [gcc-10]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.x
+
+    - name: Install CMake
+      run: pip3 install ninja cmake==3.26.4
+
+    - name: Configure build
+      run: cmake -B ${{ env.BUILD_DIR }} -G Ninja
+      env:
+        FC: ${{ matrix.fc }}
+        CC: ${{ matrix.cc }}
+
+    - name: Build project
+      run: cmake --build ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: ctest --parallel --output-on-failure
+      working-directory: ${{ env.BUILD_DIR }}
+      env:
+        OMP_NUM_THREADS: 2,1
