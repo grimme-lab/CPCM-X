@@ -12,7 +12,7 @@ universal solvation model based on solute electron density (SMD) by Marenich, Cr
 
 While there are also parameters in this repository, that are optimized for running this library with ORCA and TURBOMOLE, the published version of this model was built to be run with the semi-empirical [GFN2-xTB](https://github.com/grimme-lab/xtb) method. However, the final goal of this project is to deliver a robust open-source solvation framework, which can be reparametrized for the method of choice. 
 
-The method is currently under consideration for publication at the Journal of Physical Chemistry.
+The method is published in [The Journal of Physical Chemistry](https://pubs.acs.org/doi/10.1021/acs.jpca.3c04382).
 
 ## Using CPCM-X as a library
 
