@@ -1,5 +1,9 @@
 # CPCM-X
 
+[![License](https://img.shields.io/github/license/grimme-lab/CPCM-X)](https://github.com/grimme-lab/CPCM-X/blob/main/LICENSE)
+[![Latest Version](https://img.shields.io/github/v/release/grimme-lab/CPCM-X)](https://github.com/grimme-lab/CPCM-X/releases/latest)
+[![DOI](https://img.shields.io/badge/DOI-10.1021/acs.jpca.3c04382-blue)](https://doi.org/10.1021/acs.jpca.3c04382)
+
 ## Introduction
 
 <div align="center">
