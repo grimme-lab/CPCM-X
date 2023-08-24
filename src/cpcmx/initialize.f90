@@ -209,7 +209,7 @@ contains
       if (norm_solv .eq. "") then
          call fatal_error(error,trim(solvent)//" is not a valid solvent.")
       else
-         Call internalcosmo(solvent, mol,error)
+         Call internalcosmo(norm_solv, mol,error)
       end if
 
    end subroutine load_solvent
@@ -310,6 +310,7 @@ contains
    subroutine load_param(method,solvent,self,error)
       use mctc_env, only: error_type, fatal_error, wp
       use cpxcalc, only: calculation_type
+      use data, only: solvent_name
       use internaldb
 
       character(len=*), intent(in) :: method
@@ -319,7 +320,7 @@ contains
 
       select case (method)
       case ("xtb","xTB","XTB")
-         select case (solvent)
+         select case (solvent_name(solvent))
          case default
             self%param=xtb_other
             allocate(self%smd_param(size(xtb_other_smd)))

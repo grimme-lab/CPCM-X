@@ -272,7 +272,7 @@ contains
         !> Density of the solvent
         real(wp) :: density
  
-        select case(solvent)
+        select case(solvent_name(solvent))
         case('2methylpyridine')
             density=944.0_wp
         case('4methyl2pentanone')
@@ -469,7 +469,7 @@ contains
         type(error_type), allocatable :: error
         real(wp):: epsilon
 
-        select case(solvent)
+        select case(solvent_name(solvent))
         case('infinity','inf')
             epsilon=ieee_value(epsilon,ieee_positive_inf)
         case('2methylpyridine')
