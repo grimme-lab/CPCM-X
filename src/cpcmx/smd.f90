@@ -33,6 +33,7 @@ module sdm
       use mctc_env, only : wp
       use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size &
          & , get_vdw_rad_cosmo
+      use data, only: solvent_name
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds, ascii_cds
       use globals, only: dG_disp, BtoA, autokcal
       use iso_fortran_env, only: output_unit
@@ -73,7 +74,7 @@ module sdm
       allocate (dsdr(3,size(species),size(species)))
       allocate(coord_rev(3,size(species)))
 
-      select case (solvent)
+      select case (solvent_name(solvent))
       case ('water','Water','WATER','h2o','H2O','H2o')
          path = 'smd_h2o'
       case default
@@ -94,7 +95,7 @@ module sdm
       end do
 
       rad = get_vdw_rad_smd(symbols)
-      Call init_smd(param,solvent)
+      Call init_smd(param,solvent_name(solvent))
 
       if (param%alpha .lt. 0.43) then
         rad(8)=rad(8)+1.8*(0.43-param%alpha)
