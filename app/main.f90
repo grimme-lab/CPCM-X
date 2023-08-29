@@ -730,7 +730,7 @@ subroutine use_default(config, solv, home, error)
    character(:), allocatable :: line2
    logical :: ex
    character(len=10) :: control, command
-   integer :: nconf
+   integer :: nconf, io
 
    character(len=:), allocatable :: user
   
@@ -773,10 +773,10 @@ subroutine use_default(config, solv, home, error)
 
    end if
 
-   open(input_unit,file=config%config_path)
+   open(file=config%config_path,newunit=io)
 
-   call toml_parse(config_table,input_unit,config_error)
-   close(input_unit)
+   call toml_parse(config_table,io,config_error)
+   close(io)
    if (allocated(config_table)) then
       call config_table%get_keys(list)
       do nconf=1,size(list)
