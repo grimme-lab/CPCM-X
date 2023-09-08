@@ -16,7 +16,7 @@
 
 project(
   'cpx',
-  'fortran',
+  'fortran', 'c',
   version: files('version.txt'),
   meson_version: '>=0.60.0',
   default_options: [
@@ -43,6 +43,7 @@ cpx_dep = declare_dependency(
   dependencies: lib_deps,
 )
 
+inc_dir=include_directories('.')
 subdir('app')
 
 module_id = meson.project_name() / fc_id + '-' + fc.version()

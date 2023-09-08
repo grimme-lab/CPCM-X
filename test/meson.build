@@ -15,3 +15,4 @@
 # along with CPCM-X.  If not, see <https://www.gnu.org/licenses/>.
 
 subdir('unit')
+subdir('api')
