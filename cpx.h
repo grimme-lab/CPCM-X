@@ -36,9 +36,9 @@ cpx_calculate(cpx_calculation_type /* Calculation object */,
               char* /* Method identifier */,
               char* /* Solvent name */,
               double /* Gas Phase Energy*/,
-              double /* Probe radius (optional, default 0.3 A)*/,
-              double /* Temperature (optional, default 298.15 K)*/,
-              double /* Convergence criterium (optional, default 1E-6)*/
+              double /* Probe radius */,
+              double /* Temperature */,
+              double /* Convergence criterium */
               ) CPX_API_SUFFIX__VERSION_1_0_0;
 
 extern CPX_API_ENTRY void CPX_API_CALL

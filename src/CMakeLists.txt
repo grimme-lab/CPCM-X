@@ -20,6 +20,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list (APPEND srcs
    "${dir}/cpx.f90"
+   "${dir}/cpx_c_api.f90"
 )
 
 set(srcs "${srcs}" PARENT_SCOPE) 

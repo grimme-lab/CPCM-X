@@ -142,38 +142,22 @@ contains
 
    end subroutine load_solute_api
 
-   subroutine calculate_cpcmx_api(vcalc,vmethod,vsolvent,egas,sprobe,sT,sconv_crit) &
+   subroutine calculate_cpcmx_api(vcalc,vmethod,vsolvent,egas,probe,T,conv_crit) &
       & bind(c, name="cpx_calculate")
    use mctc_env, only: error_type
    character(kind=c_char), dimension(*), intent(in) :: vmethod
    character(kind=c_char), dimension(*), intent(in) :: vsolvent
    real(c_double), intent(in), value :: egas
    type(c_ptr),intent(inout) :: vcalc
-   real(c_double), intent(in), optional, value :: sprobe
-   real(c_double), intent(in), optional, value :: sT
-   real(c_double), intent(in), optional, value :: sconv_crit
-   real(wp) :: probe, T, conv_crit
+   real(c_double), intent(in), value :: probe
+   real(c_double), intent(in), value :: T
+   real(c_double), intent(in), value :: conv_crit
    type(vcalc_type), pointer :: calc
    type(error_type), allocatable :: error
    character(len=:, kind=c_char), allocatable :: method, solvent
 
    call c_f_character(vmethod, method)
    call c_f_character(vsolvent, solvent)
-   if (present(sprobe)) then
-      probe = sprobe
-   else
-      probe = 0.3_wp
-   end if
-   if (present(sT)) then
-      T = sT
-   else
-      T = 298.15_wp
-   end if
-   if (present(sconv_crit)) then
-      conv_crit = sconv_crit
-   else
-      conv_crit = 1.0e-6_wp
-   end if
 
    if (c_associated(vcalc)) then
       call c_f_pointer(vcalc, calc)

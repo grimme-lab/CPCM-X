@@ -18,7 +18,7 @@ cmake_minimum_required(VERSION 3.14)
 
 project(
   "cpcmx"
-  LANGUAGES "Fortran"
+  LANGUAGES "Fortran" "C"
   VERSION "1.0.0"
   DESCRIPTION "Extended conduction-like polarizable continuum model"
 )
