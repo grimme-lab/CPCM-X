@@ -22,6 +22,12 @@ cpx_loadparam(char* /* Method identifier */,
               ) CPX_API_SUFFIX__VERSION_1_0_0;
 
 extern CPX_API_ENTRY void CPX_API_CALL
+cpx_readparam(char* /* CRS Parameter File */,
+              char* /* SMD Parameter File */,
+              cpx_calculation_type /* Calculation object */
+              ) CPX_API_SUFFIX__VERSION_1_0_0;
+
+extern CPX_API_ENTRY void CPX_API_CALL
 cpx_loadsolvent(char* /* Solvent name */,
                 cpx_calculation_type /* Calculation object */
                 ) CPX_API_SUFFIX__VERSION_1_0_0;

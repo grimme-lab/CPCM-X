@@ -8,10 +8,6 @@ module cpx_c_api
       class(calculation_type), allocatable :: ptr
    end type vcalc_type
 
-   type :: vparam_type
-      class(parameter_type), allocatable :: ptr
-   end type vparam_type
-
 contains
 
    function newCalculation_api() result(vcalc) &
@@ -99,6 +95,62 @@ contains
    end if
 
    end subroutine load_param_api
+
+   !> Read parameter from file
+   subroutine read_param_api(vparam_file_crs,vparam_file_smd,vcalc) &
+      & bind(c, name="cpx_readparam")
+   use mctc_env, only: error_type, fatal_error
+   character(kind=c_char), dimension(*), intent(in) :: vparam_file_crs
+   character(kind=c_char), dimension(*), intent(in) :: vparam_file_smd
+   character(len=:, kind=c_char), allocatable :: method, solvent, param_file_crs, param_file_smd
+   type(c_ptr), intent(inout) :: vcalc
+   type(vcalc_type), pointer :: calc
+   type(calculation_type), allocatable :: dummy_calc
+   type(error_type), allocatable :: error
+
+   logical :: e
+   integer :: nu, line, estat, lines
+
+   call c_f_character(vparam_file_crs, param_file_crs)
+   call c_f_character(vparam_file_smd, param_file_smd)
+   call c_f_pointer(vcalc, calc)
+
+
+   allocate(dummy_calc)
+
+   !! Initialize crs_parameters
+   call initialize_param(param_file_crs, dummy_calc%param,error)
+   inquire(file=trim(param_file_smd), exist=e)
+   if (e) then
+      !! Initialize smd_parameters
+      open(newunit=nu, file=param_file_smd, status='old', action='read')
+      lines=0
+      estat=0
+      do
+         read(nu,'(a)',iostat=estat)
+         if (estat/=0) exit
+         lines=lines+1
+      end do
+      rewind(nu)
+      allocate(dummy_calc%smd_param(lines))
+      do line=1,lines
+         read(nu,'(a)') dummy_calc%smd_param(line)
+      end do
+      close(nu)
+   else
+      call fatal_error(error,"SMD parameter file does not exist")
+   end if
+
+   if (allocated(error)) then
+      vcalc=c_null_ptr
+   else
+      call move_alloc(dummy_calc,calc%ptr)
+      vcalc=c_loc(calc)
+   end if
+
+   end subroutine read_param_api
+
+   
 
    !> Load solvent from internal database
    subroutine load_solvent_api(vsolvent,vcalc) &
