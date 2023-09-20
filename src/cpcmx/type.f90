@@ -33,6 +33,12 @@ module type
         real(wp) :: omega
         real(wp) :: eta
         real(wp) :: shift
+
+    contains
+        
+        procedure :: copy_param_type
+        generic :: assignment(=) => copy_param_type
+
     end type parameter_type
 
 
@@ -77,6 +83,24 @@ module type
         !> Number of effective ring atoms
         integer :: near
     end type molecule_data
+
+    contains
+
+    subroutine copy_param_type(lhs,rhs)
+        class(parameter_type),intent(out) :: lhs
+        class(parameter_type), intent(in) :: rhs
+
+        lhs%rav=rhs%rav
+        lhs%aprime=rhs%aprime
+        lhs%fcorr=rhs%fcorr
+        lhs%chb=rhs%chb
+        lhs%shb=rhs%shb
+        lhs%aeff=rhs%aeff
+        lhs%lambda=rhs%lambda
+        lhs%omega=rhs%omega
+        lhs%eta=rhs%eta
+        lhs%shift=rhs%shift
+    end subroutine copy_param_type
 
 
 end module type

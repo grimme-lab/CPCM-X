@@ -315,7 +315,7 @@ contains
 
       character(len=*), intent(in) :: method
       character(len=*), intent(in) :: solvent
-      class(calculation_type), intent(out) :: self
+      class(calculation_type), intent(inout) :: self
       type(error_type), allocatable :: error
 
       select case (method)

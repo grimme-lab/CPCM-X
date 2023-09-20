@@ -16,6 +16,7 @@
 
 srcs += files(
   'cpx.f90',
+  'cpx_c_api.f90'
 )
 
 subdir('cpcmx')
