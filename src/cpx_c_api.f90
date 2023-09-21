@@ -263,7 +263,7 @@ contains
    energies(3) = calc%ptr%dG_res
    energies(4) = calc%ptr%dG_smd
    energies(5) = calc%ptr%dG_ss
-   energies(6) = calc%ptr%dG_shift
+   energies(6) = calc%ptr%param%shift
 
    end subroutine get_energies_api
 
