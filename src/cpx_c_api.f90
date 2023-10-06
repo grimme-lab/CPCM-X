@@ -252,6 +252,7 @@ contains
    subroutine get_energies_api(vcalc,energies) &
       & bind(c, name="cpx_getenergies")
    use mctc_env, only: wp
+   use globals, only: autokcal
    type(c_ptr), intent(in) :: vcalc
    type(vcalc_type), pointer :: calc
    real(c_double), dimension(6), intent(out) :: energies
@@ -263,7 +264,7 @@ contains
    energies(3) = calc%ptr%dG_res
    energies(4) = calc%ptr%dG_smd
    energies(5) = calc%ptr%dG_ss
-   energies(6) = calc%ptr%param%shift
+   energies(6) = calc%ptr%param%shift/autokcal
 
    end subroutine get_energies_api
 

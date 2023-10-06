@@ -206,7 +206,7 @@ module cpxcalc
         end select
 
         !! Initialize shift
-        self%dG_shift=self%param%shift
+        self%dG_shift=self%param%shift/autokcal
         
         self%dG_res=(self%chem_pot_sol+self%param%omega*self%solute%near)/autokcal
 
