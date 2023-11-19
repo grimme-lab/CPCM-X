@@ -711,7 +711,7 @@ subroutine use_default(config, solv, home, error)
    use mctc_env_system, only : get_variable
    use tomlf, only : toml_table, toml_parse, toml_error, toml_key, get_value
    !> Solvent used for default configuration
-   character(:), allocatable, intent(in) :: solv
+   character(len=*), intent(in) :: solv
    !> Configuration Type
    type(configuration_type), intent(inout) :: config
    !> Error handling

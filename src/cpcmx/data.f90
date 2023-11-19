@@ -70,7 +70,7 @@ contains
         use globals, only: to_lower
         !> Name of the solvent
         character(len=*), intent(in) :: solvent
-        character(:), allocatable :: solvent_name
+        character(len=:), allocatable :: solvent_name
 
         solvent_name=to_lower(solvent)
         
