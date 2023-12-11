@@ -107,7 +107,7 @@ contains
          read(input_unit,'(a)',iostat=io_error) line
          if (line(:1)=="#") then
             cycle
-         else if (io_error .lt. 0) then
+         else if (IS_IOSTAT_END(io_error)) then
             exit
          else
             read(line,*) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&

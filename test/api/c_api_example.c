@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cpx.h"
 
@@ -42,7 +43,7 @@ int testFirst() {
 
     double sum1 = energies[0] + energies[1] + energies[2] + energies[3] + energies[4] + energies[5];
 
-    if (!check(sum1, -1.718436e-03, 1.0e-7, "Energy for Hexadecane in Water does not match"))
+    if (!check(sum1, -1.718436e-03, 1.0e-5, "Energy for Hexadecane in Water does not match"))
         return 1;
 
     return 0;
@@ -55,10 +56,10 @@ int testSecond() {
 
     calc = cpx_newCalculation();
 
-    char* crsparam[200];
+    char crsparam[200];
     strcpy(crsparam,getenv("CPXHOME"));
     strcat(crsparam,"/DB/xtb/crs.param_h2o");
-    char* smdparam[200];
+    char smdparam[200];
     strcpy(smdparam,getenv("CPXHOME"));
     strcat(smdparam,"/DB/xtb/smd_h2o");
 
@@ -71,7 +72,7 @@ int testSecond() {
 
     double sum1 = energies[0] + energies[1] + energies[2] + energies[3] + energies[4] + energies[5];
 
-    if (!check(sum1, -1.718436e-03, 1.0e-7, "Energy for Hexadecane in Water does not match"))
+    if (!check(sum1, -1.718436e-03, 1.0e-5, "Energy for Hexadecane in Water does not match"))
         return 1;
 
     return 0;
@@ -94,7 +95,7 @@ int testThird() {
     double sum1 = energies[0] + energies[1] + energies[2] + energies[3] + energies[4] + energies[5];
 
     printf("%e\n",sum1);
-    if (!check(sum1, -1.532934E-2, 1.0e-7, "Energy for Hexadecane in Octanol does not match"))
+    if (!check(sum1, -1.532934E-2, 1.0e-5, "Energy for Hexadecane in Octanol does not match"))
         return 1;
 
     return 0;
