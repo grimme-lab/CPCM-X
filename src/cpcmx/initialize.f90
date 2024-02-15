@@ -110,8 +110,13 @@ contains
          else if (IS_IOSTAT_END(io_error)) then
             exit
          else
-            read(line,*) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&
+            read(line,*,iostat=io_error) dummy1,mol%id(num),mol%xyz(num,1),mol%xyz(num,2),&
                &mol%xyz(num,3),dummy3,mol%area(num),mol%su(num),mol%pot(num)
+            if (IS_IOSTAT_END(io_error)) exit
+            if (io_error .ne. 0) then
+               call fatal_error(error,"Error while reading segment information.")
+               return
+            end if
          !   charges(num)=anint(charges(num)*1000)/1000
             mol%pot(num)=mol%pot(num)*BtoA
             mol%xyz(num,1)=mol%xyz(num,1)*btoa
