@@ -14,3 +14,12 @@ option(
   yield: true,
   description: 'use OpenMP parallelisation',
 )
+
+
+option(
+  'custom_libraries',
+  type: 'array',
+  value: [],
+  yield: true,
+  description: 'libraries to load for custom linear algebra backend',
+)
