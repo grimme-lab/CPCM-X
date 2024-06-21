@@ -31,9 +31,9 @@ fc_id = fc.get_id()
 lib_deps = []
 
 if get_option('openmp')
-  omp_dep = dependency('openmp', required: fc_id != 'intel' and fc_id != 'nvidia_hpc')
+  omp_dep = dependency('openmp', required: fc_id != 'intel' and fc_id != 'intel-llvm' and fc_id != 'nvidia_hpc')
   if not omp_dep.found()
-    if fc_id == 'intel'
+    if fc_id == 'intel' or fc_id != 'intel-llvm'
       message('Using -qopenmp to use OpenMP with Intel compilers')
       omp_dep = declare_dependency(
         compile_args: '-qopenmp',
