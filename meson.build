@@ -25,7 +25,33 @@ project(
   ],
 )
 
+fc = meson.get_compiler('fortran')
+fc_id = fc.get_id()
+
 lib_deps = []
+
+if get_option('openmp')
+  omp_dep = dependency('openmp', required: fc_id != 'intel' and fc_id != 'nvidia_hpc')
+  if not omp_dep.found()
+    if fc_id == 'intel'
+      message('Using -qopenmp to use OpenMP with Intel compilers')
+      omp_dep = declare_dependency(
+        compile_args: '-qopenmp',
+        link_args: '-qopenmp',
+      )
+    else
+      message('Using -mp to use OpenMP with NVHPC compilers')
+      omp_dep = declare_dependency(
+        compile_args: '-mp',
+        link_args: '-mp',
+      )
+    endif
+  endif
+  lib_deps += omp_dep
+endif
+
+lib_deps += dependency('threads')
+
 subdir('config')
 
 srcs = []
