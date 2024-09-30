@@ -102,7 +102,7 @@ contains
    use mctc_env, only: error_type, fatal_error
    character(kind=c_char), dimension(*), intent(in) :: vparam_file_crs
    character(kind=c_char), dimension(*), intent(in) :: vparam_file_smd
-   character(len=:, kind=c_char), allocatable :: method, solvent, param_file_crs, param_file_smd
+   character(len=:, kind=c_char), allocatable :: param_file_crs, param_file_smd
    type(c_ptr), intent(inout) :: vcalc
    type(vcalc_type), pointer :: calc
    type(calculation_type), allocatable :: dummy_calc
