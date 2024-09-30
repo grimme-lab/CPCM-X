@@ -25,7 +25,6 @@ program CPCMX
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
    implicit none
    character(len=*), parameter :: prog_name = "cpx"
-   logical :: ex
    integer :: ioerror
 
    real(wp), allocatable :: isodens_rad(:)
@@ -36,7 +35,6 @@ program CPCMX
 
    type(calculation_type) :: calc
    type(configuration_type) :: config
-   type(parameter_type) :: parameter
    type(error_type), allocatable :: error
 
 
@@ -433,7 +431,6 @@ subroutine get_arguments(config, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iarg, narg
-   real(wp) :: val
    character(len=:), allocatable :: arg, home
    logical :: ex
 
@@ -592,10 +589,10 @@ subroutine read_input(config,error)
    type(configuration_type) :: config
    type(error_type), allocatable :: error
 
-   character(len=100) :: sac_param_path, smd_param_path, line
+   character(len=100) :: line
 
-   integer :: io_error, i, n,j, equal
-   logical :: ex, started
+   integer :: io_error, i, j, equal
+   logical :: ex
 
    character(len=:), allocatable :: keyword, substring
 
@@ -725,11 +722,8 @@ subroutine use_default(config, solv, home, error)
 
 
    type(toml_key), allocatable, dimension(:) :: list
-   integer :: stat
-   character(len=255) :: line
    character(:), allocatable :: line2
    logical :: ex
-   character(len=10) :: control, command
    integer :: nconf, io
 
    character(len=:), allocatable :: user
