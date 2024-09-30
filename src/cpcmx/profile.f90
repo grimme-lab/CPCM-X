@@ -113,7 +113,7 @@ module profile
 
          real(sp) :: punit
 
-         real(sp), parameter :: sig_width=0.025_8
+         real(sp), parameter :: sig_width=0.025_sp
          integer, parameter :: n_sig=51
          real(sp) :: counter(0:n_sig-1)
 
