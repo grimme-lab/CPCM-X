@@ -712,7 +712,7 @@ contains
                             Call execute_command_line("kdg end")
                             Call execute_command_line("kdg cosmo")
                             open(13,file="control", access="append")
-                            write(13,'(a)'), &
+                            write(13,'(a)') &
                             "$cosmo", &
                             "   epsilon=infinity", &
                             "   routf=1.1", &
