@@ -250,13 +250,13 @@ program CPCMX
             "|                 Isodensity Radii                 |",&
             " ------------------------------------------------- ", &
             ""
-            write(output_unit,'(5x,a)'), &
+            write(output_unit,'(5x,a)') &
             "Isodensity Flag used, calculated isodensity radii:",&
             ""
-            write(output_unit,'(10x,a,t30,a)'), &
+            write(output_unit,'(10x,a,t30,a)') &
                "Atom Number:", "[A]"
             do i=1,maxval(calc%solute%id)
-               write(output_unit,'(10x,I0,t30,F4.2)'),&
+               write(output_unit,'(10x,I0,t30,F4.2)') &
                   i, isodens_rad(i)
             end do
             write(output_unit,'(a)') ""
