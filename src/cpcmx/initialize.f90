@@ -45,7 +45,6 @@ contains
       character(:), allocatable :: filen
       integer :: io_error, dummy1, num, ele_num
       real(wp) :: dummy3, dummy4, dummy5
-      integer, allocatable :: ident(:)
       character(2) :: element
 
       logical :: exists
@@ -206,9 +205,7 @@ contains
       character(len=*), intent(in) :: solvent
       type(error_type), allocatable :: error
 
-      character(len=200), allocatable :: cosmo_file(:)
       character(:), allocatable :: norm_solv
-      integer :: un, k
 
       norm_solv=to_lower(solvent_name(solvent))
       if (norm_solv .eq. "") then
@@ -228,7 +225,6 @@ contains
       character(len=*), intent(in) :: filename
       type(parameter_type), intent(out) :: param
       logical :: g_exists
-      integer :: io_error
 
       !> Error Handling
       type(error_type), allocatable :: error
@@ -313,7 +309,7 @@ contains
    end subroutine setup_cov
 
    subroutine load_param(method,solvent,self,error)
-      use mctc_env, only: error_type, fatal_error, wp
+      use mctc_env, only: error_type, fatal_error
       use cpxcalc, only: calculation_type
       use data, only: solvent_name
       use internaldb
@@ -355,8 +351,7 @@ contains
       character(len=3) :: symbol
       character(len=*) :: filename, model, solvent
       logical :: g_exists
-      integer :: i, io_error,dummy1
-      character(len=100) :: home,param_path
+      integer :: i, io_error
 
       !> Error Handling
       type(error_type), allocatable :: error
