@@ -39,10 +39,10 @@ program CPCMX
    type(parameter_type) :: parameter
    type(error_type), allocatable :: error
 
-  
 
-  
-   !! ------------------------------------------------------------ 
+
+
+   !! ------------------------------------------------------------
    !! Read Command Line Arguments and set Parameters accordingly
    !! ------------------------------------------------------------
    Call timer%push("total")
@@ -54,7 +54,7 @@ program CPCMX
    else
       Call initialize_param(config%sac_param_path,calc%param,error)
    end if
-   Call check_error(error) 
+   Call check_error(error)
    if (config%ML) then
       Call init_pr
       write(*,*) "Machine Learning Mode selected. Will Only Write an ML.data file." !! ML Mode deprecated
@@ -69,10 +69,10 @@ program CPCMX
    !   write(*,*) "Reading Sigma Profile"
    !   Call read_singlesig(solvent_sigma,config%csm_solvent,solvent_volume)
    !   Call read_singlesig(solute_sigma,config%csm_solute,solute_volume)
-   !   
+   !
    !   Call read_triplesig(solvent_sigma3,config%csm_solvent,solvent_volume)
    !   Call read_triplesig(solute_sigma3,config%csm_solute,solute_volume)
-   !else   
+   !else
    !! ----------------------------------------------------------------------------------
    !! Creating COSMO Files with QC packages
    !! ----------------------------------------------------------------------------------
@@ -92,12 +92,12 @@ program CPCMX
                error stop
          end select
          Call check_error(error)
-         Call timer%pop() 
-      end if 
+         Call timer%pop()
+      end if
    !! ----------------------------------------------------------------------------------
    !! Create the Sigma Profile from COSMO files
    !! ----------------------------------------------------------------------------------
-      
+
       Call timer%push("sigma_av")
    !! ------------------------------------------------------------------------------------
    !! Read necessary COSMO Data
@@ -116,7 +116,7 @@ program CPCMX
       call check_error(error)
       Call read_cosmo(config%csm_solute,calc%solute,config%database,error)
       call check_error(error)
- 
+
    !! ------------------------------------------------------------------------------------
    !! Sigma Charge Averaging and creating of a single Sigma Profile for Solute and Solvent
    !! ------------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ program CPCMX
    !! Determination of Atoms in Rings, necessary for the PR2018 EOS and ER Correction
    !! ------------------------------------------------------------------------------------
    if ((config%ML) .OR. (.NOT. config%model .EQ. "sac")) then
-      Call timer%push("bondings") 
+      Call timer%push("bondings")
       write(output_unit,'(5x,a)') "Determine Ring atoms and HB groups."
       Call calc%init_bonding()
       Call timer%pop()
@@ -147,14 +147,14 @@ program CPCMX
    end if
 
    !! ------------------------------------------------------------------------------------
-   !! Exit here if you only want Sigma Profiles to be created 
+   !! Exit here if you only want Sigma Profiles to be created
    !! ------------------------------------------------------------------------------------
    if (config%prof) then;
       write(*,*) "Only Profile mode choosen, exiting."
       stop
    end if
    !end if
-   
+
 
    !! ------------------------------------------------------------------------------------
    !! Choice of the different post COSMO Models (sac,sac2010,sac2013,CPCM-X)
@@ -179,7 +179,7 @@ program CPCMX
    !      &config%smd_solvent,config%smd_param_path,config%smd_default)
    !
    !   case("sac2010")
-   !      
+   !
    !      Call sac_gas(solute_energy,id_scr,solute_area,solute_sv,solute_su,solute_pot)
    !      Call sac_2010(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume)
    !      if (config%ML) Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
@@ -202,7 +202,7 @@ program CPCMX
    !    Call sac_2013(solvent_sigma3,solute_sigma3,solvent_volume,solute_volume,sac_disp)
    !    Call pr2018(solute_area,solute_elements,solute_ident,oh_sol,nh_sol,near_sol)
    !  case ("crs")
-   
+
          !! CPCM-RS calculation starts here !!
 
          ! Calculation of Solvent Phase energies
@@ -226,7 +226,7 @@ program CPCMX
          "|                Gas Phase Results                |",&
          " ------------------------------------------------- ", &
          ""
-         
+
          write(output_unit,'(5x,a,t30,F15.8,2x,a)') &
          "E_COSMO:", calc%solute%energy, "Eh", &
          "E_COSMO+dE:", (calc%solute%energy+calc%dG_cc),"Eh",   &
@@ -241,7 +241,7 @@ program CPCMX
          "Solvent atomic mass:", AtomicMass(calc%solvent%element), "a.u.", &
          "State correction", calc%dG_ss, "Eh", &
          ""
-         
+
          Call timer%push("cds")
          if (config%isodens) then
             Call get_isodens_radii(calc%solute%xyz,calc%solute%id,calc%solute%atom_xyz,isodens_rad)
@@ -273,13 +273,13 @@ program CPCMX
          Call timer%pop()
 
       !end select
-      
+
       write(output_unit,'(10x,a)') &
          " ------------------------------------------------- ",&
          "|                     Results                     |",&
          " ------------------------------------------------- ", &
          ""
-      
+
       if (config%ML) then
          write(*,*) "Writing ML data in ML.data"
          Call System("paste --delimiters='' ML.energy ML.gamma ML.pr > ML.data")
@@ -319,7 +319,7 @@ program CPCMX
          write(*,*) "total"//repeat(" ", 18)//format_time(ttime)
          do i = 1,size(label)
             stime = timer%get(label(i))
-            write(*,*) label(i)//repeat(" ",3)//format_time(stime) 
+            write(*,*) label(i)//repeat(" ",3)//format_time(stime)
          end do
       end block
       end if
@@ -345,7 +345,7 @@ subroutine help(unit)
       "    --inp", "Allows to specify an input file for advanced configuration.", &
       "    --help", "Show this help message"
    write(unit, '(a)')
-   
+
 end subroutine help
 
 subroutine sample(filename,rc)
@@ -439,14 +439,14 @@ subroutine get_arguments(config, error)
 
 
    Call get_variable("CPXHOME",home)
-   
+
    if (.not.allocated(home)) then
       Call move_line("/",home)
    else
       if (home(len(home):len(home)) .ne. "/") call move_line(home//"/",home)
    end if
    ex=.false.
-  
+
 
    config%isodens=.false.
    iarg = 0
@@ -480,7 +480,7 @@ subroutine get_arguments(config, error)
          end if
          call fatal_error(error, "Too many positional arguments present")
          exit
-      case ("--prog") 
+      case ("--prog")
          iarg=iarg+1
          call get_argument(iarg,arg)
          call move_alloc(arg, config%qc_calc)
@@ -521,7 +521,7 @@ subroutine get_arguments(config, error)
 
    if (config%isodens) then
       config%qc_calc="tm"
-      inquire(file=config%database//"/isodens/"//config%sac_param_path, exist=ex) 
+      inquire(file=config%database//"/isodens/"//config%sac_param_path, exist=ex)
       if (ex) then
          config%database=config%database//"/isodens"
       else
@@ -570,7 +570,7 @@ subroutine get_arguments(config, error)
          end if
       end if
    end if
- 
+
     if ((.not.(allocated(config%input))) .AND. (.not. (allocated(config%smd_solvent)))) then
        if (.not.allocated(error)) then
           call help(output_unit)
@@ -585,7 +585,7 @@ subroutine get_arguments(config, error)
        end if
     end if
 
-end subroutine get_arguments 
+end subroutine get_arguments
 
    !> Subroutine to Read the CPCM-SACMD Input File
 subroutine read_input(config,error)
@@ -637,7 +637,7 @@ subroutine read_input(config,error)
          else
             Call move_line(line(j:i-1),keyword)
          end if
-         
+
          select case(keyword)
             case ('TM','tm')
                if (allocated(config%qc_calc)) then
@@ -690,7 +690,7 @@ subroutine read_input(config,error)
          if (allocated(substring)) deallocate(substring)
          j=i+1
       end if
-   end do 
+   end do
 
    Read(input_unit,'(A)',iostat=io_error,err=255) line !Comment Line
    Read(input_unit,'(A)',iostat=io_error,err=255) line
@@ -700,10 +700,10 @@ subroutine read_input(config,error)
    Read(input_unit,*,iostat=io_error,err=255) line, config%probe
    Call move_line(line,config%smd_solvent)
    Read(input_unit,*,iostat=io_error,err=255) config%T
-   SysTemp=config%T 
+   SysTemp=config%T
    config%z1=0.995
    config%z2=0.005
-   
+
 255 if (io_error .NE. 0) error stop "Check Input File."
 end subroutine read_input
 
@@ -722,8 +722,8 @@ subroutine use_default(config, solv, home, error)
    type(toml_error), allocatable :: config_error
 
    character(len=:), allocatable, intent(in) :: home
-   
-   
+
+
    type(toml_key), allocatable, dimension(:) :: list
    integer :: stat
    character(len=255) :: line
@@ -733,7 +733,7 @@ subroutine use_default(config, solv, home, error)
    integer :: nconf, io
 
    character(len=:), allocatable :: user
-  
+
    if (solv .eq. '') then
       Call fatal_error(error,'The Solvent you specified is not available.')
       return
@@ -761,10 +761,10 @@ subroutine use_default(config, solv, home, error)
    if (ex) then
       config%config_path="/home/"//user//"/cpcmx.toml"
    else
-  
+
       inquire(file=home//"cpcmx.toml",exist=ex)
 
-      if (.not. ex) then 
+      if (.not. ex) then
          !call fatal_error(error, "No configuration found in "//home)
          return
       else
@@ -781,7 +781,7 @@ subroutine use_default(config, solv, home, error)
       call config_table%get_keys(list)
       do nconf=1,size(list)
          select case(list(nconf)%key)
-         case("prog") 
+         case("prog")
                if (allocated(config%qc_calc)) cycle
                call get_value(config_table,list(nconf),line2)
                if (line2 .eq. "NONE") cycle
@@ -841,22 +841,22 @@ subroutine move_line(line,aline,hignore)
 
    if (present(hignore)) then
       if (.not. hignore) ignore=.false.
-   end if 
+   end if
 
    if (allocated(aline)) deallocate(aline)
 
    if (ignore) then
       do i= 1,len(trim(line))
-         if (line(i:i) .EQ. "#") then 
+         if (line(i:i) .EQ. "#") then
             allocate(character(len(trim(line(1:i-1)))) :: aline)
             aline=trim(line(1:i-1))
             exit
-         end if 
+         end if
          if (i .EQ. len(trim(line))) then
             allocate(character(len(trim(line(1:i)))) :: aline)
             aline=trim(line(1:i))
             exit
-         end if 
+         end if
       end do
    else
       allocate(character(len(trim(line))) :: aline)
@@ -888,21 +888,21 @@ subroutine echo_init(config)
       "Solvent:", config%smd_solvent, &
       "Corresponding COSMO File:", config%csm_solvent
 
-   if (allocated(config%qc_calc)) then 
+   if (allocated(config%qc_calc)) then
       write(output_unit,'(5x,a,t35,a)') &
       "QC Program:", config%qc_calc
    else
       write(output_unit,'(5x,a,t35,a)') &
       "Solute COSMO File:", config%csm_solute
    end if
-      
+
 end subroutine echo_init
 
 subroutine check_error(error)
    type(error_type), intent(in), allocatable :: error
 
    integer :: point
-   
+
    if (allocated(error)) then
       write(error_unit,'(a)') ""
       point=index(error%message,".")
