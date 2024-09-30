@@ -109,7 +109,7 @@ module profile
 
          character(len=*), intent(in), optional :: nam
 
-         integer :: sigma_min, sigma_max, i, j,tmp
+         integer :: i, tmp
 
          real(sp) :: punit
 
@@ -117,7 +117,7 @@ module profile
          integer, parameter :: n_sig=51
          real(sp) :: counter(0:n_sig-1)
 
-         real(wp) :: profile(0:n_sig-1), chdval(0:n_sig-1), temp
+         real(wp) :: profile(0:n_sig-1), temp
 
          punit=0.001
 
