@@ -31,8 +31,8 @@ module sac_mod
        !  type(DICT_STRUCT), pointer :: dispa_con, dispb_con
          !real(wp), dimension(10) :: param
        !  type(DICT_DATA) :: a_disp,b_disp
-         real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, thermo, beta, avcorr
-         integer :: dummy1, ioerror, i
+         real(wp) :: E_gas, dEreal, ediel, edielprime, vdW_gain, avcorr
+         integer :: ioerror, i
          logical :: ex
 
          INQUIRE(file="gas.energy", exist=ex)
@@ -593,7 +593,7 @@ subroutine sac_2013(profil,profil2,vcosmo1,vcosmo2,sac_disp)
    real(wp), dimension(:) :: sac_disp
 
    real(wp) :: gam(3,0:50),maxsig,punit,profile(3,0:50), gam_saved(3,0:50),gam_sol(3,0:50)
-   real(wp) :: gamma_solv, gamma_sol,gamma_test, summ, mix_prof(3,0:50), mix_gam(3,0:50)
+   real(wp) :: gamma_solv, gamma_sol, summ, mix_prof(3,0:50), mix_gam(3,0:50)
    real(wp) :: VNORM, ANORM, RNORM(2), QNORM(2), vcosmo1, z(2),vcosmo2, A, omega
    real(wp) :: Theta(2), Phi(2), L(2), coord, gammasg(2), bt, bp !SG Equation
    real(wp) :: gammadisp(2)
@@ -853,7 +853,7 @@ subroutine sac2013_disp(nam,is_bonded,ident,elements,disp_con,sac_disp)
    disp=dict_get_key(disp_con, trim(data_string))
    atom_disp=disp%param
    sac_disp=sac_disp+atom_disp
-   if (atom_disp .NE. 0) disp_atoms=disp_atoms+1
+   if (atom_disp .NE. 0._wp) disp_atoms=disp_atoms+1
 
    !write(*,*) data_string, atom_disp
    end do
