@@ -56,12 +56,9 @@ module sdm
       character(len=*), intent(in), dimension(:) :: internal_smd
       !>Laufen
       integer :: i, j
-      !> Read Env
-      integer :: dummy1,io_error
       !> Parameter Path and Solvent Name
       character(len=*) :: solvent
       character(len=:), allocatable :: path
-      logical :: ex
       real(wp),allocatable :: cds(:)
       real(wp) :: cds_sm
 
@@ -136,8 +133,6 @@ module sdm
       logical, intent(in) :: default
       !>Laufen
       integer :: i, j
-      !> Read Env
-      integer :: dummy1,io_error
       !> Parameter Path and Solvent Name
       character(len=*) :: path, solvent
       logical :: ex
@@ -220,8 +215,6 @@ subroutine calculate_cds_isodens(species,symbols,coord,probe,solvent,path,dG_cds
       real(wp),allocatable :: dsdr(:, :, :)
       !>Laufen
       integer :: i, j
-      !> Read Env
-      integer :: dummy1,io_error
       !> Parameter Path and Solvent Name
       character(len=*) :: path, solvent
       logical :: ex
