@@ -64,9 +64,9 @@ foreach(t IN LISTS tests)
 endforeach()
 
 
-set(CPX-EXE "${PROJECT_BINARY_DIR}/cpx")
+set(CPX_EXE "${PROJECT_BINARY_DIR}/app/cpx")
 
-add_test("EXE_Argparser_print_help" ${XTB-EXE} --help)
+add_test("EXE_Argparser_print_help" ${CPX_EXE} --help)
 
 set_tests_properties(
   PROPERTIES
