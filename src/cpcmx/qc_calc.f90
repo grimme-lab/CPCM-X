@@ -54,7 +54,6 @@ contains
         !> Necessary for reading gas phase energy.
         character(len=200) :: line
         character(len=:), allocatable :: xtb_bin
-        integer :: lines, i
         real(wp) :: E_gas
 
         charge=0
@@ -387,7 +386,7 @@ contains
         character(len=25) :: words, dummy1, dummy2, dummy3, dummy4
         real(wp) :: E_gas, E_solv
         !> I/O error
-        integer :: io_error, file_size
+        integer :: file_size
 
         !> Needed for determining right radii
         integer :: atoms, i
@@ -669,7 +668,7 @@ contains
         end if
         open(11, file='control', access='append')
         write(11,'(A)') '$cosmo'
-        if (epsilon .ne. 0) then
+        if (epsilon .ne. 0._wp) then
             write(11,'(A11, F0.2, A4)')'   epsilon=',epsilon, merge(' ion','    ',ion)
         else 
             write(11,'(A19, A4)')'   epsilon=infinity', merge(' ion','    ',ion)
@@ -687,7 +686,7 @@ contains
         end if
         write(11,'(A16,A)') '$cosmo_out file=',cosmo_out
         write(11,'(A4)') '$end'
-        if (epsilon .ne. 0) then
+        if (epsilon .ne. 0._wp) then
             write(output_unit,'(5x,A,F0.2,A)') 'Starting COSMO Calculation with epsilon=',epsilon, merge(' ion','    ',ion)
         else
             write(output_unit,'(5x,A,A)') 'Starting COSMO Calculation with epsilon=infinity', merge(' ion','    ',ion)
@@ -712,7 +711,7 @@ contains
                             Call execute_command_line("kdg end")
                             Call execute_command_line("kdg cosmo")
                             open(13,file="control", access="append")
-                            write(13,'(a)'), &
+                            write(13,'(a)') &
                             "$cosmo", &
                             "   epsilon=infinity", &
                             "   routf=1.1", &
@@ -845,7 +844,7 @@ contains
         integer :: charge, multi
 
         !> Dummy Variables and Loop Variable
-        integer :: i, j
+        integer :: i
         real(wp) :: d1, d2, d3
 
         character(len=2), parameter :: ecp28(32) = ['rb','sr','y ','zr','nb','mo','tc','ru','rh','pd','ag','cu', &

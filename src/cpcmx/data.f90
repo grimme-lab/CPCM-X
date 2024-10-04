@@ -467,8 +467,9 @@ contains
     function minnesota_eps(solvent,error) result(epsilon)
         character(len=*), intent(in) :: solvent
         type(error_type), allocatable :: error
-        real(wp):: epsilon
+        real(wp) :: epsilon
 
+        epsilon=ieee_value(epsilon,ieee_positive_inf)
         select case(solvent_name(solvent))
         case('infinity','inf')
             epsilon=ieee_value(epsilon,ieee_positive_inf)
