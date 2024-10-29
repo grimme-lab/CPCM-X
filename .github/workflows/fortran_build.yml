@@ -61,7 +61,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        fc: [ifort]
+        fc: [ifx]
         cc: [icc]
     env:
       FC: ${{ matrix.fc }}
