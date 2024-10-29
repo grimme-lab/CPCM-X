@@ -23,7 +23,7 @@ if fc_id == 'gcc'
     '-fbacktrace',
     language: 'fortran',
   )
-elif fc_id == 'intel'
+elif fc_id == 'intel' or fc_id == 'intel-llvm'
   add_project_arguments(
     '-traceback',
     language: 'fortran',
@@ -44,14 +44,14 @@ endif
 
 lapack_vendor = get_option('lapack')
 if lapack_vendor == 'auto'
-  if fc_id == 'intel'
+  if fc_id == 'intel' or fc_id == 'intel-llvm'
     lapack_vendor = 'mkl'
   endif
 endif
 
 if lapack_vendor == 'mkl'
   mkl_dep = []
-  if fc_id == 'intel'
+  if fc_id == 'intel' or fc_id == 'intel-llvm'
     mkl_dep += fc.find_library('mkl_intel_lp64')
     if get_option('openmp')
       mkl_dep += fc.find_library('mkl_intel_thread')
