@@ -11,8 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        fc: [gfortran-14]
-        cc: [gcc-14]
+        fc: [gfortran-13]
+        cc: [gcc-13]
         include:
           - os: ubuntu-latest
             fc: gfortran-9
