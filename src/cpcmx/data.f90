@@ -81,19 +81,19 @@ contains
             solvent_name='2methylpyridine'
         case('4methyl2pentanone')
             solvent_name='4methyl2pentanone'
-        case('aceticacid')
+        case('aceticacid','ethanoicacid')
             solvent_name='aceticacid'
-        case('acetonitrile')
+        case('acetonitrile','methylcyanide')
             solvent_name='acetonitrile'
         case('acetophenone')
             solvent_name='acetophenone'
         case('aniline')
             solvent_name='aniline'
-        case('anisole')
+        case('anisole','methoxybenzene')
             solvent_name='anisole'
         case('benzene')
             solvent_name='benzene'
-        case('benzonitrile')
+        case('benzonitrile','cyanobenzene')
             solvent_name='benzonitrile'
         case('benzylalcohol')
             solvent_name='benzylalcohol'
@@ -101,7 +101,7 @@ contains
             solvent_name='bromobenzene'
         case('bromoethane')
             solvent_name='bromoethane'
-        case('bromoform')
+        case('bromoform','tribromomethane')
             solvent_name='bromoform'
         case('bromooctane')
             solvent_name='bromooctane'
@@ -113,13 +113,13 @@ contains
             solvent_name='butylacetate'
         case('butylbenzene')
             solvent_name='butylbenzene'
-        case('carbondisulfide')
+        case('carbondisulfide','cs2')
             solvent_name='carbondisulfide'
-        case('carbontet','carbontetrachlorid','ccl4')
+        case('carbontet','carbontetrachloride','ccl4','tetrachloromethane)
             solvent_name='carbontet' 
         case('chlorobenzene')
             solvent_name='chlorobenzene'
-        case('chloroform','chcl3')
+        case('chloroform','chcl3','trichloromethane','TCM')
             solvent_name='chloroform'
         case('chlorohexane')
             solvent_name='chlorohexane'
@@ -139,17 +139,17 @@ contains
             solvent_name='dibutylether'
         case('dichloroethane')
             solvent_name='dichloroethane'
-        case('diethylether')
+        case('diethylether','ether')
             solvent_name='diethylether'
         case('diisopropylether')
             solvent_name='diisopropylether'
         case('dimethylacetamide')
             solvent_name='dimethylacetamide'
-        case('dimethylformamide')
+        case('dimethylformamide','dmf')
             solvent_name='dimethylformamide'
         case('dimethylpyridine')
             solvent_name='dimethylpyridine'
-        case('dimethylsulfoxide')
+        case('dimethylsulfoxide','dmso')
             solvent_name='dimethylsulfoxide'
         case('dodecane')
             solvent_name='dodecane'
@@ -181,7 +181,7 @@ contains
             solvent_name='iodobenzene'
         case('isobutanol')
             solvent_name='isobutanol'
-        case('isooctane')
+        case('isooctane','2,2,4-trimethylpentane')
             solvent_name='isooctane'
         case('isopropanol')
             solvent_name='isopropanol'
@@ -189,13 +189,13 @@ contains
             solvent_name='isopropylbenzene'
         case('isopropyltoluene')
             solvent_name='isopropyltoluene'
-        case('mcresol')
+        case('mcresol','3-methylphenol)
             solvent_name='mcresol'
-        case('mesitylene')
+        case('mesitylene','1,3,5-trimethylbenzene)
             solvent_name='mesitylene'
         case('methoxyethanol')
             solvent_name='methoxyethanol'
-        case('methylenechloride')
+        case('methylenechloride', 'dichloromethane', 'DCM', 'ch2cl2')
             solvent_name='methylenechloride'
         case('methylformamide')
             solvent_name='methylformamide'
@@ -213,7 +213,7 @@ contains
             solvent_name='octane'
         case('octanol')
             solvent_name='octanol'
-        case('odichlorobenzene')
+        case('odichlorobenzene','odcb')
             solvent_name='odichlorobenzene'
         case('onitrotoluene')
             solvent_name='onitrotoluene'
@@ -239,11 +239,11 @@ contains
             solvent_name='tbutylbenzene'
         case('tetrachloroethene','c2cl4')
             solvent_name='tetrachloroethene' 
-        case('tetrahydrofuran')
+        case('tetrahydrofuran','THF')
             solvent_name='tetrahydrofuran'
         case('tetrahydrothiophenedioxide','sulfolan') 
             solvent_name='tetrahydrothiophenedioxide' 
-        case('tetralin')
+        case('tetralin','1,2,3,4-tetrahydronaphthalene')
             solvent_name='tetralin'
         case('toluene')
             solvent_name='toluene'
@@ -251,7 +251,7 @@ contains
             solvent_name='tributylphosphate'
         case('triethylamine')
             solvent_name='triethylamine'
-        case('trimethylbenzene')
+        case('trimethylbenzene','1,2,3-trimethylbenzene')
             solvent_name='trimethylbenzene'
         case('undecane')
             solvent_name='undecane'
