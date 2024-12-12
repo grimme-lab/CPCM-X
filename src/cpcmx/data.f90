@@ -115,7 +115,7 @@ contains
             solvent_name='butylbenzene'
         case('carbondisulfide','cs2')
             solvent_name='carbondisulfide'
-        case('carbontet','carbontetrachloride','ccl4','tetrachloromethane)
+        case('carbontet','carbontetrachloride','ccl4','tetrachloromethane')
             solvent_name='carbontet' 
         case('chlorobenzene')
             solvent_name='chlorobenzene'
@@ -189,9 +189,9 @@ contains
             solvent_name='isopropylbenzene'
         case('isopropyltoluene')
             solvent_name='isopropyltoluene'
-        case('mcresol','3-methylphenol)
+        case('mcresol','3-methylphenol')
             solvent_name='mcresol'
-        case('mesitylene','1,3,5-trimethylbenzene)
+        case('mesitylene','1,3,5-trimethylbenzene')
             solvent_name='mesitylene'
         case('methoxyethanol')
             solvent_name='methoxyethanol'
