@@ -14,10 +14,10 @@ jobs:
         fc: [gfortran-12]
         cc: [gcc-12]
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             fc: gfortran-9
             cc: gcc-9
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             fc: gfortran-10
             cc: gcc-10
 
