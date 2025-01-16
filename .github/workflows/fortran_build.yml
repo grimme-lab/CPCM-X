@@ -11,8 +11,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest]
-        fc: [gfortran-11]
-        cc: [gcc-11]
+        fc: [gfortran-12]
+        cc: [gcc-12]
         include:
           - os: ubuntu-latest
             fc: gfortran-9
@@ -23,10 +23,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: 3.x
 
@@ -35,6 +35,8 @@ jobs:
       run: |
         brew install openblas
         echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
+        echo "LDFLAGS=-L/opt/homebrew/opt/openblas/lib"              >> $GITHUB_ENV
+        echo "CPPFLAGS=-I/opt/homebrew/opt/openblas/include"         >> $GITHUB_ENV
         
     - name: Install meson
       run: pip3 install meson==0.62.0 ninja cmake
@@ -61,7 +63,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        fc: [ifort]
+        fc: [ifx]
         cc: [icc]
     env:
       FC: ${{ matrix.fc }}
@@ -75,10 +77,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v5
       with:
         python-version: 3.x
 
@@ -98,7 +100,7 @@ jobs:
       run: |
         sudo apt-get install ${APT_PACKAGES}
         source /opt/intel/oneapi/setvars.sh
-        source /opt/intel/oneapi/compiler/2024.0/env/vars.sh 
+        source /opt/intel/oneapi/compiler/2025.0/env/vars.sh
         printenv >> $GITHUB_ENV
 
     - name: Configure meson build
@@ -132,10 +134,10 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.x
 
