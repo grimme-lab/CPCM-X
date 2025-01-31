@@ -119,7 +119,7 @@ contains
             solvent_name='carbontet' 
         case('chlorobenzene')
             solvent_name='chlorobenzene'
-        case('chloroform','chcl3','trichloromethane','TCM')
+        case('chloroform','chcl3','trichloromethane','tcm')
             solvent_name='chloroform'
         case('chlorohexane')
             solvent_name='chlorohexane'
@@ -195,7 +195,7 @@ contains
             solvent_name='mesitylene'
         case('methoxyethanol')
             solvent_name='methoxyethanol'
-        case('methylenechloride', 'dichloromethane', 'DCM', 'ch2cl2')
+        case('methylenechloride', 'dichloromethane', 'dcm', 'ch2cl2')
             solvent_name='methylenechloride'
         case('methylformamide')
             solvent_name='methylformamide'
@@ -239,7 +239,7 @@ contains
             solvent_name='tbutylbenzene'
         case('tetrachloroethene','c2cl4')
             solvent_name='tetrachloroethene' 
-        case('tetrahydrofuran','THF')
+        case('tetrahydrofuran','thf')
             solvent_name='tetrahydrofuran'
         case('tetrahydrothiophenedioxide','sulfolan') 
             solvent_name='tetrahydrothiophenedioxide' 
