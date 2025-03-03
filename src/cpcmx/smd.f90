@@ -31,6 +31,7 @@ module sdm
       !> Calculate the CDS energy for a molecule input with internal SMD parameters
    subroutine calculate_cds_internal(species, symbols, coord, probe, solvent, dG_cds,internal_smd)
       use mctc_env, only : wp
+      use mctc_io_symbols, only : to_number
       use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size &
          & , get_vdw_rad_cosmo
       use data, only: solvent_name
@@ -95,7 +96,9 @@ module sdm
       Call init_smd(param,solvent_name(solvent))
 
       if (param%alpha .lt. 0.43) then
-        rad(8)=rad(8)+1.8*(0.43-param%alpha)
+         where (to_number(symbols) == 8)
+            rad=rad+1.8*(0.43-param%alpha)
+         end where
       end if
 
       call new_surface_integrator(sasa, species, rad, probe, grid_size(8))
@@ -110,6 +113,7 @@ module sdm
       !> Example implementation to calculate surface area for a molecule input
       subroutine calculate_cds_normal(species, symbols, coord, probe, solvent, path, dG_cds,default)
       use mctc_env, only : wp
+      use mctc_io_symbols, only : to_number
       use numsa, only : surface_integrator, new_surface_integrator, get_vdw_rad_smd, grid_size &
          & , get_vdw_rad_cosmo
       use smd, only: init_smd, smd_param, calc_surft, smd_surft, calc_cds, ascii_cds
@@ -179,7 +183,9 @@ module sdm
       end if
 
       if (param%alpha .lt. 0.43) then
-        rad(8)=rad(8)+1.8*(0.43-param%alpha)
+         where (to_number(symbols) == 8)
+            rad=rad+1.8*(0.43-param%alpha)
+         end where
       end if
 
       call new_surface_integrator(sasa, species, rad, probe, grid_size(8))
