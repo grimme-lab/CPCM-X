@@ -78,9 +78,9 @@ module sac_mod
 
          if (ML) then
             open(5,file='ML.energy')
-            write(5,'(F0.10A)',advance='no') dG_is,","
-            write(5,'(F0.10A)',advance='no') dG_cc,","
-            write(5,'(F0.10A)',advance='no') dG_disp,","
+            write(5,'(F0.10,A)',advance='no') dG_is,","
+            write(5,'(F0.10,A)',advance='no') dG_cc,","
+            write(5,'(F0.10,A)',advance='no') dG_disp,","
             close(5)
          end if
    end subroutine sac_gas
@@ -192,7 +192,7 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
   ! if (ML) open(5,file='ML.prof')
    do i=0,50
       mix_prof(i)=(z(1)*profil(i)+z(2)*profil2(i))/(z(1)*sum(profil)+z(2)*sum(profil2))
-  !    if (ML) write(5,'(F0.10A)',advance='no') mix_prof(i),","
+  !    if (ML) write(5,'(F0.10,A)',advance='no') mix_prof(i),","
    end do
    if (ML) then
    !   close(5)
@@ -338,9 +338,9 @@ subroutine sac_2005(profil,profil2,vcosmo1,vcosmo2,z1,z2)
       gamma_test2=0.0_wp
       do i=0,50
          if (ML) then
-            write(5,'(F0.10A)',advance='no') mix_gam(i),","
-            ! write(5,'(F0.10A)',advance='no') gam(i),","
-            ! write(5,'(F0.10A)',advance='no') gam_sol(i),","
+            write(5,'(F0.10,A)',advance='no') mix_gam(i),","
+            ! write(5,'(F0.10,A)',advance='no') gam(i),","
+            ! write(5,'(F0.10,A)',advance='no') gam_sol(i),","
          end if
          !gamma_test=gamma_test+(profil(i)/param(5)*log(gam(i)))
          !gamma_test2=gamma_test2+(profil2(i)/param(5)*log(gam_sol(i)))
@@ -390,7 +390,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    do s=1,3
       do i=0,50
          mix_prof(s,i)=(z(1)*profil(s,i)+z(2)*profil2(s,i))/(z(1)*sum(profil)+z(2)*sum(profil2))
-         if (ML) write(5,'(F0.10A)',advance='no') mix_prof(s,i),","
+         if (ML) write(5,'(F0.10,A)',advance='no') mix_prof(s,i),","
       end do
    end do
 
@@ -438,7 +438,7 @@ subroutine sac_2010(profil,profil2,vcosmo1,vcosmo2)
    if (ML) then
    !   do t=1,3
    !      do i=0,50
-   !         write(5,'(F12.10A)',advance='no') mix_gam(t,i),","
+   !         write(5,'(F12.10,A)',advance='no') mix_gam(t,i),","
    !      end do
    !   end do
       close(5)
