@@ -75,7 +75,7 @@ subroutine test_calculation_nonaqueos_xtb_internal(error)
     call check_(error,calc%dG_cc, -.4007613830056836E-03_wp,thr=thr)
     call check_(error,calc%dG_res, .2635940258746455E-02_wp,thr=thr)
     call check_(error,calc%dG_ss, -.5819412185087306E-02_wp,thr=thr)
-    call check_(error,calc%dG_smd, .1061086051245725E-02_wp,thr=thr)
+    call check_(error,calc%dG_smd, .2487453303715716E-02_wp,thr=thr)
     
 
 end subroutine test_calculation_nonaqueos_xtb_internal

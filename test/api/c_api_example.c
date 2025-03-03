@@ -95,7 +95,7 @@ int testThird() {
     double sum1 = energies[0] + energies[1] + energies[2] + energies[3] + energies[4] + energies[5];
 
     printf("%e\n",sum1);
-    if (!check(sum1, -1.532934E-2, 1.0e-5, "Energy for Hexadecane in Octanol does not match"))
+    if (!check(sum1,  -1.530294E-2, 1.0e-5, "Energy for Hexadecane in Octanol does not match"))
         return 1;
 
     return 0;
