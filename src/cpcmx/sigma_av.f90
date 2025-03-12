@@ -60,7 +60,9 @@ module sigma_av
          do i=1,num
             do j=1,num
                r_u2=(area(j)/pi)
-               write(*,*) "denom", (r_u2+r_av2)
+               if(abs((r_u2+r_av2)) .lt. 0.1_wp) then
+                  write(*,*) "denom", (r_u2+r_av2)
+               end if
                if (abs(r_u2+r_av2) .gt. tiny_cutoff) then
                   tmpcounter=tmpcounter+(charges(j)*((r_u2*r_av2)/(r_u2+r_av2))*&
                             &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
@@ -69,7 +71,13 @@ module sigma_av
                end if
                r_u2=0.0_wp
             end do
-            tmpcharge=tmpcounter/tmpdenominator
+            if(tmpdenominator .gt. tiny_cutoff) then
+               write(*,*) "if"
+               tmpcharge=tmpcounter/tmpdenominator
+            else
+               write(*,*) "else"
+               tmpcharge=0.0_wp
+            end if
             tmpcounter=0.0_wp
             tmpdenominator=0.0_wp
             av_charge(i)=tmpcharge
