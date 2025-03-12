@@ -46,7 +46,6 @@ module sigma_av
          real(wp), intent(in) :: r_av
          real(wp), dimension(:), allocatable, intent(out) :: av_charge
          real(wp) :: tmpcharge, tmpcounter, tmpdenominator, r_u2, r_av2
-         real(wp) :: tiny_cutoff
          integer :: num, i, j
 
          num = size(charges)
@@ -56,28 +55,16 @@ module sigma_av
          tmpcharge=0.0_wp
          tmpcounter=0.0_wp
          tmpdenominator=0.0_wp
-         tiny_cutoff = sqrt(tiny(1.0_wp))
          do i=1,num
             do j=1,num
                r_u2=(area(j)/pi)
-               if(abs((r_u2+r_av2)) .lt. 0.1_wp) then
-                  write(*,*) "denom", (r_u2+r_av2)
-               end if
-               if (abs(r_u2+r_av2) .gt. tiny_cutoff) then
-                  tmpcounter=tmpcounter+(charges(j)*((r_u2*r_av2)/(r_u2+r_av2))*&
-                            &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
-                  tmpdenominator=tmpdenominator+(((r_u2*r_av2)/(r_u2+r_av2))*&
-                                &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
-               end if
+               tmpcounter=tmpcounter+(charges(j)*((r_u2*r_av2)/(r_u2+r_av2))*&
+                         &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
+               tmpdenominator=tmpdenominator+(((r_u2*r_av2)/(r_u2+r_av2))*&
+                             &exp(-((distance(xyz(j,:),xyz(i,:))**2.0_wp)/(r_u2+r_av2))))
                r_u2=0.0_wp
             end do
-            if(tmpdenominator .gt. tiny_cutoff) then
-               write(*,*) "if"
-               tmpcharge=tmpcounter/tmpdenominator
-            else
-               write(*,*) "else"
-               tmpcharge=0.0_wp
-            end if
+            tmpcharge=tmpcounter/tmpdenominator
             tmpcounter=0.0_wp
             tmpdenominator=0.0_wp
             av_charge(i)=tmpcharge
