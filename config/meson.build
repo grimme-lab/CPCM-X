@@ -104,13 +104,21 @@ else
   lib_deps += blas_dep
 endif
 
+# Create the tool chain library as subproject
+mctc_dep = dependency(
+  'mctc-lib',
+  version: '>=0.3.0',
+  fallback: ['mctc-lib', 'mctc_dep'],
+  default_options: ['default_library=static'],
+)
+lib_deps += mctc_dep
+
 numsa_dep = dependency(
   'numsa',
   fallback: ['numsa', 'numsa_dep'],
   default_options: ['default_library=static'],
 )
 lib_deps += numsa_dep
-
 
 tomlf_dep = dependency(
   'toml-f',
