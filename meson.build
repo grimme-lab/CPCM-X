@@ -17,7 +17,7 @@
 project(
   'cpx',
   'fortran', 'c',
-  version: files('version.txt'),
+  version: '1.1.0',
   meson_version: '>=0.60.0',
   default_options: [
     'buildtype=debugoptimized',
