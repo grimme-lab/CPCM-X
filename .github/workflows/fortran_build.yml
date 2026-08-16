@@ -10,16 +10,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-22.04]
-        fc: [gfortran-12]
-        cc: [gcc-12]
         include:
+          - os: macos-latest
+            fc: gfortran-14
+            cc: gcc-14
+            lapack: openblas
           - os: ubuntu-22.04
             fc: gfortran-9
             cc: gcc-9
+            lapack: netlib
           - os: ubuntu-22.04
             fc: gfortran-10
             cc: gcc-10
+            lapack: netlib
+          - os: ubuntu-22.04
+            fc: gfortran-12
+            cc: gcc-12
+            lapack: netlib
 
     steps:
     - name: Checkout code
@@ -33,13 +40,15 @@ jobs:
     - name: Install OpenBLAS (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
       run: |
-        brew install openblas
-        echo "PKG_CONFIG_PATH=/usr/local/opt/openblas/lib/pkgconfig" >> $GITHUB_ENV
-        echo "LDFLAGS=-L/opt/homebrew/opt/openblas/lib"              >> $GITHUB_ENV
-        echo "CPPFLAGS=-I/opt/homebrew/opt/openblas/include"         >> $GITHUB_ENV
+        brew install gcc@14 openblas
+        echo "$(brew --prefix gcc@14)/bin" >> "$GITHUB_PATH"
+        openblas_prefix=$(brew --prefix openblas)
+        echo "PKG_CONFIG_PATH=$openblas_prefix/lib/pkgconfig" >> "$GITHUB_ENV"
+        echo "LDFLAGS=-L$openblas_prefix/lib"              >> "$GITHUB_ENV"
+        echo "CPPFLAGS=-I$openblas_prefix/include"         >> "$GITHUB_ENV"
         
     - name: Install meson
-      run: pip3 install meson==0.62.0 ninja cmake
+      run: pip3 install meson==1.7.0 ninja cmake
 
     - name: Configure build
       run: >-
@@ -49,7 +58,7 @@ jobs:
       env:
         FC: ${{ matrix.fc }}
         CC: ${{ matrix.cc }}
-        MESON_ARGS: ${{ contains(matrix.os, 'macos') && '-Dlapack=openblas' || '-Dlapack=netlib' }}
+        MESON_ARGS: -Dlapack=${{ matrix.lapack }}
 
     - name: Build project
       run: meson compile -C ${{ env.BUILD_DIR }}
@@ -64,15 +73,15 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         fc: [ifx]
-        cc: [icc]
+        cc: [icx]
     env:
       FC: ${{ matrix.fc }}
       CC: ${{ matrix.cc }}
       APT_PACKAGES: >-
-        intel-oneapi-compiler-fortran
-        intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
-        intel-oneapi-mkl
-        intel-oneapi-mkl-devel
+        intel-oneapi-compiler-fortran-2026.1
+        intel-oneapi-compiler-dpcpp-cpp-2026.1
+        intel-oneapi-mkl-2026.1
+        intel-oneapi-mkl-devel-2026.1
         asciidoctor
 
     steps:
@@ -84,7 +93,7 @@ jobs:
       with:
         python-version: 3.x
 
-    - run: pip3 install meson ninja --user
+    - run: pip3 install meson==1.7.0 ninja --user
 
     - name: Add Intel repository
       if: contains(matrix.os, 'ubuntu')
@@ -99,17 +108,38 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get install ${APT_PACKAGES}
-        source /opt/intel/oneapi/setvars.sh
-        source /opt/intel/oneapi/compiler/2025.0/env/vars.sh
-        printenv >> $GITHUB_ENV
+        source /opt/intel/oneapi/setvars.sh --force
+        ifx_path=$(find /opt/intel/oneapi/compiler -name ifx -perm -111 -print | sort -V | tail -n 1)
+        test -x "$ifx_path"
+        ifx_root=$(cd "$(dirname "$ifx_path")/.." && pwd)
+        ifx_lib="$ifx_root/lib"
+        test -d "$ifx_lib"
+        icx_path="$(dirname "$ifx_path")/icx"
+        if ! test -x "$icx_path"; then
+          icx_path=$(find /opt/intel/oneapi/compiler -name icx -perm -111 -print | sort -V | tail -n 1)
+        fi
+        test -x "$icx_path"
+        export LIBRARY_PATH="$ifx_lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+        export LD_LIBRARY_PATH="$ifx_lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+        export FC="$ifx_path"
+        export CC="$icx_path"
+        echo "Using Intel Fortran compiler: $FC"
+        echo "Using Intel C compiler: $CC"
+        printenv >> "$GITHUB_ENV"
+        echo "$(dirname "$ifx_path")" >> "$GITHUB_PATH"
+        echo "$(dirname "$icx_path")" >> "$GITHUB_PATH"
 
+    # Keep project libraries static while using shared Intel compiler runtimes.
+    # libirc supplies the allocatable-descriptor runtime used by json-fortran.
+    # Keep --no-as-needed active through ifx's automatically added runtimes:
+    # libifcoremt has transitive dependencies in libimf.
     - name: Configure meson build
       run: >-
         meson setup ${{ env.BUILD_DIR }}
         --prefix=/ --libdir=lib
-        -Dfortran_link_args="-lifcoremt -static"
+        -Dfortran_link_args="-shared-intel -Wl,-Bdynamic -Wl,--no-as-needed -lirc"
         -Ddefault_library=static
-        -Dlapack=mkl
+        -Dlapack=mkl-rt
 
     - name: Build project
       run: ninja -C ${{ env.BUILD_DIR }}

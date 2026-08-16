@@ -48,17 +48,19 @@ macro(
       if("${_pkg_uc}_FOUND")
         message(STATUS "Found ${package} via pkg-config")
 
-        add_library("${package}::${package}" INTERFACE IMPORTED)
-        target_link_libraries(
-          "${package}::${package}"
-          INTERFACE
-          "${${_pkg_uc}_LINK_LIBRARIES}"
-        )
-        target_include_directories(
-          "${package}::${package}"
-          INTERFACE
-          "${${_pkg_uc}_INCLUDE_DIRS}"
-        )
+        if(NOT TARGET "${package}::${package}")
+          add_library("${package}::${package}" INTERFACE IMPORTED GLOBAL)
+          target_link_libraries(
+            "${package}::${package}"
+            INTERFACE
+            "${${_pkg_uc}_LINK_LIBRARIES}"
+          )
+          target_include_directories(
+            "${package}::${package}"
+            INTERFACE
+            "${${_pkg_uc}_INCLUDE_DIRS}"
+          )
+        endif()
         break()
       endif()
     endif()
@@ -77,8 +79,10 @@ macro(
           "${${_pkg_uc}_BINARY_DIR}"
         )
 
-        add_library("${package}::${package}" INTERFACE IMPORTED)
-        target_link_libraries("${package}::${package}" INTERFACE "${package}")
+        if(NOT TARGET "${package}::${package}")
+          add_library("${package}::${package}" INTERFACE IMPORTED GLOBAL)
+          target_link_libraries("${package}::${package}" INTERFACE "${package}")
+        endif()
 
         # We need the module directory in the subproject before we finish the configure stage
         if(NOT EXISTS "${${_pkg_uc}_BINARY_DIR}/include")
@@ -99,8 +103,10 @@ macro(
       )
       FetchContent_MakeAvailable("${_pkg_lc}")
 
-      add_library("${package}::${package}" INTERFACE IMPORTED)
-      target_link_libraries("${package}::${package}" INTERFACE "${package}")
+      if(NOT TARGET "${package}::${package}")
+        add_library("${package}::${package}" INTERFACE IMPORTED GLOBAL)
+        target_link_libraries("${package}::${package}" INTERFACE "${package}")
+      endif()
 
       # We need the module directory in the subproject before we finish the configure stage
       FetchContent_GetProperties("${_pkg_lc}" SOURCE_DIR "${_pkg_uc}_SOURCE_DIR")
