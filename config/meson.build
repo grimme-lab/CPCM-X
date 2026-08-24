@@ -88,9 +88,26 @@ elif lapack_vendor == 'openblas'
     lib_deps += lapack_dep
   endif
 elif lapack_vendor == 'custom'
-  foreach lib: get_option('custom_libraries')
-    lib_deps += fc.find_library(lib)
-  endforeach
+  custom_deps = []
+  libs = get_option('custom_libraries')
+  if libs[0].startswith('-L')
+    foreach lib: libs
+      if lib != libs[0]
+        custom_deps += cc.find_library(lib, dirs: libs[0].substring(2))
+      endif
+    endforeach
+  else
+    foreach lib: libs
+      custom_deps += cc.find_library(lib)
+    endforeach
+  endif
+  if (not fc.links('external dsytrs; call dsytrs(); end', dependencies:  (get_option('openmp') ? [custom_deps, omp_dep] : [custom_deps])))
+    error('Custom LAPACK libraries do not link')
+  elif (not fc.links('external dsytrs; call dgemm(); end', dependencies: (get_option('openmp') ? [custom_deps, omp_dep] : [custom_deps])))
+    error('Custom BLAS libraries do not link')
+  endif
+  lib_deps += custom_deps
+
 else
   lapack_dep = dependency('lapack', required: false)
   if not lapack_dep.found()
