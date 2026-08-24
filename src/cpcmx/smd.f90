@@ -56,7 +56,7 @@ module sdm
       !> Using default SMD Parameters?
       character(len=*), intent(in), dimension(:) :: internal_smd
       !>Laufen
-      integer :: i, j
+      integer :: i, j, smd_unit
       !> Parameter Path and Solvent Name
       character(len=*) :: solvent
       character(len=:), allocatable :: path
@@ -80,11 +80,11 @@ module sdm
       end select
 
       !> Writing SMD Parameters to File
-      open(output_unit, file=path,status='unknown')
+      open(newunit=smd_unit, file=path, status='unknown', action='write')
       do i=1,size(internal_smd)
-         write(output_unit,'(a)') trim(internal_smd(i))
+         write(smd_unit,'(a)') trim(internal_smd(i))
       end do
-      close(output_unit)
+      close(smd_unit)
 
       do i=1,3
          do j=1,size(species)
